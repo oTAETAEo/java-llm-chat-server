@@ -7,18 +7,16 @@ public record ChatMessage(
 ) {
 
     public ChatMessage {
-
         if (role == null) {
-            throw new IllegalArgumentException("role은 null이 아니어야 합니다.");
+            throw new IllegalArgumentException(TokenizerErrorMessage.ROLE_NOT_NULL.getMessage());
         }
 
         if (content == null || content.isBlank()) {
-            throw new IllegalArgumentException("content는 비어있을 수 없습니다.");
+            throw new IllegalArgumentException(TokenizerErrorMessage.CONTENT_NOT_BLANK.getMessage());
         }
 
         if (tokenCount < 0) {
-            throw new IllegalArgumentException("tokenCount의 개수는 음수일 수 없습니다.");
+            throw new IllegalArgumentException(TokenizerErrorMessage.TOKEN_COUNT_NOT_NEGATIVE.getMessage());
         }
     }
-
 }
