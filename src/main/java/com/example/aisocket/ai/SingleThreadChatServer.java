@@ -1,6 +1,5 @@
 package com.example.aisocket.ai;
 
-import com.example.aisocket.ai.*;
 import com.example.aisocket.tokenizer.*;
 
 import java.io.BufferedReader;
@@ -27,7 +26,7 @@ public class SingleThreadChatServer {
             System.out.println("서버가 포트 " + PORT + "에서 클라이언트 접속 대기 중...\n");
 
             while (true) {
-                // 💡 수정 완료: 팩토리 메서드에 전체 문맥 제한(50)과 단일 메시지 제한(500)을 각각 주입합니다.
+                // 수정 완료: 팩토리 메서드에 전체 문맥 제한(50)과 단일 메시지 제한(500)을 각각 주입합니다.
                 TokenSlidingWindow slidingWindow = TokenSlidingWindow.create(MAX_CONTEXT_TOKENS, MAX_SINGLE_MESSAGE_TOKENS);
 
                 try (Socket clientSocket = serverSocket.accept();
