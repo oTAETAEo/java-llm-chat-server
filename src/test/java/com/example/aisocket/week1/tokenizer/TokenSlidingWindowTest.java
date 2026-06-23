@@ -1,5 +1,9 @@
-package com.example.aisocket.tokenizer;
+package com.example.aisocket.week1.tokenizer;
 
+import com.example.aisocket.week1.tokenizer.ChatMessage;
+import com.example.aisocket.week1.tokenizer.Role;
+import com.example.aisocket.week1.tokenizer.TokenSlidingWindow;
+import com.example.aisocket.week1.tokenizer.TokenizerErrorMessage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

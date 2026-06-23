@@ -1,4 +1,4 @@
-package com.example.aisocket.ai;
+package com.example.aisocket.week1.ai;
 
 public interface AiClient {
 

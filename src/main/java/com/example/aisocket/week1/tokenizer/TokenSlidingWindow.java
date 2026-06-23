@@ -1,4 +1,4 @@
-package com.example.aisocket.tokenizer;
+package com.example.aisocket.week1.tokenizer;
 
 import lombok.Getter;
 

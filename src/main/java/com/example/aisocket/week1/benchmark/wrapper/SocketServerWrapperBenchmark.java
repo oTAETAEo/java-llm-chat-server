@@ -1,4 +1,4 @@
-package com.example.aisocket.benchmark.primitive;
+package com.example.aisocket.week1.benchmark.wrapper;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -6,38 +6,38 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 
-public class SocketServerPrimitiveBenchmark {
+public class SocketServerWrapperBenchmark {
 
-    private static final int PORT = 9991;
+    private static final int PORT = 9992;
     private static final int VECTOR_COUNT = 100_000;
     private static final int DIMENSION = 768;
 
     public static void main(String[] args) throws IOException {
 
         // 1. 데이터 미리 채우기
-        double[][] primitiveData = new double[VECTOR_COUNT][DIMENSION];
+        Double[][] wrapperData = new Double[VECTOR_COUNT][DIMENSION];
         for (int i = 0; i < VECTOR_COUNT; i++) {
             for (int j = 0; j < DIMENSION; j++) {
-                primitiveData[i][j] = i + j;
+                wrapperData[i][j] = (double) (i + j);
             }
         }
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("[Primitive 서버] 포트 " + PORT + " 대기 중...");
+            System.out.println("[Wrapper 서버] 포트 " + PORT + " 대기 중...");
             try (Socket client = serverSocket.accept();
                  DataOutputStream out = new DataOutputStream(client.getOutputStream())) {
 
-                System.out.println("[Primitive 서버] 전송 시작");
+                System.out.println("[Wrapper 서버] 전송 시작");
 
                 ByteBuffer buffer = ByteBuffer.allocate(DIMENSION * 8);
-                sendPrimitiveData(out, primitiveData, buffer);
+                sendWrapperData(out, wrapperData, buffer);
 
-                System.out.println("[Primitive 서버] 전송 완료.");
+                System.out.println("[Wrapper 서버] 전송 완료.");
             }
         }
     }
 
-    private static void sendPrimitiveData(DataOutputStream out, double[][] data, ByteBuffer buffer) throws IOException {
+    private static void sendWrapperData(DataOutputStream out, Double[][] data, ByteBuffer buffer) throws IOException {
         for (int i = 0; i < VECTOR_COUNT; i++) {
             buffer.clear();
             for (int j = 0; j < DIMENSION; j++) {

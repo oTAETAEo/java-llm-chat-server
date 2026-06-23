@@ -1,5 +1,7 @@
-package com.example.aisocket.tokenizer;
+package com.example.aisocket.week1.tokenizer;
 
+import com.example.aisocket.week1.tokenizer.SimpleTokenizer;
+import com.example.aisocket.week1.tokenizer.Tokenizer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

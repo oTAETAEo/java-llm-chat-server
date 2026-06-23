@@ -1,6 +1,6 @@
-package com.example.aisocket.ai;
+package com.example.aisocket.week1.ai;
 
-import com.example.aisocket.tokenizer.*;
+import com.example.aisocket.week1.tokenizer.*;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

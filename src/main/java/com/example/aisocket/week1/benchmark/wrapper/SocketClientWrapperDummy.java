@@ -1,4 +1,4 @@
-package com.example.aisocket.benchmark.wrapper;
+package com.example.aisocket.week1.benchmark.wrapper;
 
 import java.io.DataInputStream;
 import java.io.IOException;

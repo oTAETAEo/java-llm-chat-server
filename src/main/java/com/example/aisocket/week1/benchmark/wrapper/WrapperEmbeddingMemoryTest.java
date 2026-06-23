@@ -1,35 +1,35 @@
-package com.example.aisocket.benchmark.primitive;
+package com.example.aisocket.week1.benchmark.wrapper;
 
 import java.io.IOException;
 import java.util.Random;
 
-public class PrimitiveEmbeddingMemoryTest {
+public class WrapperEmbeddingMemoryTest {
 
     private static final int VECTOR_COUNT = 100_000;
     private static final int DIMENSION = 768;
 
-    private static double[][] embeddings;
+    private static Double[][] embeddings;
 
     public static void main(String[] args) throws IOException {
-        System.out.println("double[][] primitive 임베딩 메모리 테스트");
+        System.out.println("Double[][] wrapper 임베딩 메모리 테스트");
         System.out.println("VECTOR_COUNT = " + VECTOR_COUNT);
         System.out.println("DIMENSION = " + DIMENSION);
 
         waitForVisualVm("Before allocation");
 
-        embeddings = createPrimitiveEmbeddings();
+        embeddings = createWrapperEmbeddings();
 
         waitForVisualVm("After allocation");
 
         System.out.println("Done. embeddings length = " + embeddings.length);
     }
 
-    private static double[][] createPrimitiveEmbeddings() {
+    private static Double[][] createWrapperEmbeddings() {
         Random random = new Random(42);
-        double[][] result = new double[VECTOR_COUNT][];
+        Double[][] result = new Double[VECTOR_COUNT][];
 
         for (int i = 0; i < VECTOR_COUNT; i++) {
-            double[] vector = new double[DIMENSION];
+            Double[] vector = new Double[DIMENSION];
 
             for (int j = 0; j < DIMENSION; j++) {
                 vector[j] = random.nextDouble();
