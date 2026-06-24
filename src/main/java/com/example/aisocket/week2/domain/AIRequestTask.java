@@ -18,7 +18,7 @@ public class AIRequestTask implements Comparable<AIRequestTask> {
         this.userGrade = userGrade;
         this.requestedTime = System.currentTimeMillis();
         this.responseFuture = responseFuture;
-        this.retryCount = 0; // 초기 재시도 횟수는 0
+        this.retryCount = 0;
     }
 
     public void incrementRetryCount() {
