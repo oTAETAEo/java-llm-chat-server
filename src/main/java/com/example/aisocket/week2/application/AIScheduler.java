@@ -2,6 +2,7 @@ package com.example.aisocket.week2.application;
 
 import com.example.aisocket.week2.adapter.out.infra.AiClient;
 import com.example.aisocket.week2.domain.AIRequestTask;
+import lombok.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.PriorityBlockingQueue;
@@ -34,24 +35,27 @@ public class AIScheduler {
      */
     private void startConsumerThreads() {
         for (int i = 0; i < CONSUMER_THREAD_COUNT; i++) {
-            Thread consumerThread = new Thread(() -> {
-                while (!Thread.currentThread().isInterrupted()) {
-                    try {
-                        // 큐의 맨 앞에서 가중치 순으로 일감을 하나씩 꺼낸다 (일감이 없으면 CPU 자원을 쓰지 않고 차단 대기)
-                        AIRequestTask task = eventQueue.take();
-
-                        // 핵심 지수 백오프 알고리즘 작동
-                        processWithExponentialBackoff(task);
-
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
-                }
-            }, "AI-Scheduler-Consumer-" + i);
-
+            Thread consumerThread = createThread(i);
             consumerThread.start();
         }
+    }
+
+    private @NonNull Thread createThread(int i) {
+        return new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    // 큐의 맨 앞에서 가중치 순으로 일감을 하나씩 꺼낸다 (일감이 없으면 CPU 자원을 쓰지 않고 차단 대기)
+                    AIRequestTask task = eventQueue.take();
+
+                    // 핵심 지수 백오프 알고리즘 작동
+                    processWithExponentialBackoff(task);
+
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }, "AI-Scheduler-Consumer-" + i);
     }
 
     /**
