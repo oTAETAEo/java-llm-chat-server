@@ -1,5 +1,8 @@
 package com.example.aisocket.week2.adapter.out.infra;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class OpenAIClient implements AiClient{
 
     @Override
