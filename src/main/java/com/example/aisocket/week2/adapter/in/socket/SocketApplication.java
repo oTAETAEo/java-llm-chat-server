@@ -1,6 +1,5 @@
-package com.example.aisocket.week2;
+package com.example.aisocket.week2.adapter.in.socket;
 
-import com.example.aisocket.week2.adapter.in.socket.ChatServerSocket;
 import com.example.aisocket.week2.adapter.out.infra.AiClient;
 import com.example.aisocket.week2.adapter.out.infra.OpenAIClient;
 import com.example.aisocket.week2.adapter.out.persistence.DiskLogRepository;
