@@ -1,4 +1,4 @@
-package com.example.aisocket.week2.adapter.out.session;
+package com.example.aisocket.week2.adapter.out.persistence;
 
 import com.example.aisocket.week2.domain.SessionRepository;
 import com.example.aisocket.week2.domain.UserSession;
