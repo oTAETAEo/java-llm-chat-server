@@ -5,13 +5,16 @@ import com.example.aisocket.week2.domain.AIRequestTask;
 import lombok.NonNull;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.PriorityBlockingQueue;
 
 @Component
-public class AIScheduler {
+public class AIScheduler implements AutoCloseable {
 
     private final PriorityBlockingQueue<AIRequestTask> eventQueue = new PriorityBlockingQueue<>();
     private final AiClient aiClient;
+    private final List<Thread> consumerThreads = new ArrayList<>();
 
     private static final int CONSUMER_THREAD_COUNT = 3;
     private static final int MAX_RETRIES = 5;
@@ -36,6 +39,7 @@ public class AIScheduler {
     private void startConsumerThreads() {
         for (int i = 0; i < CONSUMER_THREAD_COUNT; i++) {
             Thread consumerThread = createThread(i);
+            consumerThreads.add(consumerThread);
             consumerThread.start();
         }
     }
@@ -96,6 +100,16 @@ public class AIScheduler {
                     task.getResponseFuture().completeExceptionally(ie);
                     break;
                 }
+            }
+        }
+    }
+
+    @Override
+    public void close() {
+        System.out.println("[AIScheduler] 모든 AI 전담 일꾼 스레드에게 종료 신호를 전송합니다.");
+        for (Thread thread : consumerThreads) {
+            if (thread != null && thread.isAlive()) {
+                thread.interrupt();
             }
         }
     }

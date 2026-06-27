@@ -5,7 +5,7 @@ import lombok.NonNull;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class FileLogPipeline {
+public class FileLogPipeline implements AutoCloseable {
 
     private final BlockingQueue<String> logQueue = new LinkedBlockingQueue<>();
     private final LogRepository logRepository;
@@ -51,6 +51,14 @@ public class FileLogPipeline {
     }
 
     public void stop() {
+        if (workerThread != null) {
+            workerThread.interrupt();
+        }
+    }
+
+    @Override
+    public void close() {
+        System.out.println("[FileLogPipeline] 백그라운드 로그 일꾼 스레드 종료 및 버퍼 플러시...");
         if (workerThread != null) {
             workerThread.interrupt();
         }
