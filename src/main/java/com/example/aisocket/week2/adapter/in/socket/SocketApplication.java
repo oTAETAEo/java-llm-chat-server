@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 public class SocketApplication {
 
     private static final int SERVER_PORT = 8080;
-    private static final Path LOG_FILE_PATH = Paths.get("./chat_async_history.log");
+    private static final Path LOG_FILE_PATH = Paths.get("src/main/java/com/example/aisocket/week2/adapter/in/socket/chat_async_history.log");
 
     public static void main(String[] args) {
 
