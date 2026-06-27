@@ -6,6 +6,7 @@ import com.example.aisocket.week2.domain.UserGrade;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -31,7 +32,7 @@ public class AIController {
         CompletableFuture<String> responseFuture = new CompletableFuture<>();
 
         // 3. 도메인 레이어의 일감 세트(AIRequestTask) 조립
-        AIRequestTask task = new AIRequestTask(prompt, userGrade, responseFuture);
+        AIRequestTask task = new AIRequestTask(prompt, userGrade, responseFuture, UUID.randomUUID().toString());
 
         // 4. 스케줄러 내부의 PriorityBlockingQueue 필드에 일감 주입
         aiScheduler.enqueueTask(task);

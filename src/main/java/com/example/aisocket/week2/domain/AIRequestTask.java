@@ -7,13 +7,20 @@ import java.util.concurrent.CompletableFuture;
 @Getter
 public class AIRequestTask implements Comparable<AIRequestTask> {
 
+    private final String roomId;
+
     private final String prompt;
+
     private final UserGrade userGrade;
+
     private final long requestedTime;
+
     private final CompletableFuture<String> responseFuture;
+
     private int retryCount;
 
-    public AIRequestTask(String prompt, UserGrade userGrade, CompletableFuture<String> responseFuture) {
+    public AIRequestTask(String prompt, UserGrade userGrade, CompletableFuture<String> responseFuture, String roomId) {
+        this.roomId = roomId;
         this.prompt = prompt;
         this.userGrade = userGrade;
         this.requestedTime = System.currentTimeMillis();
