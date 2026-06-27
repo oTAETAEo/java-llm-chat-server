@@ -37,3 +37,4 @@ out/
 .vscode/
 
 /src/main/java/com/example/aisocket/week2/benchmark/pure_java_lock_dump.txt
+/src/main/java/com/example/aisocket/week2/adapter/in/socket/chat_async_history.log
