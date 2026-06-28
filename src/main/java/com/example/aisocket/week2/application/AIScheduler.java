@@ -2,19 +2,19 @@ package com.example.aisocket.week2.application;
 
 import com.example.aisocket.week2.adapter.out.infra.AiClient;
 import com.example.aisocket.week2.domain.AIRequestTask;
-import lombok.NonNull;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class AIScheduler implements AutoCloseable {
 
     private final PriorityBlockingQueue<AIRequestTask> eventQueue = new PriorityBlockingQueue<>();
     private final AiClient aiClient;
-    private final List<Thread> consumerThreads = new ArrayList<>();
+    private final ExecutorService executorService;
 
     private static final int CONSUMER_THREAD_COUNT = 3;
     private static final int MAX_RETRIES = 5;
@@ -23,64 +23,49 @@ public class AIScheduler implements AutoCloseable {
 
     public AIScheduler(AiClient aiClient) {
         this.aiClient = aiClient;
+        // 스레드 풀 팩토리를 통해 명확한 이름 지명 및 고정 풀 생성
+        this.executorService = Executors.newFixedThreadPool(CONSUMER_THREAD_COUNT, r -> {
+            Thread t = new Thread(r);
+            t.setName("AI-Scheduler-Consumer");
+            return t;
+        });
         startConsumerThreads();
     }
 
-    /**
-     * 인바운드 어댑터(Controller)가 호출할 일감 주입 대문
-     */
     public void enqueueTask(AIRequestTask task) {
         this.eventQueue.put(task);
     }
 
-    /**
-     * 톰캣 풀과 완전히 격리되어 루프를 돌 전담 일꾼 스레드 가동
-     */
     private void startConsumerThreads() {
         for (int i = 0; i < CONSUMER_THREAD_COUNT; i++) {
-            Thread consumerThread = createThread(i);
-            consumerThreads.add(consumerThread);
-            consumerThread.start();
+            executorService.submit(() -> {
+                while (!Thread.currentThread().isInterrupted()) {
+                    try {
+                        AIRequestTask task = eventQueue.take();
+                        processWithExponentialBackoff(task);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    } catch (Exception e) {
+                        System.err.println("[AIScheduler 일꾼 예외 감지] : " + e.getMessage());
+                    }
+                }
+            });
         }
     }
 
-    private @NonNull Thread createThread(int i) {
-        return new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    // 큐의 맨 앞에서 가중치 순으로 일감을 하나씩 꺼낸다 (일감이 없으면 CPU 자원을 쓰지 않고 차단 대기)
-                    AIRequestTask task = eventQueue.take();
-
-                    // 핵심 지수 백오프 알고리즘 작동
-                    processWithExponentialBackoff(task);
-
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
-        }, "AI-Scheduler-Consumer-" + i);
-    }
-
-    /**
-     * 지수 백오프(Exponential Backoff) + 지터(Jitter) 기반 로직
-     */
     private void processWithExponentialBackoff(AIRequestTask task) {
         boolean isSuccess = false;
 
         while (!isSuccess && task.getRetryCount() < MAX_RETRIES) {
             try {
-                // 아웃바운드 포트(AiClient)를 통해 실제 외부 AI API 타격
                 String response = aiClient.generateResponse(task.getPrompt());
-
                 task.getResponseFuture().complete(response);
                 isSuccess = true;
-
             } catch (Exception e) {
                 task.incrementRetryCount();
 
                 if (task.getRetryCount() >= MAX_RETRIES) {
-                    // 최대 재시도 실패 시 가방에 에러를 담아 유저에게 즉시 예외 반환
                     task.getResponseFuture().completeExceptionally(
                             new RuntimeException("AI 서버의 응답 제한 제한 횟수를 초과했습니다. 다시 시도해 주세요.")
                     );
@@ -92,10 +77,8 @@ public class AIScheduler implements AutoCloseable {
                 long totalWaitTime = backoffTime + jitter;
 
                 try {
-
                     Thread.sleep(totalWaitTime);
                 } catch (InterruptedException ie) {
-
                     Thread.currentThread().interrupt();
                     task.getResponseFuture().completeExceptionally(ie);
                     break;
@@ -106,11 +89,13 @@ public class AIScheduler implements AutoCloseable {
 
     @Override
     public void close() {
-        System.out.println("[AIScheduler] 모든 AI 전담 일꾼 스레드에게 종료 신호를 전송합니다.");
-        for (Thread thread : consumerThreads) {
-            if (thread != null && thread.isAlive()) {
-                thread.interrupt();
+        executorService.shutdownNow();
+        try {
+            if (!executorService.awaitTermination(3, TimeUnit.SECONDS)) {
+                System.err.println("[AIScheduler Warning] 강제 해제합니다.");
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 }

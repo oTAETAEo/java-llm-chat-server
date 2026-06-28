@@ -1,18 +1,23 @@
 package com.example.aisocket.week2.domain;
 
-import lombok.NonNull;
-
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 
 public class FileLogPipeline implements AutoCloseable {
 
     private final BlockingQueue<String> logQueue = new LinkedBlockingQueue<>();
     private final LogRepository logRepository;
-    private Thread workerThread;
+
+    private final ExecutorService executorService;
 
     public FileLogPipeline(LogRepository logRepository) {
         this.logRepository = logRepository;
+
+        this.executorService = Executors.newSingleThreadExecutor(r -> {
+            Thread t = new Thread(r);
+            t.setName("Log-Pipeline-Worker");
+            return t;
+        });
+
         startPipeline();
     }
 
@@ -21,15 +26,10 @@ public class FileLogPipeline implements AutoCloseable {
     }
 
     private void startPipeline() {
-        this.workerThread = createPipelineThread();
-        this.workerThread.start();
-    }
 
-    private @NonNull Thread createPipelineThread() {
-        return new Thread(() -> {
+        executorService.submit(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-
                     String logMessage = logQueue.take();
 
                     logRepository.write(logMessage);
@@ -42,25 +42,22 @@ public class FileLogPipeline implements AutoCloseable {
                     Thread.currentThread().interrupt();
                     break;
                 } catch (Exception e) {
-                    System.err.println("[로그 파이프라인 엔진 에러] : " + e.getMessage());
+                    System.err.println("[로그 파이프라인 엔진 예외 발생] : " + e.getMessage());
                 }
             }
-
             logRepository.close();
-        }, "Log-Pipeline-Worker");
-    }
-
-    public void stop() {
-        if (workerThread != null) {
-            workerThread.interrupt();
-        }
+        });
     }
 
     @Override
     public void close() {
-        System.out.println("[FileLogPipeline] 백그라운드 로그 일꾼 스레드 종료 및 버퍼 플러시...");
-        if (workerThread != null) {
-            workerThread.interrupt();
+        executorService.shutdownNow();
+        try {
+            if (!executorService.awaitTermination(3, TimeUnit.SECONDS)) {
+                System.err.println("[FileLogPipeline Warning] 강제 해제합니다.");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 }
