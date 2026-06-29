@@ -29,13 +29,13 @@ public class ChatServerSocket {
 
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("🚀 [소켓 서버 가동] 포트 번호: " + port + "에서 연결을 대기합니다.");
+            System.out.println("[소켓 서버 가동] 포트 번호: " + port + "에서 연결을 대기합니다.");
 
             while (!Thread.currentThread().isInterrupted()) {
                 // 외부 클라이언트가 접속할 때까지 차단 대기 (Accept)
                 Socket clientSocket = serverSocket.accept();
 
-                // 톰캣 스레드 풀을 방어하기 위해 가상 스레드(Virtual Thread)로 유저별 전담 마크 일꾼 배정!
+                // 가상 스레드(Virtual Thread) 배정!
                 Thread.startVirtualThread(() -> handleClient(clientSocket));
             }
         } catch (IOException e) {
@@ -59,7 +59,6 @@ public class ChatServerSocket {
             session.send("[접속 성공] 환영합니다, " + userId + "님! (방 ID: " + roomId + ")");
             logPipeline.pushLog("[입장] " + userId + "님이 방 [" + roomId + "]에 입장했습니다.");
 
-
             // 3. 유저가 타이핑을 쳐서 엔터를 누를 때마다 한 줄씩 수집하는 루프
             BufferedReader reader = session.getReader();
             String message;
@@ -75,10 +74,10 @@ public class ChatServerSocket {
                 // AI 응답을 비동기로 받아낼 주머니(Future) 준비
                 CompletableFuture<String> responseFuture = new CompletableFuture<>();
 
-                // 태현님이 확장하신 생성자 포맷 그대로 일감 메모지 생성!
+                // 사용자의 요청 메시지 생성 및 응답을 하기 위한 객체 생성
                 AIRequestTask task = new AIRequestTask(message, UserGrade.HIGH, responseFuture, roomId);
 
-                // 4. 애플리케이션 지휘자(AIScheduler)의 비동기 백오프 큐에 일감 위임!
+                // 4. 애플리케이션 지휘자(AIScheduler)의 비동기 백오프 큐에 일감 위임
                 aiScheduler.enqueueTask(task);
 
                 // 5. [비동기 콜백 체인] AI 답변이 완료되는 시점에 호출될 액션 정의
