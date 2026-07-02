@@ -35,7 +35,6 @@ public class RagSearchController {
     /**
      * memory를 통해 Top5 가져오는 방식.
      */
-
     @PostMapping("/memory/retrieve")
     public ResponseEntity<Map<String, Object>> memoryRetrieve(@RequestBody QueryPayload payload) {
 
