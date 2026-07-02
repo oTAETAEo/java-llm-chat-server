@@ -48,7 +48,6 @@ public class RagSearchService {
     public List<String> retrieveTop5FromMemory(QueryPayload payload) {
 
         float[] queryEmbedding = embeddingModel.embed(payload.question());
-
         List<InMemoryVectorRow> allVectors = cacheRegistry.getAllCachedVectors();
         List<ScoredRow> scoredRows = new ArrayList<>();
 
@@ -69,10 +68,19 @@ public class RagSearchService {
     }
 
     private @NonNull List<String> getTop5ScoredRows(List<ScoredRow> scoredRows) {
+
+        double similarityThreshold = 0.5;
+
         List<String> result = new ArrayList<>();
         int limit = Math.min(5, scoredRows.size());
 
         for (int i = 0; i < limit; i++) {
+            ScoredRow current = scoredRows.get(i);
+
+            if (current.score() < similarityThreshold) {
+                continue;
+            }
+
             result.add(scoredRows.get(i).row().content());
         }
 
