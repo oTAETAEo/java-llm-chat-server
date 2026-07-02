@@ -1,5 +1,6 @@
 package com.example.aisocket.week3.arg;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,16 +12,17 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/rag")
+@RequiredArgsConstructor
 public class RagSearchController {
 
     private final RagSearchService ragSearchService;
+    private final InMemoryUnrolledRagService inMemoryUnrolledRagService;
 
-    public RagSearchController(RagSearchService ragSearchService) {
-        this.ragSearchService = ragSearchService;
-    }
-
-    @PostMapping("/retrieve")
-    public ResponseEntity<Map<String, Object>> retrieve(@RequestBody QueryPayload payload) {
+    /**
+     * DB를 통해 Top5 가져오는 방식.
+     */
+    @PostMapping("/db/retrieve")
+    public ResponseEntity<Map<String, Object>> dbRetrieve(@RequestBody QueryPayload payload) {
 
         List<String> top5Documents = ragSearchService.retrieveTop5FromDb(payload);
 
@@ -30,4 +32,19 @@ public class RagSearchController {
                 "documents", top5Documents
         ));
     }
+
+    @PostMapping("/memory/retrieve")
+    public ResponseEntity<Map<String, Object>> memoryRetrieve(@RequestBody QueryPayload payload) {
+
+        List<String> top5Documents = inMemoryUnrolledRagService.searchTopK(payload);
+
+        return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "count", top5Documents.size(),
+                "documents", top5Documents
+        ));
+    }
+
+
+
 }
