@@ -16,7 +16,6 @@ import java.util.Map;
 public class RagSearchController {
 
     private final RagSearchService ragSearchService;
-    private final InMemoryUnrolledRagService inMemoryUnrolledRagService;
 
     /**
      * DB를 통해 Top5 가져오는 방식.
@@ -36,7 +35,7 @@ public class RagSearchController {
     @PostMapping("/memory/retrieve")
     public ResponseEntity<Map<String, Object>> memoryRetrieve(@RequestBody QueryPayload payload) {
 
-        List<String> top5Documents = inMemoryUnrolledRagService.searchTopK(payload);
+        List<String> top5Documents = ragSearchService.retrieveTop5FromMemory(payload);
 
         return ResponseEntity.ok(Map.of(
                 "status", "SUCCESS",
