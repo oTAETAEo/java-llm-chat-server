@@ -24,3 +24,4 @@
 
 ### 정리 문서
 1. [RAG(검색증강생성)를 위한 코사인 유사도(Cosine Similarity) 고속 연산](https://taetae-o.tistory.com/15)
+2. [Platform Thread vs Virtual Thread의 AI I/O 블로킹 효율 비교](https://taetae-o.tistory.com/16)
