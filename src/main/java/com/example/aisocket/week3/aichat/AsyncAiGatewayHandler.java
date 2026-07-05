@@ -54,9 +54,16 @@ final class AsyncAiGatewayHandler implements Runnable {
              OutputStream userOut = socket.getOutputStream()
         ) {
 
+            // 30초 타임아웃
             socket.setSoTimeout(30_000);
 
             // InputStream으로 들어오는 바이트를 해석
+//          POST / HTTP/1.1
+//          Host: localhost:8080
+//          Content-Type: application/json
+//          Content-Length: 25
+//
+//          {"prompt":"안녕하세요"}
             HttpRequestData clientRequest =
                     HttpRequestData.read(userIn, MAX_HEADER_BYTES, MAX_BODY_BYTES);
             if (!"POST".equals(clientRequest.method())) {

@@ -33,7 +33,7 @@ public class RagSearchController {
     }
 
     /**
-     * memory를 통해 Top5 가져오는 방식.
+     * memory에 올라와있는 백터 데이터를 통해 Top5 가져오는 방식.
      */
     @PostMapping("/memory/retrieve")
     public ResponseEntity<Map<String, Object>> memoryRetrieve(@RequestBody QueryPayload payload) {
