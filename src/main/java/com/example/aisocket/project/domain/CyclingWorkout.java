@@ -21,7 +21,7 @@ public class CyclingWorkout implements Workout {
     private final Double maxPower;
     private final Double ftp;
 
-    public static CyclingWorkout createCycleWorkout(CyclingWorkoutCommand workoutCommand, CreateCycleWorkoutCommand cycleWorkoutCommand){
+    public static CyclingWorkout of(CyclingWorkoutCommand workoutCommand, CreateCycleWorkoutCommand cycleWorkoutCommand){
         return new CyclingWorkout(workoutCommand, cycleWorkoutCommand);
     }
 

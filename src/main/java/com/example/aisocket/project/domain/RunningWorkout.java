@@ -18,7 +18,7 @@ public class RunningWorkout implements Workout {
     private final Double maxPace;
     private final Integer steps;
 
-    public static RunningWorkout createRunningWorkout(CyclingWorkoutCommand workoutCommand, CreateRunningWorkoutCommand runningWorkoutCommand){
+    public static RunningWorkout of(CyclingWorkoutCommand workoutCommand, CreateRunningWorkoutCommand runningWorkoutCommand){
         return new RunningWorkout(workoutCommand, runningWorkoutCommand);
     }
 
