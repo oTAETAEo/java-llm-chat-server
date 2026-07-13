@@ -23,7 +23,7 @@ public class CoachFeedbackController {
     @PostMapping("/v1/feedback")
     public ResponseEntity<String> generateFeedback(@RequestBody FeedbackRequest request) {
 
-        Workout workout = workoutMapper.create(request);
+        Workout workout = workoutMapper.toWorkout(request);
 
         String feedback = coachFeedback.getFeedback(workout, request.tier());
 
@@ -33,9 +33,11 @@ public class CoachFeedbackController {
     @PostMapping(value = "/v2/feedback", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> generateFeedbackStream(@RequestBody FeedbackRequest request) {
 
-        Workout workout = workoutMapper.create(request);
+        Workout workout = workoutMapper.toWorkout(request);
 
-        return coachFeedback.getFeedbackStream(workout, request.tier());
+        Flux<String> result = coachFeedback.getFeedbackStream(workout, request.tier());
+
+        return result;
     }
 
 }

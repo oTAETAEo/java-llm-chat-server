@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class WorkoutMapper {
 
-    public Workout create(FeedbackRequest request) {
+    public Workout toWorkout(FeedbackRequest request) {
         if (request.workOutType() == null) {
             throw new IllegalArgumentException("운동 종목(workOutType)은 필수 값입니다.");
         }
