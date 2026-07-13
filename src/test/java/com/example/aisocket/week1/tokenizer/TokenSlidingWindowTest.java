@@ -64,7 +64,7 @@ class TokenSlidingWindowTest {
     void throwExceptionWhenSingleMessageExceedsMaxTokens() {
         TokenSlidingWindow window = TokenSlidingWindow.create(30, 50);
 
-        ChatMessage message = new ChatMessage(Role.USER, "너무 긴 메시지", 31);
+        ChatMessage message = new ChatMessage(Role.USER, "너무 긴 메시지", 60);
 
         assertThatThrownBy(() -> window.addMessage(message))
                 .isInstanceOf(IllegalArgumentException.class)
