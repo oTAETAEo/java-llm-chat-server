@@ -1,38 +1,60 @@
 package com.example.aisocket.project.application.out;
 
-import com.example.aisocket.project.domain.*;
+import com.example.aisocket.project.domain.AthleteTier;
+import com.example.aisocket.project.domain.WorkOutType;
+import com.example.aisocket.project.domain.Workout;
 import lombok.NonNull;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class CoachFeedbackPromptBuilder implements AiPromptBuilder {
 
+    private final Map<WorkOutType, WorkoutPromptSectionBuilder> sectionBuilders;
+
+    public CoachFeedbackPromptBuilder(List<WorkoutPromptSectionBuilder> sectionBuilders) {
+        this.sectionBuilders = sectionBuilders.stream()
+                .collect(Collectors.toMap(
+                        WorkoutPromptSectionBuilder::supportType,
+                        Function.identity()
+                ));
+    }
+
     @Override
     public String build(Workout workout, AthleteTier tier) {
+        Objects.requireNonNull(workout, "운동 데이터(workout)는 필수 값입니다.");
 
-        String systemInstruction = "";
-        if (AthleteTier.PRO.equals(tier)) {
-
-            systemInstruction = createProSystemInstruction();
-        } else if (AthleteTier.AMATEUR.equals(tier)) {
-
-            systemInstruction = createAmateurSystemInstruction();
-        }
-
+        String systemInstruction = createSystemInstruction(tier);
         String commonTemplate = createCommonPrompt(workout);
-
-        String specificTemplate = "";
-        if (workout.getWorkOutType() == WorkOutType.CYCLING){
-
-            specificTemplate = createCycleWorkoutPrompt((CyclingWorkout) workout);
-        } else if (workout.getWorkOutType() == WorkOutType.RUNNING){
-
-            specificTemplate = createRunningWorkoutPrompt((RunningWorkout) workout);
-        }
+        String specificTemplate = createSpecificPrompt(workout);
 
         return systemInstruction + commonTemplate + "\n" + specificTemplate;
     }
 
+    private String createSystemInstruction(AthleteTier tier) {
+        if (tier == null) {
+            throw new IllegalArgumentException("운동 등급(tier)은 필수 값입니다.");
+        }
+
+        return switch (tier) {
+            case PRO -> createProSystemInstruction();
+            case AMATEUR -> createAmateurSystemInstruction();
+        };
+    }
+
+    private String createSpecificPrompt(Workout workout) {
+        WorkoutPromptSectionBuilder sectionBuilder = sectionBuilders.get(workout.getWorkOutType());
+        if (sectionBuilder == null) {
+            throw new IllegalArgumentException("지원하지 않는 운동 타입입니다: " + workout.getWorkOutType());
+        }
+
+        return sectionBuilder.build(workout);
+    }
 
     private @NonNull String createProSystemInstruction() {
         return """
@@ -78,39 +100,6 @@ public class CoachFeedbackPromptBuilder implements AiPromptBuilder {
                 workout.getMaxHeartRate(),
                 workout.getAvgCadence(),
                 workout.getMaxCadence()
-        );
-    }
-
-    private @NonNull String createCycleWorkoutPrompt(CyclingWorkout cyclingWorkout) {
-        return """       
-                [자전거 전용 분석 지표]
-                - 평균 속도: %.1f km/h / 최고 속도: %.1f km/h
-                - 평균 파워: %.1f W / 최고 파워: %.1f W
-                - 현재 유저 FTP: %.1f W
-                
-                코칭 매뉴얼: 자전거 전용 지표인 FTP 대비 평균 파워(avgPower)의 비율을 분석하여 오버페이스 여부를 판별하고, 라이딩 효율성 향상을 위한 페이싱 전략을 3문장 이내로 제시하세요.
-                
-                """.formatted(
-                cyclingWorkout.getAvgSpeed(),
-                cyclingWorkout.getMaxSpeed(),
-                cyclingWorkout.getAvgPower(),
-                cyclingWorkout.getMaxPower(),
-                cyclingWorkout.getFtp()
-        );
-    }
-
-    private @NonNull String createRunningWorkoutPrompt(RunningWorkout runningWorkout) {
-        return """
-                [러닝 전용 분석 지표]
-                - 평균 페이스: %.2f min/km / 최고 페이스: %.2f min/km
-                - 총 걸음 수: %d 걸음
-                
-                코칭 매뉴얼: 러닝 전용 지표인 평균 페이스(avgPace)와 총 걸음 수를 분석하여 주폭(Stride)과 케이던스의 밸런스가 적절했는지 판별하고, 부상 방지 및 페이스 유지 조언을 3문장 이내로 제시하세요.
-                
-                """.formatted(
-                runningWorkout.getAvgPace(),
-                runningWorkout.getMaxPace(),
-                runningWorkout.getSteps()
         );
     }
 }
