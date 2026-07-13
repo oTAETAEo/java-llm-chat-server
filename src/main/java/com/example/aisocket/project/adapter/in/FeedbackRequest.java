@@ -1,6 +1,10 @@
 package com.example.aisocket.project.adapter.in;
 
-import com.example.aisocket.project.domain.*;
+import com.example.aisocket.project.domain.AthleteTier;
+import com.example.aisocket.project.domain.CommonWorkoutCommand;
+import com.example.aisocket.project.domain.CreateCyclingWorkoutCommand;
+import com.example.aisocket.project.domain.CreateRunningWorkoutCommand;
+import com.example.aisocket.project.domain.WorkOutType;
 
 public record FeedbackRequest(
 
@@ -30,33 +34,20 @@ public record FeedbackRequest(
         Integer steps
 ) {
 
-    public Workout toDomain() {
-        if (workOutType == null) {
-            throw new IllegalArgumentException("운동 종목(workOutType)은 필수 값입니다.");
-        }
-
-        CommonWorkoutCommand commonCommand = createCommonCommand();
-
-        return switch (workOutType) {
-            case CYCLING -> CyclingWorkout.of(commonCommand, createCycleCommand());
-            case RUNNING -> RunningWorkout.of(commonCommand, createRunningCommand());
-        };
-    }
-
-    private CommonWorkoutCommand createCommonCommand() {
+    CommonWorkoutCommand toCommonCommand() {
         return new CommonWorkoutCommand(
                 distance, elevGain, elevationMax, movingTime, calories,
                 avgCadence, maxCadence, maxHeartRate, avgHeartRate
         );
     }
 
-    private CreateCyclingWorkoutCommand createCycleCommand() {
+    CreateCyclingWorkoutCommand toCyclingCommand() {
         return new CreateCyclingWorkoutCommand(
                 avgSpeed, maxSpeed, avgPower, maxPower, ftp
         );
     }
 
-    private CreateRunningWorkoutCommand createRunningCommand() {
+    CreateRunningWorkoutCommand toRunningCommand() {
         return new CreateRunningWorkoutCommand(
                 avgPace, maxPace, steps
         );
