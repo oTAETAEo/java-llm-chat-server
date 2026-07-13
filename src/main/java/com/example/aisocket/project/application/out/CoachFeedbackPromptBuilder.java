@@ -5,7 +5,7 @@ import lombok.NonNull;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AiPromptBuilderImpl implements AiPromptBuilder {
+public class CoachFeedbackPromptBuilder implements AiPromptBuilder {
 
     @Override
     public String build(Workout workout, AthleteTier tier) {
