@@ -1,15 +1,14 @@
-package com.example.aisocket.project.adapter.out.ai;
+package com.example.aisocket.project.application.out;
 
 import com.example.aisocket.project.domain.*;
 import lombok.NonNull;
-import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AiPromptBuilderV1 implements AiPromptBuilder {
+public class AiPromptBuilderImpl implements AiPromptBuilder {
 
     @Override
-    public Prompt build(Workout workout, AthleteTier tier) {
+    public String build(Workout workout, AthleteTier tier) {
 
         String systemInstruction = "";
         if (AthleteTier.PRO.equals(tier)) {
@@ -31,7 +30,7 @@ public class AiPromptBuilderV1 implements AiPromptBuilder {
             specificTemplate = createRunningWorkoutPrompt((RunningWorkout) workout);
         }
 
-        return new Prompt(systemInstruction + commonTemplate + "\n" + specificTemplate);
+        return systemInstruction + commonTemplate + "\n" + specificTemplate;
     }
 
 
