@@ -3,7 +3,7 @@ package com.example.aisocket.project.domain;
 import lombok.Getter;
 
 @Getter
-public class CycleWorkout implements Workout {
+public class CyclingWorkout implements Workout {
     
     private final Double distance;
     private final Double elevGain;
@@ -21,11 +21,11 @@ public class CycleWorkout implements Workout {
     private final Double maxPower;
     private final Double ftp;
 
-    public static CycleWorkout createCycleWorkout(CreateWorkoutCommand workoutCommand, CreateCycleWorkoutCommand cycleWorkoutCommand){
-        return new CycleWorkout(workoutCommand, cycleWorkoutCommand);
+    public static CyclingWorkout createCycleWorkout(CyclingWorkoutCommand workoutCommand, CreateCycleWorkoutCommand cycleWorkoutCommand){
+        return new CyclingWorkout(workoutCommand, cycleWorkoutCommand);
     }
 
-    private CycleWorkout(CreateWorkoutCommand workoutCommand, CreateCycleWorkoutCommand cycleWorkoutCommand) {
+    private CyclingWorkout(CyclingWorkoutCommand workoutCommand, CreateCycleWorkoutCommand cycleWorkoutCommand) {
 
         this.distance = workoutCommand.distance();
         this.elevGain = workoutCommand.elevGain();
@@ -61,7 +61,7 @@ public class CycleWorkout implements Workout {
 
     @Override
     public WorkOutType getWorkOutType() {
-        return WorkOutType.CYCLE;
+        return WorkOutType.CYCLING;
     }
 
 }
