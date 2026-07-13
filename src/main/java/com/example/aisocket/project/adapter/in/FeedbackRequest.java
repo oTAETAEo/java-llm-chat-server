@@ -35,7 +35,7 @@ public record FeedbackRequest(
             throw new IllegalArgumentException("운동 종목(workOutType)은 필수 값입니다.");
         }
 
-        CyclingWorkoutCommand commonCommand = createCommonCommand();
+        CommonWorkoutCommand commonCommand = createCommonCommand();
 
         return switch (workOutType) {
             case CYCLING -> CyclingWorkout.of(commonCommand, createCycleCommand());
@@ -43,15 +43,15 @@ public record FeedbackRequest(
         };
     }
 
-    private CyclingWorkoutCommand createCommonCommand() {
-        return new CyclingWorkoutCommand(
+    private CommonWorkoutCommand createCommonCommand() {
+        return new CommonWorkoutCommand(
                 distance, elevGain, elevationMax, movingTime, calories,
                 avgCadence, maxCadence, maxHeartRate, avgHeartRate
         );
     }
 
-    private CreateCycleWorkoutCommand createCycleCommand() {
-        return new CreateCycleWorkoutCommand(
+    private CreateCyclingWorkoutCommand createCycleCommand() {
+        return new CreateCyclingWorkoutCommand(
                 avgSpeed, maxSpeed, avgPower, maxPower, ftp
         );
     }

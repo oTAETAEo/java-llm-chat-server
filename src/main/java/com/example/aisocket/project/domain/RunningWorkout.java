@@ -18,11 +18,11 @@ public class RunningWorkout implements Workout {
     private final Double maxPace;
     private final Integer steps;
 
-    public static RunningWorkout of(CyclingWorkoutCommand workoutCommand, CreateRunningWorkoutCommand runningWorkoutCommand){
+    public static RunningWorkout of(CommonWorkoutCommand workoutCommand, CreateRunningWorkoutCommand runningWorkoutCommand){
         return new RunningWorkout(workoutCommand, runningWorkoutCommand);
     }
 
-    private RunningWorkout(CyclingWorkoutCommand workoutCommand, CreateRunningWorkoutCommand runningWorkoutCommand) {
+    private RunningWorkout(CommonWorkoutCommand workoutCommand, CreateRunningWorkoutCommand runningWorkoutCommand) {
 
         this.distance = workoutCommand.distance();
         this.elevGain = workoutCommand.elevGain();

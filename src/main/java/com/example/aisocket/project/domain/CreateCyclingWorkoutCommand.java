@@ -1,6 +1,6 @@
 package com.example.aisocket.project.domain;
 
-public record CreateCycleWorkoutCommand(
+public record CreateCyclingWorkoutCommand(
 
         Double avgSpeed,
         Double maxSpeed,
