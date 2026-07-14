@@ -9,6 +9,8 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.Optional;
 
@@ -19,13 +21,13 @@ public class SpringAiClient implements AiSender {
     private final OpenAiChatModel chatModel;
 
     @Override
-    public String execute(String promptText) {
-
-        Prompt prompt = new Prompt(promptText);
-
-        ChatResponse response = chatModel.call(prompt);
-
-        return response.getResult().getOutput().getText();
+    public Mono<String> execute(String promptText) {
+        return Mono.fromCallable(() -> {
+                    Prompt prompt = new Prompt(promptText);
+                    ChatResponse response = chatModel.call(prompt);
+                    return response.getResult().getOutput().getText();
+                })
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
