@@ -1,29 +1,24 @@
 package com.example.aisocket.week3.knowledge;
 
-import org.springframework.ai.document.Document;
-import org.springframework.ai.vectorstore.VectorStore;
+import com.example.aisocket.week3.arg.InMemoryCacheRegistry;
+import com.example.aisocket.week3.arg.ReactivePgVectorStore;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Map;
+import reactor.core.publisher.Mono;
 
 @Service
 public class KnowledgeIngestionService {
 
-    private final VectorStore vectorStore;
+    private final ReactivePgVectorStore vectorStore;
+    private final InMemoryCacheRegistry cacheRegistry;
 
-    public KnowledgeIngestionService(VectorStore vectorStore) {
+    public KnowledgeIngestionService(ReactivePgVectorStore vectorStore, InMemoryCacheRegistry cacheRegistry) {
         this.vectorStore = vectorStore;
+        this.cacheRegistry = cacheRegistry;
     }
 
-    public void injectKnowledge(KnowledgePayload payload) {
-
-        Document document = Document.builder()
-                .text(payload.context())
-                .metadata(Map.of("category", payload.category()))
-                .build();
-
-        vectorStore.accept(List.of(document));
+    public Mono<Void> injectKnowledge(KnowledgePayload payload) {
+        return vectorStore.add(payload.context(), payload.category())
+                .then(cacheRegistry.refresh());
     }
 
 }
