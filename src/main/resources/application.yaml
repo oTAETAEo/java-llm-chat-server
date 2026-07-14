@@ -2,20 +2,13 @@ spring:
   application:
     name: aisocket
 
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/ai_rag_db
+  main:
+    web-application-type: reactive
+
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/ai_rag_db
     username: admin
     password: password123!
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        show_sql: true
-        format_sql: true
 
   ai:
     openai:
@@ -26,7 +19,9 @@ spring:
       chat:
         options:
           model: gpt-4o-mini
-    vectorstore:
-      pgvector:
-        initialize-schema: true
-        dimensions: 1536
+
+app:
+  vector-store:
+    table-name: vector_store
+    dimensions: 1536
+    initialize-schema: true
