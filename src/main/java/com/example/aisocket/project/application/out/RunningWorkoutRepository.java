@@ -5,6 +5,6 @@ import com.example.aisocket.project.domain.RunningWorkout;
 
 public interface RunningWorkoutRepository {
 
-    void save(RunningWorkout workout, AthleteTier tier);
+    Long save(RunningWorkout workout, AthleteTier tier);
 
 }

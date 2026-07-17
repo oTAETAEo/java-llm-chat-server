@@ -13,7 +13,10 @@ public class JpaCyclingWorkoutRecordPersistenceAdapter implements CyclingWorkout
     private final JpaCyclingWorkoutRecordRepository repository;
 
     @Override
-    public void save(CyclingWorkout workout, AthleteTier tier) {
-        repository.save(CyclingWorkoutRecordEntity.from(workout, tier));
+    public Long save(CyclingWorkout workout, AthleteTier tier) {
+        CyclingWorkoutRecordEntity savedRecord =
+                repository.save(CyclingWorkoutRecordEntity.from(workout, tier));
+
+        return savedRecord.getId();
     }
 }
