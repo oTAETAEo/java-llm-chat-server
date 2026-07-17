@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
@@ -20,12 +19,12 @@ public class KnowledgeIngestionController {
     }
 
     @PostMapping("/inject")
-    public Mono<ResponseEntity<Map<String, String>>> inject(@RequestBody KnowledgePayload payload) {
-        return ingestionService.injectKnowledge(payload)
-                .thenReturn(ResponseEntity.ok(Map.of(
-                        "status", "SUCCESS",
-                        "category", payload.category(),
-                        "message", "성공적으로 임베딩되어 벡터 DB에 저장되었습니다."
-                )));
+    public ResponseEntity<Map<String, String>> inject(@RequestBody KnowledgePayload payload) {
+        ingestionService.injectKnowledge(payload);
+        return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "category", payload.category(),
+                "message", "성공적으로 임베딩되어 벡터 DB에 저장되었습니다."
+        ));
     }
 }

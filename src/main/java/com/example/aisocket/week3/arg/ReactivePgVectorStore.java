@@ -4,12 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.r2dbc.core.DatabaseClient;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -18,85 +16,73 @@ import java.util.stream.IntStream;
 @Component
 public class ReactivePgVectorStore {
 
-    private final DatabaseClient databaseClient;
+    private final JdbcTemplate jdbcTemplate;
     private final EmbeddingModel embeddingModel;
     private final ObjectMapper objectMapper;
     private final String tableName;
 
     public ReactivePgVectorStore(
-            DatabaseClient databaseClient,
+            JdbcTemplate jdbcTemplate,
             EmbeddingModel embeddingModel,
             ObjectMapper objectMapper,
             @Value("${app.vector-store.table-name:vector_store}") String tableName
     ) {
-        this.databaseClient = databaseClient;
+        this.jdbcTemplate = jdbcTemplate;
         this.embeddingModel = embeddingModel;
         this.objectMapper = objectMapper;
         this.tableName = tableName;
     }
 
-    public Mono<Void> add(String content, String category) {
-        return embed(content)
-                .flatMap(embedding -> insert(content, category, embedding));
+    public void add(String content, String category) {
+        insert(content, category, embed(content));
     }
 
-    public Flux<String> similaritySearch(String query, String category, int topK, double similarityThreshold) {
-        return embed(query)
-                .flatMapMany(embedding -> databaseClient.sql("""
-                                SELECT content,
-                                       1 - (embedding <=> CAST(:embedding AS vector)) AS similarity
-                                FROM public.%s
-                                WHERE metadata ->> 'category' = :category
-                                  AND 1 - (embedding <=> CAST(:embedding AS vector)) >= :similarityThreshold
-                                ORDER BY embedding <=> CAST(:embedding AS vector)
-                                LIMIT :topK
-                                """.formatted(tableName))
-                        .bind("embedding", toVectorLiteral(embedding))
-                        .bind("category", category)
-                        .bind("similarityThreshold", similarityThreshold)
-                        .bind("topK", topK)
-                        .map((row, metadata) -> row.get("content", String.class))
-                        .all());
+    public List<String> similaritySearch(String query, String category, int topK, double similarityThreshold) {
+        String embedding = toVectorLiteral(embed(query));
+        return jdbcTemplate.queryForList("""
+                        SELECT content
+                        FROM public.%s
+                        WHERE metadata ->> 'category' = ?
+                          AND 1 - (embedding <=> CAST(? AS vector)) >= ?
+                        ORDER BY embedding <=> CAST(? AS vector)
+                        LIMIT ?
+                        """.formatted(tableName),
+                String.class,
+                category,
+                embedding,
+                similarityThreshold,
+                embedding,
+                topK
+        );
     }
 
-    public Flux<InMemoryVectorRow> findAll() {
-        return databaseClient.sql("""
+    public List<InMemoryVectorRow> findAll() {
+        return jdbcTemplate.query("""
                         SELECT id, content, metadata::text AS metadata, embedding::text AS embedding
                         FROM public.%s
-                        """.formatted(tableName))
-                .map((row, metadata) -> {
-                    String id = String.valueOf(row.get("id"));
-                    String content = row.get("content", String.class);
-                    String metadataJson = row.get("metadata", String.class);
-                    String embeddingText = row.get("embedding", String.class);
-
-                    return new InMemoryVectorRow(
-                            id,
-                            content,
-                            extractCategory(metadataJson),
-                            parseEmbedding(embeddingText)
-                    );
-                })
-                .all();
+                        """.formatted(tableName),
+                (row, rowNum) -> new InMemoryVectorRow(
+                        String.valueOf(row.getObject("id")),
+                        row.getString("content"),
+                        extractCategory(row.getString("metadata")),
+                        parseEmbedding(row.getString("embedding"))
+                ));
     }
 
-    private Mono<Void> insert(String content, String category, float[] embedding) {
-        return databaseClient.sql("""
+    private void insert(String content, String category, float[] embedding) {
+        jdbcTemplate.update("""
                         INSERT INTO public.%s (id, content, metadata, embedding)
-                        VALUES (CAST(:id AS uuid), :content, CAST(:metadata AS jsonb), CAST(:embedding AS vector))
-                        """.formatted(tableName))
-                .bind("id", UUID.randomUUID().toString())
-                .bind("content", content)
-                .bind("metadata", toMetadataJson(category))
-                .bind("embedding", toVectorLiteral(embedding))
-                .fetch()
-                .rowsUpdated()
-                .then();
+                        VALUES (CAST(? AS uuid), ?, CAST(? AS jsonb), CAST(? AS vector))
+                        """.formatted(tableName),
+                UUID.randomUUID().toString(),
+                content,
+                toMetadataJson(category),
+                toVectorLiteral(embedding)
+        );
     }
 
-    private Mono<float[]> embed(String text) {
-        return Mono.fromCallable(() -> embeddingModel.embed(text))
-                .subscribeOn(Schedulers.boundedElastic());
+    private float[] embed(String text) {
+        return embeddingModel.embed(text);
     }
 
     private String toMetadataJson(String category) {

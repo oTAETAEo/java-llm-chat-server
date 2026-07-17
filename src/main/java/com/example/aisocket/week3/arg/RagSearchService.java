@@ -5,8 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -21,33 +19,29 @@ public class RagSearchService {
     private final InMemoryCacheRegistry cacheRegistry;
     private final ReactivePgVectorStore vectorStore;
 
-    public Mono<List<String>> retrieveTop5FromDb(QueryPayload payload) {
-        return vectorStore.similaritySearch(payload.question(), payload.category(), 5, 0.5)
-                .collectList();
+    public List<String> retrieveTop5FromDb(QueryPayload payload) {
+        return vectorStore.similaritySearch(payload.question(), payload.category(), 5, 0.5);
     }
 
-    public Mono<List<String>> retrieveTop5FromMemory(QueryPayload payload) {
-        return Mono.fromCallable(() -> {
-                    float[] queryEmbedding = embeddingModel.embed(payload.question());
-                    List<InMemoryVectorRow> allVectors = cacheRegistry.getAllCachedVectors();
-                    List<ScoredRow> scoredRows = new ArrayList<>();
+    public List<String> retrieveTop5FromMemory(QueryPayload payload) {
+        float[] queryEmbedding = embeddingModel.embed(payload.question());
+        List<InMemoryVectorRow> allVectors = cacheRegistry.getAllCachedVectors();
+        List<ScoredRow> scoredRows = new ArrayList<>();
 
-                    String targetCategory = payload.category();
+        String targetCategory = payload.category();
 
-                    for (InMemoryVectorRow row : allVectors) {
-                        if (!row.category().equalsIgnoreCase(targetCategory)) {
-                            continue;
-                        }
+        for (InMemoryVectorRow row : allVectors) {
+            if (!row.category().equalsIgnoreCase(targetCategory)) {
+                continue;
+            }
 
-                        double similarity = calculateUnrolledCosineSimilarity(queryEmbedding, row.embedding());
-                        scoredRows.add(new ScoredRow(row, similarity));
-                    }
+            double similarity = calculateUnrolledCosineSimilarity(queryEmbedding, row.embedding());
+            scoredRows.add(new ScoredRow(row, similarity));
+        }
 
-                    scoredRows.sort(Comparator.comparingDouble(ScoredRow::score).reversed());
+        scoredRows.sort(Comparator.comparingDouble(ScoredRow::score).reversed());
 
-                    return getTop5ScoredRows(scoredRows);
-                })
-                .subscribeOn(Schedulers.boundedElastic());
+        return getTop5ScoredRows(scoredRows);
     }
 
     private @NonNull List<String> getTop5ScoredRows(List<ScoredRow> scoredRows) {

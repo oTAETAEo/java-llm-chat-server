@@ -3,7 +3,6 @@ package com.example.aisocket.week3.arg;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,17 +22,16 @@ public class InMemoryCacheRegistry {
 
     @PostConstruct
     public void initInMemoryVectorCache() {
-        refresh()
-                .doOnSuccess(ignored -> log.info("{}개의 자바 지식 벡터가 힙 메모리에 올라감.", cacheRegistry.size()))
-                .doOnError(error -> log.error("인메모리 벡터 로딩 중 오류 발생", error))
-                .subscribe();
+        try {
+            refresh();
+            log.info("{}개의 자바 지식 벡터가 힙 메모리에 올라감.", cacheRegistry.size());
+        } catch (Exception error) {
+            log.error("인메모리 벡터 로딩 중 오류 발생", error);
+        }
     }
 
-    public Mono<Void> refresh() {
-        return vectorStore.findAll()
-                .collectList()
-                .doOnNext(rows -> this.cacheRegistry = Collections.unmodifiableList(rows))
-                .then();
+    public void refresh() {
+        this.cacheRegistry = Collections.unmodifiableList(vectorStore.findAll());
     }
 
     public List<InMemoryVectorRow> getAllCachedVectors() {

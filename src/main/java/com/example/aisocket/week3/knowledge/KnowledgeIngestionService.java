@@ -3,7 +3,6 @@ package com.example.aisocket.week3.knowledge;
 import com.example.aisocket.week3.arg.InMemoryCacheRegistry;
 import com.example.aisocket.week3.arg.ReactivePgVectorStore;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 @Service
 public class KnowledgeIngestionService {
@@ -16,9 +15,9 @@ public class KnowledgeIngestionService {
         this.cacheRegistry = cacheRegistry;
     }
 
-    public Mono<Void> injectKnowledge(KnowledgePayload payload) {
-        return vectorStore.add(payload.context(), payload.category())
-                .then(cacheRegistry.refresh());
+    public void injectKnowledge(KnowledgePayload payload) {
+        vectorStore.add(payload.context(), payload.category());
+        cacheRegistry.refresh();
     }
 
 }

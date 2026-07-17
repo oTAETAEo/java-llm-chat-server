@@ -4,22 +4,23 @@ import com.example.aisocket.project.application.out.MemberRepository;
 import com.example.aisocket.project.domain.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
+
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class R2dbcMemberPersistenceAdapter implements MemberRepository {
+public class JpaMemberPersistenceAdapter implements MemberRepository {
 
-    private final R2dbcMemberRepository repository;
+    private final JpaMemberRepository repository;
 
     @Override
-    public Mono<Member> save(Member member) {
+    public Member save(Member member) {
         return repository.save(MemberEntity.from(member))
-                .map(MemberEntity::toDomain);
+                .toDomain();
     }
 
     @Override
-    public Mono<Member> findById(Long id) {
+    public Optional<Member> findById(Long id) {
         return repository.findById(id)
                 .map(MemberEntity::toDomain);
     }

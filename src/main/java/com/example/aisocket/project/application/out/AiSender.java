@@ -1,12 +1,11 @@
 package com.example.aisocket.project.application.out;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import java.util.function.Consumer;
 
 public interface AiSender {
 
-    Mono<String> execute(String promptText);
+    String execute(String promptText);
 
-    Flux<String> sendStream(String promptText);
+    void sendStream(String promptText, Consumer<String> chunkConsumer);
 
 }

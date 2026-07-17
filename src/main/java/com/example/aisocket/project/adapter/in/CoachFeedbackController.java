@@ -8,8 +8,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/coach")
@@ -21,17 +22,38 @@ public class CoachFeedbackController {
     private final WorkoutMapper workoutMapper;
 
     @PostMapping("/v1/feedback")
-    public Mono<String> generateFeedback(@RequestBody FeedbackRequest request) {
+    public String generateFeedback(@RequestBody FeedbackRequest request) {
         Workout workout = workoutMapper.toWorkout(request);
 
         return coachFeedback.getFeedback(workout, request.tier());
     }
 
     @PostMapping(value = "/v2/feedback", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> generateFeedbackStream(@RequestBody FeedbackRequest request) {
+    public SseEmitter generateFeedbackStream(@RequestBody FeedbackRequest request) {
+
         Workout workout = workoutMapper.toWorkout(request);
 
-        return coachFeedback.getFeedbackStream(workout, request.tier());
+        SseEmitter emitter = new SseEmitter(0L);
+
+        Thread.startVirtualThread(() -> {
+            try {
+                coachFeedback.getFeedbackStream(
+                        workout, request.tier(), chunk -> send(emitter, chunk));
+                emitter.complete();
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+            }
+        });
+
+        return emitter;
+    }
+
+    private void send(SseEmitter emitter, String chunk) {
+        try {
+            emitter.send(SseEmitter.event().data(chunk));
+        } catch (IOException e) {
+            throw new IllegalStateException("SSE 응답 전송에 실패했습니다.", e);
+        }
     }
 
 }

@@ -7,8 +7,8 @@ import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.Workout;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.util.function.Consumer;
 
 @Service
 @RequiredArgsConstructor
@@ -19,15 +19,15 @@ public class CoachFeedbackService implements CoachFeedback {
     private final AiPromptBuilder aiPromptBuilder;
 
     @Override
-    public Mono<String> getFeedback(Workout workout, AthleteTier tier) {
-        return Mono.fromSupplier(() -> aiPromptBuilder.build(workout, tier))
-                .flatMap(aiSender::execute);
+    public String getFeedback(Workout workout, AthleteTier tier) {
+        String prompt = aiPromptBuilder.build(workout, tier);
+        return aiSender.execute(prompt);
     }
 
     @Override
-    public Flux<String> getFeedbackStream(Workout workout, AthleteTier tier) {
-        return Mono.fromSupplier(() -> aiPromptBuilder.build(workout, tier))
-                .flatMapMany(aiSender::sendStream);
+    public void getFeedbackStream(Workout workout, AthleteTier tier, Consumer<String> chunkConsumer) {
+        String prompt = aiPromptBuilder.build(workout, tier);
+        aiSender.sendStream(prompt, chunkConsumer);
     }
 
 }

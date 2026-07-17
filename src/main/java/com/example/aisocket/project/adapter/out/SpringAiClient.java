@@ -8,11 +8,9 @@ import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 @Component
 @RequiredArgsConstructor
@@ -21,27 +19,24 @@ public class SpringAiClient implements AiSender {
     private final OpenAiChatModel chatModel;
 
     @Override
-    public Mono<String> execute(String promptText) {
-        return Mono.fromCallable(() -> {
-                    Prompt prompt = new Prompt(promptText);
-                    ChatResponse response = chatModel.call(prompt);
-                    return response.getResult().getOutput().getText();
-                })
-                .subscribeOn(Schedulers.boundedElastic());
+    public String execute(String promptText) {
+        Prompt prompt = new Prompt(promptText);
+        ChatResponse response = chatModel.call(prompt);
+        return response.getResult().getOutput().getText();
     }
 
     @Override
-    public Flux<String> sendStream(String promptText) {
+    public void sendStream(String promptText, Consumer<String> chunkConsumer) {
         Prompt prompt = new Prompt(promptText);
 
-        return chatModel.stream(prompt)
-                .flatMap(response -> Optional.ofNullable(response)
+        chatModel.stream(prompt)
+                .toIterable()
+                .forEach(response -> Optional.ofNullable(response)
                         .map(ChatResponse::getResult)
                         .map(Generation::getOutput)
                         .map(AssistantMessage::getText)
                         .filter(text -> !text.isEmpty())
-                        .map(Flux::just)
-                        .orElseGet(Flux::empty)
+                        .ifPresent(chunkConsumer)
                 );
     }
 
