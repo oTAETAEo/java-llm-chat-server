@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class JpaRunningWorkoutRecordPersistenceAdapter implements RunningWorkoutRepository {
+public class RunningWorkoutRecordPersistenceAdapter implements RunningWorkoutRepository {
 
-    private final JpaRunningWorkoutRecordRepository repository;
+    private final RunningWorkoutRecordRepository repository;
 
     @Override
     public Long save(RunningWorkout workout, AthleteTier tier) {

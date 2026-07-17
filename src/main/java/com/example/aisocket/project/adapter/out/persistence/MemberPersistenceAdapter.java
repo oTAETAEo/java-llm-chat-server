@@ -1,6 +1,6 @@
 package com.example.aisocket.project.adapter.out.persistence;
 
-import com.example.aisocket.project.application.out.MemberRepository;
+import com.example.aisocket.project.application.out.MemberFinder;
 import com.example.aisocket.project.domain.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -9,9 +9,9 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class JpaMemberPersistenceAdapter implements MemberRepository {
+public class MemberPersistenceAdapter implements MemberFinder {
 
-    private final JpaMemberRepository repository;
+    private final MemberRepository repository;
 
     @Override
     public Member save(Member member) {
