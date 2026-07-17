@@ -1,5 +1,6 @@
 package com.example.aisocket.project.adapter.in;
 
+import com.example.aisocket.project.adapter.in.mapper.WorkoutMapper;
 import com.example.aisocket.project.application.in.CoachFeedback;
 import com.example.aisocket.project.domain.Workout;
 import lombok.RequiredArgsConstructor;

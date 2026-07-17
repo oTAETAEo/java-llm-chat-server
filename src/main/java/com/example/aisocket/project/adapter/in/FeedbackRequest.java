@@ -34,20 +34,20 @@ public record FeedbackRequest(
         Integer steps
 ) {
 
-    CommonWorkoutCommand toCommonCommand() {
+    public CommonWorkoutCommand toCommonCommand() {
         return new CommonWorkoutCommand(
                 distance, elevGain, elevationMax, movingTime, calories,
                 avgCadence, maxCadence, maxHeartRate, avgHeartRate
         );
     }
 
-    CreateCyclingWorkoutCommand toCyclingCommand() {
+    public CreateCyclingWorkoutCommand toCyclingCommand() {
         return new CreateCyclingWorkoutCommand(
                 avgSpeed, maxSpeed, avgPower, maxPower, ftp
         );
     }
 
-    CreateRunningWorkoutCommand toRunningCommand() {
+    public CreateRunningWorkoutCommand toRunningCommand() {
         return new CreateRunningWorkoutCommand(
                 avgPace, maxPace, steps
         );
