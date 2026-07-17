@@ -26,7 +26,9 @@ public class CoachFeedbackController {
     @PostMapping(value = "/single/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter generateSingleWorkoutFeedbackStream(@RequestBody FeedbackRequest request) {
 
-        Member member = Member.create("temporary-user");
+        // TODO : 스프링 시큐리티 적용 시 제거
+        Member member = Member.of(1L, "temporary-user");
+
         Workout workout = workoutMapper.toWorkout(request);
         SseEmitter emitter = new SseEmitter(0L);
 
