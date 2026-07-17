@@ -1,6 +1,7 @@
 package com.example.aisocket.project.application.service;
 
 import com.example.aisocket.project.application.in.CoachFeedback;
+import com.example.aisocket.project.application.in.WorkoutVectorSaver;
 import com.example.aisocket.project.application.out.AiSender;
 import com.example.aisocket.project.application.prompt.AiPromptBuilder;
 import com.example.aisocket.project.domain.AthleteTier;
@@ -19,12 +20,12 @@ public class CoachFeedbackService implements CoachFeedback {
 
     private final AiPromptBuilder aiPromptBuilder;
 
-    private final WorkoutVectorSaveService workoutVectorSaveService;
+    private final WorkoutVectorSaver workoutVectorSaver;
 
     @Override
     public void getFeedbackStream(Member member, Workout workout, AthleteTier tier, Consumer<String> chunkConsumer) {
 
-        workoutVectorSaveService.save(member, workout, tier);
+        workoutVectorSaver.save(member, workout, tier);
 
         String prompt = aiPromptBuilder.build(workout, tier);
 
