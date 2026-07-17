@@ -15,7 +15,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/api/coach")
+@RequestMapping("/api/v1/coach/feedback")
 @RequiredArgsConstructor
 public class CoachFeedbackController {
 
@@ -23,8 +23,8 @@ public class CoachFeedbackController {
 
     private final WorkoutMapper workoutMapper;
 
-    @PostMapping(value = "/v1/feedback", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter generateFeedbackStream(@RequestBody FeedbackRequest request) {
+    @PostMapping(value = "/single/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter generateSingleWorkoutFeedbackStream(@RequestBody FeedbackRequest request) {
 
         Member member = Member.create("temporary-user");
         Workout workout = workoutMapper.toWorkout(request);
