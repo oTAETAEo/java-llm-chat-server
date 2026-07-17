@@ -33,6 +33,18 @@ public class MemberEntity {
         );
     }
 
+    public static MemberEntity reference(Member member) {
+
+        if (member.getId() == null) {
+            throw new IllegalArgumentException("회원 ID는 운동 기록 연관관계 저장에 필수 값입니다.");
+        }
+
+        return new MemberEntity(
+                member.getId(),
+                member.getNickname()
+        );
+    }
+
     public Member toDomain() {
         return Member.of(id, nickname);
     }

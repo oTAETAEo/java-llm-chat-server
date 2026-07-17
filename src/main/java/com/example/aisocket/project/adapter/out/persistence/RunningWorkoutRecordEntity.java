@@ -1,6 +1,7 @@
 package com.example.aisocket.project.adapter.out.persistence;
 
 import com.example.aisocket.project.domain.AthleteTier;
+import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.RunningWorkout;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -48,15 +49,11 @@ public class RunningWorkoutRecordEntity {
     private Double maxPace;
     private Integer steps;
 
-    public static RunningWorkoutRecordEntity from(RunningWorkout workout, AthleteTier tier) {
-        return from(workout, tier, null);
-    }
-
-    public static RunningWorkoutRecordEntity from(RunningWorkout workout, AthleteTier tier, MemberEntity member) {
+    public static RunningWorkoutRecordEntity from(RunningWorkout workout, AthleteTier tier, Member member) {
         return new RunningWorkoutRecordEntity(
                 null,
                 tier,
-                member,
+                MemberEntity.reference(member),
                 workout.getDistance(),
                 workout.getElevGain(),
                 workout.getElevationMax(),

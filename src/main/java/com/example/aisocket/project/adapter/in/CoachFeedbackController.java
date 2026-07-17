@@ -2,6 +2,7 @@ package com.example.aisocket.project.adapter.in;
 
 import com.example.aisocket.project.adapter.in.mapper.WorkoutMapper;
 import com.example.aisocket.project.application.in.CoachFeedback;
+import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.Workout;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -24,22 +25,24 @@ public class CoachFeedbackController {
 
     @PostMapping("/v1/feedback")
     public String generateFeedback(@RequestBody FeedbackRequest request) {
+
+        Member member = Member.create("temporary-user");
         Workout workout = workoutMapper.toWorkout(request);
 
-        return coachFeedback.getFeedback(workout, request.tier());
+        return coachFeedback.getFeedback(member, workout, request.tier());
     }
 
     @PostMapping(value = "/v2/feedback", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter generateFeedbackStream(@RequestBody FeedbackRequest request) {
 
+        Member member = Member.create("temporary-user");
         Workout workout = workoutMapper.toWorkout(request);
-
         SseEmitter emitter = new SseEmitter(0L);
 
         Thread.startVirtualThread(() -> {
             try {
                 coachFeedback.getFeedbackStream(
-                        workout, request.tier(), chunk -> send(emitter, chunk));
+                        member, workout, request.tier(), chunk -> send(emitter, chunk));
                 emitter.complete();
             } catch (Exception e) {
                 emitter.completeWithError(e);
