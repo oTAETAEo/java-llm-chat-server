@@ -22,16 +22,6 @@ public class CoachFeedbackService implements CoachFeedback {
     private final WorkoutVectorSaveService workoutVectorSaveService;
 
     @Override
-    public String getFeedback(Member member, Workout workout, AthleteTier tier) {
-
-        workoutVectorSaveService.save(member, workout, tier);
-
-        String prompt = aiPromptBuilder.build(workout, tier);
-
-        return aiSender.execute(prompt);
-    }
-
-    @Override
     public void getFeedbackStream(Member member, Workout workout, AthleteTier tier, Consumer<String> chunkConsumer) {
 
         workoutVectorSaveService.save(member, workout, tier);

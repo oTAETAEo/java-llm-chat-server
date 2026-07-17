@@ -8,8 +8,6 @@ import java.util.function.Consumer;
 
 public interface CoachFeedback {
 
-    String getFeedback(Member member, Workout workout, AthleteTier tier);
-
     void getFeedbackStream(Member member, Workout workout, AthleteTier tier, Consumer<String> chunkConsumer);
 
 }

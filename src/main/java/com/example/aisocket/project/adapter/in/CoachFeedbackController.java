@@ -23,16 +23,7 @@ public class CoachFeedbackController {
 
     private final WorkoutMapper workoutMapper;
 
-    @PostMapping("/v1/feedback")
-    public String generateFeedback(@RequestBody FeedbackRequest request) {
-
-        Member member = Member.create("temporary-user");
-        Workout workout = workoutMapper.toWorkout(request);
-
-        return coachFeedback.getFeedback(member, workout, request.tier());
-    }
-
-    @PostMapping(value = "/v2/feedback", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/v1/feedback", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter generateFeedbackStream(@RequestBody FeedbackRequest request) {
 
         Member member = Member.create("temporary-user");
