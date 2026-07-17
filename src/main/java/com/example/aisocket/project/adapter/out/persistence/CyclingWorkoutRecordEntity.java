@@ -1,13 +1,15 @@
 package com.example.aisocket.project.adapter.out.persistence;
 
-import com.example.aisocket.project.adapter.in.FeedbackRequest;
 import com.example.aisocket.project.domain.AthleteTier;
+import com.example.aisocket.project.domain.CyclingWorkout;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -28,6 +30,10 @@ public class CyclingWorkoutRecordEntity {
     @Enumerated(EnumType.STRING)
     private AthleteTier tier;
 
+    @ManyToOne
+    @JoinColumn(name = "member_id")
+    private MemberEntity member;
+
     private Double distance;
     private Double elevGain;
     private Double elevationMax;
@@ -44,24 +50,29 @@ public class CyclingWorkoutRecordEntity {
     private Double maxPower;
     private Double ftp;
 
-    public static CyclingWorkoutRecordEntity from(FeedbackRequest request) {
+    public static CyclingWorkoutRecordEntity from(CyclingWorkout workout, AthleteTier tier) {
+        return from(workout, tier, null);
+    }
+
+    public static CyclingWorkoutRecordEntity from(CyclingWorkout workout, AthleteTier tier, MemberEntity member) {
         return new CyclingWorkoutRecordEntity(
                 null,
-                request.tier(),
-                request.distance(),
-                request.elevGain(),
-                request.elevationMax(),
-                request.movingTime(),
-                request.calories(),
-                request.avgCadence(),
-                request.maxCadence(),
-                request.maxHeartRate(),
-                request.avgHeartRate(),
-                request.avgSpeed(),
-                request.maxSpeed(),
-                request.avgPower(),
-                request.maxPower(),
-                request.ftp()
+                tier,
+                member,
+                workout.getDistance(),
+                workout.getElevGain(),
+                workout.getElevationMax(),
+                workout.getMovingTime(),
+                workout.getCalories(),
+                workout.getAvgCadence(),
+                workout.getMaxCadence(),
+                workout.getMaxHeartRate(),
+                workout.getAvgHeartRate(),
+                workout.getAvgSpeed(),
+                workout.getMaxSpeed(),
+                workout.getAvgPower(),
+                workout.getMaxPower(),
+                workout.getFtp()
         );
     }
 }

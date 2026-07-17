@@ -1,13 +1,15 @@
 package com.example.aisocket.project.adapter.out.persistence;
 
-import com.example.aisocket.project.adapter.in.FeedbackRequest;
 import com.example.aisocket.project.domain.AthleteTier;
+import com.example.aisocket.project.domain.RunningWorkout;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -28,6 +30,10 @@ public class RunningWorkoutRecordEntity {
     @Enumerated(EnumType.STRING)
     private AthleteTier tier;
 
+    @ManyToOne
+    @JoinColumn(name = "member_id")
+    private MemberEntity member;
+
     private Double distance;
     private Double elevGain;
     private Double elevationMax;
@@ -42,22 +48,27 @@ public class RunningWorkoutRecordEntity {
     private Double maxPace;
     private Integer steps;
 
-    public static RunningWorkoutRecordEntity from(FeedbackRequest request) {
+    public static RunningWorkoutRecordEntity from(RunningWorkout workout, AthleteTier tier) {
+        return from(workout, tier, null);
+    }
+
+    public static RunningWorkoutRecordEntity from(RunningWorkout workout, AthleteTier tier, MemberEntity member) {
         return new RunningWorkoutRecordEntity(
                 null,
-                request.tier(),
-                request.distance(),
-                request.elevGain(),
-                request.elevationMax(),
-                request.movingTime(),
-                request.calories(),
-                request.avgCadence(),
-                request.maxCadence(),
-                request.maxHeartRate(),
-                request.avgHeartRate(),
-                request.avgPace(),
-                request.maxPace(),
-                request.steps()
+                tier,
+                member,
+                workout.getDistance(),
+                workout.getElevGain(),
+                workout.getElevationMax(),
+                workout.getMovingTime(),
+                workout.getCalories(),
+                workout.getAvgCadence(),
+                workout.getMaxCadence(),
+                workout.getMaxHeartRate(),
+                workout.getAvgHeartRate(),
+                workout.getAvgPace(),
+                workout.getMaxPace(),
+                workout.getSteps()
         );
     }
 }

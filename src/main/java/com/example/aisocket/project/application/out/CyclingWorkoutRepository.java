@@ -1,9 +1,10 @@
 package com.example.aisocket.project.application.out;
 
-import com.example.aisocket.project.adapter.in.FeedbackRequest;
+import com.example.aisocket.project.domain.AthleteTier;
+import com.example.aisocket.project.domain.CyclingWorkout;
 
 public interface CyclingWorkoutRepository {
 
-    void save(FeedbackRequest request);
+    void save(CyclingWorkout workout, AthleteTier tier);
 
 }
