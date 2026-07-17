@@ -4,7 +4,7 @@ import com.example.aisocket.project.domain.Member;
 
 import java.util.Optional;
 
-public interface MemberFinder {
+public interface MemberRepository {
 
     Member save(Member member);
 

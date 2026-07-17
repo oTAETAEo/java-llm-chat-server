@@ -14,7 +14,7 @@ import java.util.stream.IntStream;
 
 @Component
 @RequiredArgsConstructor
-public class WorkoutVectorPersistenceAdapter implements WorkoutVectorRepository {
+public class WorkoutVectorRepositoryAdapter implements WorkoutVectorRepository {
 
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
