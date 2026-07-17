@@ -4,6 +4,7 @@ import com.example.aisocket.project.application.in.CoachFeedback;
 import com.example.aisocket.project.application.out.AiSender;
 import com.example.aisocket.project.application.prompt.AiPromptBuilder;
 import com.example.aisocket.project.domain.AthleteTier;
+import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.Workout;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,15 +19,25 @@ public class CoachFeedbackService implements CoachFeedback {
 
     private final AiPromptBuilder aiPromptBuilder;
 
+    private final WorkoutVectorSaveService workoutVectorSaveService;
+
     @Override
-    public String getFeedback(Workout workout, AthleteTier tier) {
+    public String getFeedback(Member member, Workout workout, AthleteTier tier) {
+
+        workoutVectorSaveService.save(member, workout, tier);
+
         String prompt = aiPromptBuilder.build(workout, tier);
+
         return aiSender.execute(prompt);
     }
 
     @Override
-    public void getFeedbackStream(Workout workout, AthleteTier tier, Consumer<String> chunkConsumer) {
+    public void getFeedbackStream(Member member, Workout workout, AthleteTier tier, Consumer<String> chunkConsumer) {
+
+        workoutVectorSaveService.save(member, workout, tier);
+
         String prompt = aiPromptBuilder.build(workout, tier);
+
         aiSender.sendStream(prompt, chunkConsumer);
     }
 
