@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 		"spring.datasource.driver-class-name=org.h2.Driver",
 		"spring.datasource.username=sa",
 		"spring.datasource.password=",
+		"spring.sql.init.mode=never",
 		"spring.jpa.hibernate.ddl-auto=create-drop",
 		"spring.ai.openai.api-key=test-api-key",
 		"app.vector-store.initialize-schema=false"
