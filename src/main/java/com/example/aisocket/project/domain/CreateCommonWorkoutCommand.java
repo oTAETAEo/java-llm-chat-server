@@ -1,7 +1,11 @@
 package com.example.aisocket.project.domain;
 
+import java.time.LocalDateTime;
+
 public record CreateCommonWorkoutCommand(
 
+        LocalDateTime startedAt,
+        LocalDateTime endedAt,
         Double distance,
         Double elevGain,
         Double elevationMax,

@@ -17,6 +17,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Entity
 @Table(name = "cycling_workout_record")
@@ -35,6 +37,8 @@ public class CyclingWorkoutRecordEntity {
     @JoinColumn(name = "member_id")
     private MemberEntity member;
 
+    private LocalDateTime startedAt;
+    private LocalDateTime endedAt;
     private Double distance;
     private Double elevGain;
     private Double elevationMax;
@@ -56,6 +60,8 @@ public class CyclingWorkoutRecordEntity {
                 null,
                 tier,
                 MemberEntity.reference(member),
+                workout.getStartedAt(),
+                workout.getEndedAt(),
                 workout.getDistance(),
                 workout.getElevGain(),
                 workout.getElevationMax(),

@@ -6,11 +6,15 @@ import com.example.aisocket.project.domain.CreateCyclingWorkoutCommand;
 import com.example.aisocket.project.domain.CreateRunningWorkoutCommand;
 import com.example.aisocket.project.domain.WorkOutType;
 
+import java.time.LocalDateTime;
+
 public record FeedbackRequest(
 
         WorkOutType workOutType,
         AthleteTier tier,
 
+        LocalDateTime startedAt,
+        LocalDateTime endedAt,
         Double distance,
         Double elevGain,
         Double elevationMax,
@@ -36,7 +40,7 @@ public record FeedbackRequest(
 
     public CreateCommonWorkoutCommand toCommonCommand() {
         return new CreateCommonWorkoutCommand(
-                distance, elevGain, elevationMax, movingTime, calories,
+                startedAt, endedAt, distance, elevGain, elevationMax, movingTime, calories,
                 avgCadence, maxCadence, maxHeartRate, avgHeartRate
         );
     }

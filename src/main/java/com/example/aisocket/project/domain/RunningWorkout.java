@@ -2,9 +2,13 @@ package com.example.aisocket.project.domain;
 
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 public class RunningWorkout implements Workout {
 
+    private final LocalDateTime startedAt;
+    private final LocalDateTime endedAt;
     private final Double distance;
     private final Double elevGain;
     private final Double elevationMax;
@@ -24,6 +28,8 @@ public class RunningWorkout implements Workout {
 
     private RunningWorkout(CreateCommonWorkoutCommand workoutCommand, CreateRunningWorkoutCommand runningWorkoutCommand) {
 
+        this.startedAt = workoutCommand.startedAt();
+        this.endedAt = workoutCommand.endedAt();
         this.distance = workoutCommand.distance();
         this.elevGain = workoutCommand.elevGain();
         this.elevationMax = workoutCommand.elevationMax();
@@ -43,6 +49,15 @@ public class RunningWorkout implements Workout {
 
     @Override
     public void validate() {
+        if (startedAt == null) {
+            throw new IllegalArgumentException("운동 시작 시간(startedAt)은 필수 값입니다.");
+        }
+        if (endedAt == null) {
+            throw new IllegalArgumentException("운동 종료 시간(endedAt)은 필수 값입니다.");
+        }
+        if (endedAt.isBefore(startedAt)) {
+            throw new IllegalArgumentException("운동 종료 시간(endedAt)은 시작 시간(startedAt)보다 빠를 수 없습니다.");
+        }
         if (movingTime != null && movingTime <= 0) {
             throw new IllegalArgumentException("운동 시간(movingTime)은 0보다 커야 합니다.");
         }

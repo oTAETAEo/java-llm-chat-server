@@ -54,6 +54,8 @@ public class WorkoutVectorSaveService implements WorkoutVectorSaver {
         Map<String, Object> metadata = new LinkedHashMap<>();
         metadata.put("tier", tier);
         metadata.put("workoutType", workout.getWorkOutType());
+        metadata.put("startedAt", workout.getStartedAt());
+        metadata.put("endedAt", workout.getEndedAt());
         metadata.put("distance", workout.getDistance());
         metadata.put("movingTime", workout.getMovingTime());
         metadata.put("calories", workout.getCalories());

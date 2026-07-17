@@ -24,6 +24,8 @@ public class CyclingWorkoutEmbeddingContentBuilder implements WorkoutEmbeddingCo
                 [자전거 운동 기록]
                 사용자 등급: %s
                 운동 타입: %s
+                운동 시작 시간: %s
+                운동 종료 시간: %s
                 거리: %.2f km
                 운동 시간: %d 분
                 소모 칼로리: %.1f kcal
@@ -42,6 +44,8 @@ public class CyclingWorkoutEmbeddingContentBuilder implements WorkoutEmbeddingCo
                 """.formatted(
                 tier,
                 cyclingWorkout.getWorkOutType(),
+                cyclingWorkout.getStartedAt(),
+                cyclingWorkout.getEndedAt(),
                 cyclingWorkout.getDistance(),
                 cyclingWorkout.getMovingTime(),
                 cyclingWorkout.getCalories(),

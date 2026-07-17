@@ -1,7 +1,11 @@
 package com.example.aisocket.project.domain;
 
+import java.time.LocalDateTime;
+
 public interface Workout {
 
+    LocalDateTime getStartedAt();
+    LocalDateTime getEndedAt();
     Double getDistance();
     Double getElevGain();
     Double getElevationMax();
