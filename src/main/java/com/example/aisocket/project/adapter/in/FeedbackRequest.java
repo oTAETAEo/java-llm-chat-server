@@ -1,7 +1,7 @@
 package com.example.aisocket.project.adapter.in;
 
 import com.example.aisocket.project.domain.AthleteTier;
-import com.example.aisocket.project.domain.CommonWorkoutCommand;
+import com.example.aisocket.project.domain.CreateCommonWorkoutCommand;
 import com.example.aisocket.project.domain.CreateCyclingWorkoutCommand;
 import com.example.aisocket.project.domain.CreateRunningWorkoutCommand;
 import com.example.aisocket.project.domain.WorkOutType;
@@ -34,8 +34,8 @@ public record FeedbackRequest(
         Integer steps
 ) {
 
-    public CommonWorkoutCommand toCommonCommand() {
-        return new CommonWorkoutCommand(
+    public CreateCommonWorkoutCommand toCommonCommand() {
+        return new CreateCommonWorkoutCommand(
                 distance, elevGain, elevationMax, movingTime, calories,
                 avgCadence, maxCadence, maxHeartRate, avgHeartRate
         );

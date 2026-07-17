@@ -21,11 +21,11 @@ public class CyclingWorkout implements Workout {
     private final Double maxPower;
     private final Double ftp;
 
-    public static CyclingWorkout of(CommonWorkoutCommand workoutCommand, CreateCyclingWorkoutCommand cycleWorkoutCommand){
+    public static CyclingWorkout of(CreateCommonWorkoutCommand workoutCommand, CreateCyclingWorkoutCommand cycleWorkoutCommand){
         return new CyclingWorkout(workoutCommand, cycleWorkoutCommand);
     }
 
-    private CyclingWorkout(CommonWorkoutCommand workoutCommand, CreateCyclingWorkoutCommand cycleWorkoutCommand) {
+    private CyclingWorkout(CreateCommonWorkoutCommand workoutCommand, CreateCyclingWorkoutCommand cycleWorkoutCommand) {
 
         this.distance = workoutCommand.distance();
         this.elevGain = workoutCommand.elevGain();
