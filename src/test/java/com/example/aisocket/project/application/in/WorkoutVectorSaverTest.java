@@ -2,7 +2,6 @@ package com.example.aisocket.project.application.in;
 
 import com.example.aisocket.project.SpringBootIntegrationTestSupport;
 import com.example.aisocket.project.application.out.EmbeddingGenerator;
-import com.example.aisocket.project.application.out.MemberRepository;
 import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.CreateCommonWorkoutCommand;
 import com.example.aisocket.project.domain.CreateRunningWorkoutCommand;
@@ -32,9 +31,6 @@ class WorkoutVectorSaverTest extends SpringBootIntegrationTestSupport {
     private WorkoutVectorSaver workoutVectorSaver;
 
     @Autowired
-    private MemberRepository memberRepository;
-
-    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
@@ -45,16 +41,11 @@ class WorkoutVectorSaverTest extends SpringBootIntegrationTestSupport {
     void saveRunningWorkoutVector() {
         given(embeddingGenerator.generate(anyString())).willReturn(testEmbedding());
 
-        Member member = memberRepository.save(Member.create("runner"));
+        Member member = Member.of(1L, "runner");
         RunningWorkout workout = runningWorkout();
 
-        UUID vectorId = workoutVectorSaver.save(member, workout, AthleteTier.AMATEUR);
+        UUID vectorId = workoutVectorSaver.save(member, 10L, workout, AthleteTier.AMATEUR);
 
-        Long runningRecordCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM running_workout WHERE member_id = ?",
-                Long.class,
-                member.getId()
-        );
         Map<String, Object> vectorRow = jdbcTemplate.queryForMap("""
                         SELECT member_id, workout_id, workout_type, content, metadata::text AS metadata
                         FROM workout_vector_store
@@ -63,10 +54,9 @@ class WorkoutVectorSaverTest extends SpringBootIntegrationTestSupport {
                 vectorId.toString()
         );
 
-        assertThat(runningRecordCount).isEqualTo(1L);
         assertThat(vectorRow.get("member_id")).isEqualTo(member.getId());
         assertThat(vectorRow.get("workout_type")).isEqualTo(WorkOutType.RUNNING.name());
-        assertThat(vectorRow.get("workout_id")).isNotNull();
+        assertThat(vectorRow.get("workout_id")).isEqualTo(10L);
         assertThat(vectorRow.get("content").toString()).contains("[러닝 운동 기록]", "거리: 8.20 km");
         assertThat(vectorRow.get("metadata").toString()).contains("\"workoutType\": \"RUNNING\"");
     }
@@ -76,13 +66,12 @@ class WorkoutVectorSaverTest extends SpringBootIntegrationTestSupport {
     void saveRunningWorkoutVectorWhenEmbeddingGenerationFails() {
         RuntimeException embeddingException = new RuntimeException("embedding failed");
         given(embeddingGenerator.generate(anyString())).willThrow(embeddingException);
-        Member member = memberRepository.save(Member.create("runner"));
+        Member member = Member.of(1L, "runner");
         RunningWorkout workout = runningWorkout();
 
-        assertThatThrownBy(() -> workoutVectorSaver.save(member, workout, AthleteTier.AMATEUR))
+        assertThatThrownBy(() -> workoutVectorSaver.save(member, 10L, workout, AthleteTier.AMATEUR))
                 .isSameAs(embeddingException);
 
-        assertThat(countRows("running_workout")).isEqualTo(1L);
         assertThat(countRows("workout_vector_store")).isZero();
         verify(embeddingGenerator).generate(anyString());
     }
@@ -91,10 +80,10 @@ class WorkoutVectorSaverTest extends SpringBootIntegrationTestSupport {
     @DisplayName("벡터 저장에 실패하면 예외를 상위로 전파한다")
     void saveRunningWorkoutVectorWhenVectorStoreFails() {
         given(embeddingGenerator.generate(anyString())).willReturn(new float[]{0.1f, 0.2f, 0.3f});
-        Member member = memberRepository.save(Member.create("runner"));
+        Member member = Member.of(1L, "runner");
         RunningWorkout workout = runningWorkout();
 
-        assertThatThrownBy(() -> workoutVectorSaver.save(member, workout, AthleteTier.AMATEUR))
+        assertThatThrownBy(() -> workoutVectorSaver.save(member, 10L, workout, AthleteTier.AMATEUR))
                 .isInstanceOf(DataAccessException.class);
 
         verify(embeddingGenerator).generate(anyString());

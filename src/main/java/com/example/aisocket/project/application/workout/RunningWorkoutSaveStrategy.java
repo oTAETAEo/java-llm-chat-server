@@ -1,4 +1,4 @@
-package com.example.aisocket.project.application.record;
+package com.example.aisocket.project.application.workout;
 
 import com.example.aisocket.project.application.out.RunningWorkoutRepository;
 import com.example.aisocket.project.domain.AthleteTier;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class RunningWorkoutSaver implements WorkoutSaver {
+public class RunningWorkoutSaveStrategy implements WorkoutSaveStrategy {
 
     private final RunningWorkoutRepository runningWorkoutRepository;
 

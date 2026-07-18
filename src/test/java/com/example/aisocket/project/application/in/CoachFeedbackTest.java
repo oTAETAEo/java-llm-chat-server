@@ -16,7 +16,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -32,6 +32,9 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
 
     @Autowired
     private CoachFeedback coachFeedback;
+
+    @MockitoBean
+    private WorkoutRecordSaver workoutRecordSaver;
 
     @MockitoBean
     private WorkoutVectorSaver workoutVectorSaver;
@@ -44,8 +47,8 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
     void getFeedbackStream() {
         Member member = Member.of(1L, "runner");
         RunningWorkout workout = runningWorkout();
-        given(workoutVectorSaver.save(member, workout, AthleteTier.AMATEUR))
-                .willReturn(UUID.randomUUID());
+        given(workoutRecordSaver.save(member, workout, AthleteTier.AMATEUR))
+                .willReturn(10L);
         doAnswer(invocation -> {
             Consumer<String> consumer = invocation.getArgument(1);
             consumer.accept("첫 번째 응답");
@@ -57,8 +60,10 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
         coachFeedback.getFeedbackStream(member, workout, AthleteTier.AMATEUR, chunks::add);
 
         ArgumentCaptor<String> promptCaptor = ArgumentCaptor.forClass(String.class);
-        verify(workoutVectorSaver).save(member, workout, AthleteTier.AMATEUR);
-        verify(aiSender).sendStream(promptCaptor.capture(), any());
+        var inOrder = inOrder(workoutRecordSaver, workoutVectorSaver, aiSender);
+        inOrder.verify(workoutRecordSaver).save(member, workout, AthleteTier.AMATEUR);
+        inOrder.verify(workoutVectorSaver).save(member, 10L, workout, AthleteTier.AMATEUR);
+        inOrder.verify(aiSender).sendStream(promptCaptor.capture(), any());
         assertThat(promptCaptor.getValue()).contains("[기본 운동 통계 정보]", "[러닝 전용 분석 지표]");
         assertThat(chunks).containsExactly("첫 번째 응답", "두 번째 응답");
     }
@@ -69,7 +74,9 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
         Member member = Member.of(1L, "runner");
         RunningWorkout workout = runningWorkout();
         RuntimeException saveException = new RuntimeException("vector save failed");
-        given(workoutVectorSaver.save(member, workout, AthleteTier.AMATEUR))
+        given(workoutRecordSaver.save(member, workout, AthleteTier.AMATEUR))
+                .willReturn(10L);
+        given(workoutVectorSaver.save(member, 10L, workout, AthleteTier.AMATEUR))
                 .willThrow(saveException);
 
         assertThatThrownBy(() ->
@@ -77,7 +84,8 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
                 })
         ).isSameAs(saveException);
 
-        verify(workoutVectorSaver).save(member, workout, AthleteTier.AMATEUR);
+        verify(workoutRecordSaver).save(member, workout, AthleteTier.AMATEUR);
+        verify(workoutVectorSaver).save(member, 10L, workout, AthleteTier.AMATEUR);
         verifyNoInteractions(aiSender);
     }
 
@@ -87,8 +95,8 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
         Member member = Member.of(1L, "runner");
         RunningWorkout workout = runningWorkout();
         RuntimeException aiException = new RuntimeException("ai stream failed");
-        given(workoutVectorSaver.save(member, workout, AthleteTier.AMATEUR))
-                .willReturn(UUID.randomUUID());
+        given(workoutRecordSaver.save(member, workout, AthleteTier.AMATEUR))
+                .willReturn(10L);
         doAnswer(invocation -> {
             throw aiException;
         }).when(aiSender).sendStream(anyString(), any());
@@ -98,8 +106,27 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
                 })
         ).isSameAs(aiException);
 
-        verify(workoutVectorSaver).save(member, workout, AthleteTier.AMATEUR);
+        verify(workoutRecordSaver).save(member, workout, AthleteTier.AMATEUR);
+        verify(workoutVectorSaver).save(member, 10L, workout, AthleteTier.AMATEUR);
         verify(aiSender).sendStream(anyString(), any());
+    }
+
+    @Test
+    @DisplayName("운동 기록 저장에 실패하면 벡터 저장과 AI 스트리밍을 호출하지 않는다")
+    void getFeedbackStreamWhenWorkoutRecordFails() {
+        Member member = Member.of(1L, "runner");
+        RunningWorkout workout = runningWorkout();
+        RuntimeException recordException = new RuntimeException("record failed");
+        given(workoutRecordSaver.save(member, workout, AthleteTier.AMATEUR))
+                .willThrow(recordException);
+
+        assertThatThrownBy(() ->
+                coachFeedback.getFeedbackStream(member, workout, AthleteTier.AMATEUR, chunk -> {
+                })
+        ).isSameAs(recordException);
+
+        verify(workoutRecordSaver).save(member, workout, AthleteTier.AMATEUR);
+        verifyNoInteractions(workoutVectorSaver, aiSender);
     }
 
     private RunningWorkout runningWorkout() {

@@ -1,4 +1,4 @@
-package com.example.aisocket.project.application.record;
+package com.example.aisocket.project.application.workout;
 
 import com.example.aisocket.project.application.out.CyclingWorkoutRepository;
 import com.example.aisocket.project.application.out.RunningWorkoutRepository;
@@ -24,14 +24,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-class WorkoutSaverRegistryTest {
+class WorkoutSaveStrategyRegistryTest {
 
     private final RunningWorkoutRepository runningWorkoutRepository = mock(RunningWorkoutRepository.class);
     private final CyclingWorkoutRepository cyclingWorkoutRepository = mock(CyclingWorkoutRepository.class);
 
-    private final WorkoutSaverRegistry registry = new WorkoutSaverRegistry(List.of(
-            new RunningWorkoutSaver(runningWorkoutRepository),
-            new CyclingWorkoutSaver(cyclingWorkoutRepository)
+    private final WorkoutSaveStrategyRegistry registry = new WorkoutSaveStrategyRegistry(List.of(
+            new RunningWorkoutSaveStrategy(runningWorkoutRepository),
+            new CyclingWorkoutSaveStrategy(cyclingWorkoutRepository)
     ));
 
     @Test

@@ -1,4 +1,4 @@
-package com.example.aisocket.project.application.record;
+package com.example.aisocket.project.application.workout;
 
 import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.Member;
@@ -12,20 +12,20 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
-public class WorkoutSaverRegistry {
+public class WorkoutSaveStrategyRegistry {
 
-    private final Map<WorkOutType, WorkoutSaver> savers;
+    private final Map<WorkOutType, WorkoutSaveStrategy> savers;
 
-    public WorkoutSaverRegistry(List<WorkoutSaver> savers) {
+    public WorkoutSaveStrategyRegistry(List<WorkoutSaveStrategy> savers) {
         this.savers = savers.stream()
                 .collect(Collectors.toMap(
-                        WorkoutSaver::supportType,
+                        WorkoutSaveStrategy::supportType,
                         Function.identity()
                 ));
     }
 
     public Long save(Member member, Workout workout, AthleteTier tier) {
-        WorkoutSaver saver = savers.get(workout.getWorkOutType());
+        WorkoutSaveStrategy saver = savers.get(workout.getWorkOutType());
         if (saver == null) {
             throw new IllegalArgumentException("지원하지 않는 운동 타입입니다: " + workout.getWorkOutType());
         }
