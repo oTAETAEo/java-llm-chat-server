@@ -24,14 +24,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-class WorkoutRecordSaverRegistryTest {
+class WorkoutSaverRegistryTest {
 
     private final RunningWorkoutRepository runningWorkoutRepository = mock(RunningWorkoutRepository.class);
     private final CyclingWorkoutRepository cyclingWorkoutRepository = mock(CyclingWorkoutRepository.class);
 
-    private final WorkoutRecordSaverRegistry registry = new WorkoutRecordSaverRegistry(List.of(
-            new RunningWorkoutRecordSaver(runningWorkoutRepository),
-            new CyclingWorkoutRecordSaver(cyclingWorkoutRepository)
+    private final WorkoutSaverRegistry registry = new WorkoutSaverRegistry(List.of(
+            new RunningWorkoutSaver(runningWorkoutRepository),
+            new CyclingWorkoutSaver(cyclingWorkoutRepository)
     ));
 
     @Test

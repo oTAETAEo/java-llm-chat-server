@@ -4,7 +4,7 @@ import com.example.aisocket.project.application.embedding.WorkoutEmbeddingConten
 import com.example.aisocket.project.application.in.WorkoutVectorSaver;
 import com.example.aisocket.project.application.out.EmbeddingGenerator;
 import com.example.aisocket.project.application.out.WorkoutVectorRepository;
-import com.example.aisocket.project.application.record.WorkoutRecordSaverRegistry;
+import com.example.aisocket.project.application.record.WorkoutSaverRegistry;
 import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.CreateWorkoutVectorCommand;
 import com.example.aisocket.project.domain.Member;
@@ -21,7 +21,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class WorkoutVectorSaveService implements WorkoutVectorSaver {
 
-    private final WorkoutRecordSaverRegistry workoutRecordSaverRegistry;
+    private final WorkoutSaverRegistry workoutSaverRegistry;
 
     private final WorkoutEmbeddingContentBuilderRegistry contentBuilderRegistry;
 
@@ -32,7 +32,7 @@ public class WorkoutVectorSaveService implements WorkoutVectorSaver {
     @Override
     public UUID save(Member member, Workout workout, AthleteTier tier) {
 
-        Long workoutId = workoutRecordSaverRegistry.save(member, workout, tier);
+        Long workoutId = workoutSaverRegistry.save(member, workout, tier);
 
         String content = contentBuilderRegistry.build(workout, tier);
 

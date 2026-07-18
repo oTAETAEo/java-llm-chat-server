@@ -51,7 +51,7 @@ class WorkoutVectorSaverTest extends SpringBootIntegrationTestSupport {
         UUID vectorId = workoutVectorSaver.save(member, workout, AthleteTier.AMATEUR);
 
         Long runningRecordCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM running_workout_record WHERE member_id = ?",
+                "SELECT COUNT(*) FROM running_workout WHERE member_id = ?",
                 Long.class,
                 member.getId()
         );
@@ -82,7 +82,7 @@ class WorkoutVectorSaverTest extends SpringBootIntegrationTestSupport {
         assertThatThrownBy(() -> workoutVectorSaver.save(member, workout, AthleteTier.AMATEUR))
                 .isSameAs(embeddingException);
 
-        assertThat(countRows("running_workout_record")).isEqualTo(1L);
+        assertThat(countRows("running_workout")).isEqualTo(1L);
         assertThat(countRows("workout_vector_store")).isZero();
         verify(embeddingGenerator).generate(anyString());
     }

@@ -1,8 +1,8 @@
 package com.example.aisocket.project.adapter.out.persistence;
 
 import com.example.aisocket.project.domain.AthleteTier;
+import com.example.aisocket.project.domain.CyclingWorkout;
 import com.example.aisocket.project.domain.Member;
-import com.example.aisocket.project.domain.RunningWorkout;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -21,10 +21,10 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@Table(name = "running_workout_record")
+@Table(name = "cycling_workout")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class RunningWorkoutRecordEntity {
+public class CyclingWorkoutEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,12 +49,14 @@ public class RunningWorkoutRecordEntity {
     private Double maxHeartRate;
     private Double avgHeartRate;
 
-    private Double avgPace;
-    private Double maxPace;
-    private Integer steps;
+    private Double avgSpeed;
+    private Double maxSpeed;
+    private Double avgPower;
+    private Double maxPower;
+    private Double ftp;
 
-    public static RunningWorkoutRecordEntity from(RunningWorkout workout, AthleteTier tier, Member member) {
-        return new RunningWorkoutRecordEntity(
+    public static CyclingWorkoutEntity from(CyclingWorkout workout, AthleteTier tier, Member member) {
+        return new CyclingWorkoutEntity(
                 null,
                 tier,
                 MemberEntity.reference(member),
@@ -69,9 +71,11 @@ public class RunningWorkoutRecordEntity {
                 workout.getMaxCadence(),
                 workout.getMaxHeartRate(),
                 workout.getAvgHeartRate(),
-                workout.getAvgPace(),
-                workout.getMaxPace(),
-                workout.getSteps()
+                workout.getAvgSpeed(),
+                workout.getMaxSpeed(),
+                workout.getAvgPower(),
+                workout.getMaxPower(),
+                workout.getFtp()
         );
     }
 }

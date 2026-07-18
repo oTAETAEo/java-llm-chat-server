@@ -9,14 +9,14 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class RunningWorkoutRecordRepositoryAdapter implements RunningWorkoutRepository {
+public class RunningWorkoutRepositoryAdapter implements RunningWorkoutRepository {
 
-    private final RunningWorkoutRecordJpaRepository repository;
+    private final RunningWorkoutJpaRepository repository;
 
     @Override
     public Long save(Member member, RunningWorkout workout, AthleteTier tier) {
-        RunningWorkoutRecordEntity savedRecord =
-                repository.save(RunningWorkoutRecordEntity.from(workout, tier, member));
+        RunningWorkoutEntity savedRecord =
+                repository.save(RunningWorkoutEntity.from(workout, tier, member));
 
         return savedRecord.getId();
     }

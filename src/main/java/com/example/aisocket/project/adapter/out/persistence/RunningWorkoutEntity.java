@@ -1,8 +1,8 @@
 package com.example.aisocket.project.adapter.out.persistence;
 
 import com.example.aisocket.project.domain.AthleteTier;
-import com.example.aisocket.project.domain.CyclingWorkout;
 import com.example.aisocket.project.domain.Member;
+import com.example.aisocket.project.domain.RunningWorkout;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -21,10 +21,10 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@Table(name = "cycling_workout_record")
+@Table(name = "running_workout")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class CyclingWorkoutRecordEntity {
+public class RunningWorkoutEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,14 +49,12 @@ public class CyclingWorkoutRecordEntity {
     private Double maxHeartRate;
     private Double avgHeartRate;
 
-    private Double avgSpeed;
-    private Double maxSpeed;
-    private Double avgPower;
-    private Double maxPower;
-    private Double ftp;
+    private Double avgPace;
+    private Double maxPace;
+    private Integer steps;
 
-    public static CyclingWorkoutRecordEntity from(CyclingWorkout workout, AthleteTier tier, Member member) {
-        return new CyclingWorkoutRecordEntity(
+    public static RunningWorkoutEntity from(RunningWorkout workout, AthleteTier tier, Member member) {
+        return new RunningWorkoutEntity(
                 null,
                 tier,
                 MemberEntity.reference(member),
@@ -71,11 +69,9 @@ public class CyclingWorkoutRecordEntity {
                 workout.getMaxCadence(),
                 workout.getMaxHeartRate(),
                 workout.getAvgHeartRate(),
-                workout.getAvgSpeed(),
-                workout.getMaxSpeed(),
-                workout.getAvgPower(),
-                workout.getMaxPower(),
-                workout.getFtp()
+                workout.getAvgPace(),
+                workout.getMaxPace(),
+                workout.getSteps()
         );
     }
 }

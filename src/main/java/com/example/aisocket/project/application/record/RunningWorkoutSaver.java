@@ -1,9 +1,9 @@
 package com.example.aisocket.project.application.record;
 
-import com.example.aisocket.project.application.out.CyclingWorkoutRepository;
+import com.example.aisocket.project.application.out.RunningWorkoutRepository;
 import com.example.aisocket.project.domain.AthleteTier;
-import com.example.aisocket.project.domain.CyclingWorkout;
 import com.example.aisocket.project.domain.Member;
+import com.example.aisocket.project.domain.RunningWorkout;
 import com.example.aisocket.project.domain.WorkOutType;
 import com.example.aisocket.project.domain.Workout;
 import lombok.RequiredArgsConstructor;
@@ -11,21 +11,21 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class CyclingWorkoutRecordSaver implements WorkoutRecordSaver {
+public class RunningWorkoutSaver implements WorkoutSaver {
 
-    private final CyclingWorkoutRepository cyclingWorkoutRepository;
+    private final RunningWorkoutRepository runningWorkoutRepository;
 
     @Override
     public WorkOutType supportType() {
-        return WorkOutType.CYCLING;
+        return WorkOutType.RUNNING;
     }
 
     @Override
     public Long save(Member member, Workout workout, AthleteTier tier) {
-        if (!(workout instanceof CyclingWorkout cyclingWorkout)) {
-            throw new IllegalArgumentException("자전거 운동 데이터가 아닙니다.");
+        if (!(workout instanceof RunningWorkout runningWorkout)) {
+            throw new IllegalArgumentException("러닝 운동 데이터가 아닙니다.");
         }
 
-        return cyclingWorkoutRepository.save(member, cyclingWorkout, tier);
+        return runningWorkoutRepository.save(member, runningWorkout, tier);
     }
 }

@@ -2,7 +2,7 @@ package com.example.aisocket.project.application.out;
 
 import com.example.aisocket.project.DataJpaTestSupport;
 import com.example.aisocket.project.adapter.out.persistence.MemberRepositoryAdapter;
-import com.example.aisocket.project.adapter.out.persistence.RunningWorkoutRecordRepositoryAdapter;
+import com.example.aisocket.project.adapter.out.persistence.RunningWorkoutRepositoryAdapter;
 import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.CreateCommonWorkoutCommand;
 import com.example.aisocket.project.domain.CreateRunningWorkoutCommand;
@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Import({
         MemberRepositoryAdapter.class,
-        RunningWorkoutRecordRepositoryAdapter.class
+        RunningWorkoutRepositoryAdapter.class
 })
 class RunningWorkoutRepositoryTest extends DataJpaTestSupport {
 
@@ -48,7 +48,7 @@ class RunningWorkoutRepositoryTest extends DataJpaTestSupport {
 
         Map<String, Object> row = jdbcTemplate.queryForMap("""
                         SELECT member_id, tier, started_at, ended_at, distance, avg_pace, steps
-                        FROM running_workout_record
+                        FROM running_workout
                         WHERE id = ?
                         """,
                 workoutId

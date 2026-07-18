@@ -12,20 +12,20 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
-public class WorkoutRecordSaverRegistry {
+public class WorkoutSaverRegistry {
 
-    private final Map<WorkOutType, WorkoutRecordSaver> savers;
+    private final Map<WorkOutType, WorkoutSaver> savers;
 
-    public WorkoutRecordSaverRegistry(List<WorkoutRecordSaver> savers) {
+    public WorkoutSaverRegistry(List<WorkoutSaver> savers) {
         this.savers = savers.stream()
                 .collect(Collectors.toMap(
-                        WorkoutRecordSaver::supportType,
+                        WorkoutSaver::supportType,
                         Function.identity()
                 ));
     }
 
     public Long save(Member member, Workout workout, AthleteTier tier) {
-        WorkoutRecordSaver saver = savers.get(workout.getWorkOutType());
+        WorkoutSaver saver = savers.get(workout.getWorkOutType());
         if (saver == null) {
             throw new IllegalArgumentException("지원하지 않는 운동 타입입니다: " + workout.getWorkOutType());
         }
