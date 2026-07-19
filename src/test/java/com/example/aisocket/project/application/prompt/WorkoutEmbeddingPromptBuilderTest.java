@@ -1,6 +1,7 @@
-package com.example.aisocket.project.application.prompt.embedding;
+package com.example.aisocket.project.application.prompt;
 
-import com.example.aisocket.project.application.prompt.WorkoutEmbeddingPromptBuilder;
+import com.example.aisocket.project.application.prompt.embedding.CyclingWorkoutEmbeddingPromptStrategy;
+import com.example.aisocket.project.application.prompt.embedding.RunningWorkoutEmbeddingPromptStrategy;
 import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.CreateCommonWorkoutCommand;
 import com.example.aisocket.project.domain.CreateCyclingWorkoutCommand;
