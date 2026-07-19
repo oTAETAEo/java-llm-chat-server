@@ -1,6 +1,6 @@
 package com.example.aisocket.project.application.service;
 
-import com.example.aisocket.project.application.embedding.WorkoutEmbeddingContentBuilderRegistry;
+import com.example.aisocket.project.application.prompt.embedding.WorkoutEmbeddingContentBuilderRegistry;
 import com.example.aisocket.project.application.in.WorkoutVectorSaver;
 import com.example.aisocket.project.application.out.EmbeddingGenerator;
 import com.example.aisocket.project.application.out.WorkoutVectorRepository;
