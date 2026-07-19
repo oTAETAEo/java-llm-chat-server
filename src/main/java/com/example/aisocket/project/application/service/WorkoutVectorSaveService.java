@@ -11,6 +11,7 @@ import com.example.aisocket.project.domain.Workout;
 import com.example.aisocket.project.domain.WorkoutVector;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -27,6 +28,7 @@ public class WorkoutVectorSaveService implements WorkoutVectorSaver {
     private final WorkoutVectorRepository workoutVectorRepository;
 
     @Override
+    @Transactional
     public UUID save(Member member, Long workoutId, Workout workout, AthleteTier tier) {
 
         String content = workoutEmbeddingPromptBuilder.build(workout, tier);

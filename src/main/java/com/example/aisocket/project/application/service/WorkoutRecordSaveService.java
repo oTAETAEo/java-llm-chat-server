@@ -7,6 +7,7 @@ import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.Workout;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +16,7 @@ public class WorkoutRecordSaveService implements WorkoutRecordSaver {
     private final WorkoutSaveStrategyRegistry workoutSaveStrategyRegistry;
 
     @Override
+    @Transactional
     public Long save(Member member, Workout workout, AthleteTier tier) {
         return workoutSaveStrategyRegistry.save(member, workout, tier);
     }
