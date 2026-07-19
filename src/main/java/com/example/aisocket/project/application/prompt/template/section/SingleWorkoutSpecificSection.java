@@ -1,7 +1,9 @@
-package com.example.aisocket.project.application.prompt;
+package com.example.aisocket.project.application.prompt.template.section;
 
+import com.example.aisocket.project.application.prompt.workout.WorkoutPromptSectionBuilder;
 import com.example.aisocket.project.domain.WorkOutType;
 import com.example.aisocket.project.domain.Workout;
+import com.example.aisocket.project.application.prompt.template.SingleWorkoutPromptContext;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.example.aisocket.project.application.prompt;
+package com.example.aisocket.project.application.prompt.template;
 
 import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.Workout;

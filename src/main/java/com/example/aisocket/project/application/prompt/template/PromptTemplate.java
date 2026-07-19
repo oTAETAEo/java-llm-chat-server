@@ -1,4 +1,4 @@
-package com.example.aisocket.project.application.prompt;
+package com.example.aisocket.project.application.prompt.template;
 
 public interface PromptTemplate<C> {
 

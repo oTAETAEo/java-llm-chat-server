@@ -1,5 +1,6 @@
-package com.example.aisocket.project.application.prompt;
+package com.example.aisocket.project.application.prompt.template;
 
+import com.example.aisocket.project.application.prompt.template.section.SingleWorkoutPromptSection;
 import org.springframework.stereotype.Component;
 
 import java.util.Comparator;

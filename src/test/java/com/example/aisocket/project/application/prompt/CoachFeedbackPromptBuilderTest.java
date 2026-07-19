@@ -1,5 +1,7 @@
 package com.example.aisocket.project.application.prompt;
 
+import com.example.aisocket.project.application.prompt.workout.CyclingWorkoutPromptSectionBuilder;
+import com.example.aisocket.project.application.prompt.workout.RunningWorkoutPromptSectionBuilder;
 import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.CreateCommonWorkoutCommand;
 import com.example.aisocket.project.domain.CreateCyclingWorkoutCommand;
