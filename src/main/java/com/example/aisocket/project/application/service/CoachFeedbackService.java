@@ -4,7 +4,7 @@ import com.example.aisocket.project.application.in.CoachFeedback;
 import com.example.aisocket.project.application.in.WorkoutRecordSaver;
 import com.example.aisocket.project.application.in.WorkoutVectorSaver;
 import com.example.aisocket.project.application.out.AiSender;
-import com.example.aisocket.project.application.prompt.AiPromptBuilder;
+import com.example.aisocket.project.application.prompt.CoachFeedbackPromptBuilder;
 import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.Workout;
@@ -19,7 +19,7 @@ public class CoachFeedbackService implements CoachFeedback {
 
     private final AiSender aiSender;
 
-    private final AiPromptBuilder aiPromptBuilder;
+    private final CoachFeedbackPromptBuilder coachFeedbackPromptBuilder;
 
     private final WorkoutRecordSaver workoutRecordSaver;
 
@@ -32,7 +32,7 @@ public class CoachFeedbackService implements CoachFeedback {
 
         workoutVectorSaver.save(member, workoutId, workout, tier);
 
-        String prompt = aiPromptBuilder.build(workout, tier);
+        String prompt = coachFeedbackPromptBuilder.build(workout, tier);
 
         aiSender.sendStream(prompt, chunkConsumer);
     }

@@ -7,7 +7,7 @@ import com.example.aisocket.project.domain.Workout;
 import org.springframework.stereotype.Component;
 
 @Component
-public class RunningWorkoutEmbeddingContentBuilder implements WorkoutEmbeddingContentBuilder {
+public class RunningWorkoutEmbeddingPromptStrategy implements WorkoutEmbeddingPromptStrategy {
 
     @Override
     public WorkOutType supportType() {

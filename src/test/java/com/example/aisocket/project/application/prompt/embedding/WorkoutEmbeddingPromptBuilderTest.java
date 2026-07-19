@@ -1,8 +1,6 @@
 package com.example.aisocket.project.application.prompt.embedding;
 
-import com.example.aisocket.project.application.prompt.embedding.CyclingWorkoutEmbeddingContentBuilder;
-import com.example.aisocket.project.application.prompt.embedding.RunningWorkoutEmbeddingContentBuilder;
-import com.example.aisocket.project.application.prompt.embedding.WorkoutEmbeddingContentBuilderRegistry;
+import com.example.aisocket.project.application.prompt.WorkoutEmbeddingPromptBuilder;
 import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.CreateCommonWorkoutCommand;
 import com.example.aisocket.project.domain.CreateCyclingWorkoutCommand;
@@ -20,17 +18,17 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class WorkoutEmbeddingContentBuilderRegistryTest {
+class WorkoutEmbeddingPromptBuilderTest {
 
-    private final WorkoutEmbeddingContentBuilderRegistry registry = new WorkoutEmbeddingContentBuilderRegistry(List.of(
-            new RunningWorkoutEmbeddingContentBuilder(),
-            new CyclingWorkoutEmbeddingContentBuilder()
+    private final WorkoutEmbeddingPromptBuilder promptBuilder = new WorkoutEmbeddingPromptBuilder(List.of(
+            new RunningWorkoutEmbeddingPromptStrategy(),
+            new CyclingWorkoutEmbeddingPromptStrategy()
     ));
 
     @Test
     @DisplayName("러닝 운동에 맞는 임베딩 원문 전략을 선택한다")
     void buildRunningWorkoutContent() {
-        String content = registry.build(runningWorkout(), AthleteTier.AMATEUR);
+        String content = promptBuilder.build(runningWorkout(), AthleteTier.AMATEUR);
 
         assertThat(content)
                 .contains("[러닝 운동 기록]")
@@ -44,7 +42,7 @@ class WorkoutEmbeddingContentBuilderRegistryTest {
     @Test
     @DisplayName("자전거 운동에 맞는 임베딩 원문 전략을 선택한다")
     void buildCyclingWorkoutContent() {
-        String content = registry.build(cyclingWorkout(), AthleteTier.PRO);
+        String content = promptBuilder.build(cyclingWorkout(), AthleteTier.PRO);
 
         assertThat(content)
                 .contains("[자전거 운동 기록]")
@@ -60,7 +58,7 @@ class WorkoutEmbeddingContentBuilderRegistryTest {
     void buildUnsupportedWorkoutFails() {
         Workout unsupportedWorkout = unsupportedWorkout();
 
-        assertThatThrownBy(() -> registry.build(unsupportedWorkout, AthleteTier.AMATEUR))
+        assertThatThrownBy(() -> promptBuilder.build(unsupportedWorkout, AthleteTier.AMATEUR))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("지원하지 않는 운동 타입");
     }

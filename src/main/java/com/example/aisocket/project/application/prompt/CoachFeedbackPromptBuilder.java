@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class CoachFeedbackPromptBuilder implements AiPromptBuilder {
+public class CoachFeedbackPromptBuilder {
 
     private final PromptTemplate<SingleWorkoutPromptContext> singleWorkoutPromptTemplate;
 
@@ -36,7 +36,6 @@ public class CoachFeedbackPromptBuilder implements AiPromptBuilder {
         )));
     }
 
-    @Override
     public String build(Workout workout, AthleteTier tier) {
         return singleWorkoutPromptTemplate.render(new SingleWorkoutPromptContext(workout, tier));
     }

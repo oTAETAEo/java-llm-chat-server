@@ -1,5 +1,6 @@
-package com.example.aisocket.project.application.prompt.embedding;
+package com.example.aisocket.project.application.prompt;
 
+import com.example.aisocket.project.application.prompt.embedding.WorkoutEmbeddingPromptStrategy;
 import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.WorkOutType;
 import com.example.aisocket.project.domain.Workout;
@@ -11,24 +12,24 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
-public class WorkoutEmbeddingContentBuilderRegistry {
+public class WorkoutEmbeddingPromptBuilder {
 
-    private final Map<WorkOutType, WorkoutEmbeddingContentBuilder> builders;
+    private final Map<WorkOutType, WorkoutEmbeddingPromptStrategy> strategies;
 
-    public WorkoutEmbeddingContentBuilderRegistry(List<WorkoutEmbeddingContentBuilder> builders) {
-        this.builders = builders.stream()
+    public WorkoutEmbeddingPromptBuilder(List<WorkoutEmbeddingPromptStrategy> strategies) {
+        this.strategies = strategies.stream()
                 .collect(Collectors.toMap(
-                        WorkoutEmbeddingContentBuilder::supportType,
+                        WorkoutEmbeddingPromptStrategy::supportType,
                         Function.identity()
                 ));
     }
 
     public String build(Workout workout, AthleteTier tier) {
-        WorkoutEmbeddingContentBuilder builder = builders.get(workout.getWorkOutType());
-        if (builder == null) {
+        WorkoutEmbeddingPromptStrategy strategy = strategies.get(workout.getWorkOutType());
+        if (strategy == null) {
             throw new IllegalArgumentException("지원하지 않는 운동 타입입니다: " + workout.getWorkOutType());
         }
 
-        return builder.build(workout, tier);
+        return strategy.build(workout, tier);
     }
 }

@@ -1,6 +1,6 @@
 package com.example.aisocket.project.application.service;
 
-import com.example.aisocket.project.application.prompt.embedding.WorkoutEmbeddingContentBuilderRegistry;
+import com.example.aisocket.project.application.prompt.WorkoutEmbeddingPromptBuilder;
 import com.example.aisocket.project.application.in.WorkoutVectorSaver;
 import com.example.aisocket.project.application.out.EmbeddingGenerator;
 import com.example.aisocket.project.application.out.WorkoutVectorRepository;
@@ -20,7 +20,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class WorkoutVectorSaveService implements WorkoutVectorSaver {
 
-    private final WorkoutEmbeddingContentBuilderRegistry contentBuilderRegistry;
+    private final WorkoutEmbeddingPromptBuilder workoutEmbeddingPromptBuilder;
 
     private final EmbeddingGenerator embeddingGenerator;
 
@@ -29,7 +29,7 @@ public class WorkoutVectorSaveService implements WorkoutVectorSaver {
     @Override
     public UUID save(Member member, Long workoutId, Workout workout, AthleteTier tier) {
 
-        String content = contentBuilderRegistry.build(workout, tier);
+        String content = workoutEmbeddingPromptBuilder.build(workout, tier);
 
         float[] embedding = embeddingGenerator.generate(content);
 
