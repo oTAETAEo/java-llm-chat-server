@@ -1,8 +1,8 @@
 package com.example.aisocket.project.adapter.in;
 
-import com.example.aisocket.project.adapter.in.mapper.CyclingWorkoutRequestMapper;
-import com.example.aisocket.project.adapter.in.mapper.RunningWorkoutRequestMapper;
-import com.example.aisocket.project.adapter.in.mapper.WorkoutMapper;
+import com.example.aisocket.project.adapter.in.factory.CyclingWorkoutCreateStrategy;
+import com.example.aisocket.project.adapter.in.factory.RunningWorkoutCreateStrategy;
+import com.example.aisocket.project.adapter.in.factory.WorkoutFactory;
 import com.example.aisocket.project.application.in.CoachFeedback;
 import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.CyclingWorkout;
@@ -36,9 +36,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(CoachFeedbackController.class)
 @Import({
-        WorkoutMapper.class,
-        RunningWorkoutRequestMapper.class,
-        CyclingWorkoutRequestMapper.class
+        WorkoutFactory.class,
+        RunningWorkoutCreateStrategy.class,
+        CyclingWorkoutCreateStrategy.class
 })
 class CoachFeedbackControllerTest {
 

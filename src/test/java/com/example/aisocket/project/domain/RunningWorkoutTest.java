@@ -1,5 +1,6 @@
 package com.example.aisocket.project.domain;
 
+import com.example.aisocket.project.domain.Member;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +14,9 @@ class RunningWorkoutTest {
     @Test
     @DisplayName("러닝 운동을 생성한다")
     void createRunningWorkout() {
-        RunningWorkout workout = RunningWorkout.of(
+        RunningWorkout workout = RunningWorkout.create(
+                member(),
+                AthleteTier.AMATEUR,
                 commonCommand(
                         LocalDateTime.of(2026, 7, 18, 7, 0),
                         LocalDateTime.of(2026, 7, 18, 7, 45),
@@ -32,7 +35,9 @@ class RunningWorkoutTest {
     @Test
     @DisplayName("운동 시작 시간이 없으면 러닝 운동 생성에 실패한다")
     void createWithoutStartedAtFails() {
-        assertThatThrownBy(() -> RunningWorkout.of(
+        assertThatThrownBy(() -> RunningWorkout.create(
+                member(),
+                AthleteTier.AMATEUR,
                 commonCommand(null, LocalDateTime.of(2026, 7, 18, 7, 45), 8.2, 45),
                 new CreateRunningWorkoutCommand(5.48, 4.92, 7600)
         )).isInstanceOf(IllegalArgumentException.class)
@@ -42,7 +47,9 @@ class RunningWorkoutTest {
     @Test
     @DisplayName("운동 종료 시간이 없으면 러닝 운동 생성에 실패한다")
     void createWithoutEndedAtFails() {
-        assertThatThrownBy(() -> RunningWorkout.of(
+        assertThatThrownBy(() -> RunningWorkout.create(
+                member(),
+                AthleteTier.AMATEUR,
                 commonCommand(LocalDateTime.of(2026, 7, 18, 7, 0), null, 8.2, 45),
                 new CreateRunningWorkoutCommand(5.48, 4.92, 7600)
         )).isInstanceOf(IllegalArgumentException.class)
@@ -52,7 +59,9 @@ class RunningWorkoutTest {
     @Test
     @DisplayName("운동 종료 시간이 시작 시간보다 빠르면 러닝 운동 생성에 실패한다")
     void createWithEndedAtBeforeStartedAtFails() {
-        assertThatThrownBy(() -> RunningWorkout.of(
+        assertThatThrownBy(() -> RunningWorkout.create(
+                member(),
+                AthleteTier.AMATEUR,
                 commonCommand(
                         LocalDateTime.of(2026, 7, 18, 7, 45),
                         LocalDateTime.of(2026, 7, 18, 7, 0),
@@ -67,7 +76,9 @@ class RunningWorkoutTest {
     @Test
     @DisplayName("운동 시간이 0 이하이면 러닝 운동 생성에 실패한다")
     void createWithNonPositiveMovingTimeFails() {
-        assertThatThrownBy(() -> RunningWorkout.of(
+        assertThatThrownBy(() -> RunningWorkout.create(
+                member(),
+                AthleteTier.AMATEUR,
                 commonCommand(
                         LocalDateTime.of(2026, 7, 18, 7, 0),
                         LocalDateTime.of(2026, 7, 18, 7, 45),
@@ -82,7 +93,9 @@ class RunningWorkoutTest {
     @Test
     @DisplayName("운동 거리가 음수이면 러닝 운동 생성에 실패한다")
     void createWithNegativeDistanceFails() {
-        assertThatThrownBy(() -> RunningWorkout.of(
+        assertThatThrownBy(() -> RunningWorkout.create(
+                member(),
+                AthleteTier.AMATEUR,
                 commonCommand(
                         LocalDateTime.of(2026, 7, 18, 7, 0),
                         LocalDateTime.of(2026, 7, 18, 7, 45),
@@ -97,7 +110,9 @@ class RunningWorkoutTest {
     @Test
     @DisplayName("걸음 수가 음수이면 러닝 운동 생성에 실패한다")
     void createWithNegativeStepsFails() {
-        assertThatThrownBy(() -> RunningWorkout.of(
+        assertThatThrownBy(() -> RunningWorkout.create(
+                member(),
+                AthleteTier.AMATEUR,
                 commonCommand(
                         LocalDateTime.of(2026, 7, 18, 7, 0),
                         LocalDateTime.of(2026, 7, 18, 7, 45),
@@ -129,4 +144,9 @@ class RunningWorkoutTest {
                 148.0
         );
     }
+
+    private Member member() {
+        return Member.of(1L, null, null, "test-member");
+    }
+
 }

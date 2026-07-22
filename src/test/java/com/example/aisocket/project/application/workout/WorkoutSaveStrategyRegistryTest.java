@@ -37,7 +37,7 @@ class WorkoutSaveStrategyRegistryTest {
     @Test
     @DisplayName("러닝 운동이면 러닝 저장 전략을 선택한다")
     void saveRunningWorkout() {
-        Member member = Member.of(1L, "runner");
+        Member member = Member.of(1L, null, null, "runner");
         RunningWorkout workout = runningWorkout();
         when(runningWorkoutRepository.save(member, workout, AthleteTier.AMATEUR)).thenReturn(10L);
 
@@ -51,7 +51,7 @@ class WorkoutSaveStrategyRegistryTest {
     @Test
     @DisplayName("자전거 운동이면 자전거 저장 전략을 선택한다")
     void saveCyclingWorkout() {
-        Member member = Member.of(1L, "rider");
+        Member member = Member.of(1L, null, null, "rider");
         CyclingWorkout workout = cyclingWorkout();
         when(cyclingWorkoutRepository.save(member, workout, AthleteTier.PRO)).thenReturn(20L);
 
@@ -65,7 +65,7 @@ class WorkoutSaveStrategyRegistryTest {
     @Test
     @DisplayName("지원하지 않는 운동 타입이면 저장 전략 선택에 실패한다")
     void saveUnsupportedWorkoutFails() {
-        assertThatThrownBy(() -> registry.save(Member.of(1L, "user"), unsupportedWorkout(), AthleteTier.AMATEUR))
+        assertThatThrownBy(() -> registry.save(Member.of(1L, null, null, "user"), unsupportedWorkout(), AthleteTier.AMATEUR))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("지원하지 않는 운동 타입");
 
@@ -73,7 +73,9 @@ class WorkoutSaveStrategyRegistryTest {
     }
 
     private RunningWorkout runningWorkout() {
-        return RunningWorkout.of(
+        return RunningWorkout.create(
+                member(),
+                AthleteTier.AMATEUR,
                 commonWorkoutCommand(
                         LocalDateTime.of(2026, 7, 18, 7, 0),
                         LocalDateTime.of(2026, 7, 18, 7, 45),
@@ -85,7 +87,9 @@ class WorkoutSaveStrategyRegistryTest {
     }
 
     private CyclingWorkout cyclingWorkout() {
-        return CyclingWorkout.of(
+        return CyclingWorkout.create(
+                member(),
+                AthleteTier.PRO,
                 commonWorkoutCommand(
                         LocalDateTime.of(2026, 7, 18, 9, 0),
                         LocalDateTime.of(2026, 7, 18, 10, 30),
@@ -134,4 +138,9 @@ class WorkoutSaveStrategyRegistryTest {
             @Override public WorkOutType getWorkOutType() { return null; }
         };
     }
+
+    private Member member() {
+        return Member.of(1L, null, null, "test-member");
+    }
+
 }

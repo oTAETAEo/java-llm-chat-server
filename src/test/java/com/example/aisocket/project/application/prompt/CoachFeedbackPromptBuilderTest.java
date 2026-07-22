@@ -10,6 +10,7 @@ import com.example.aisocket.project.domain.CyclingWorkout;
 import com.example.aisocket.project.domain.RunningWorkout;
 import com.example.aisocket.project.domain.WorkOutType;
 import com.example.aisocket.project.domain.Workout;
+import com.example.aisocket.project.domain.Member;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -71,7 +72,9 @@ class CoachFeedbackPromptBuilderTest {
     }
 
     private RunningWorkout runningWorkout() {
-        return RunningWorkout.of(
+        return RunningWorkout.create(
+                member(),
+                AthleteTier.AMATEUR,
                 commonWorkoutCommand(
                         LocalDateTime.of(2026, 7, 18, 7, 0),
                         LocalDateTime.of(2026, 7, 18, 7, 45),
@@ -83,7 +86,9 @@ class CoachFeedbackPromptBuilderTest {
     }
 
     private CyclingWorkout cyclingWorkout() {
-        return CyclingWorkout.of(
+        return CyclingWorkout.create(
+                member(),
+                AthleteTier.PRO,
                 commonWorkoutCommand(
                         LocalDateTime.of(2026, 7, 18, 9, 0),
                         LocalDateTime.of(2026, 7, 18, 10, 30),
@@ -132,4 +137,9 @@ class CoachFeedbackPromptBuilderTest {
             @Override public WorkOutType getWorkOutType() { return null; }
         };
     }
+
+    private Member member() {
+        return Member.of(1L, null, null, "test-member");
+    }
+
 }

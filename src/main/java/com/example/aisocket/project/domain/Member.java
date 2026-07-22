@@ -1,23 +1,47 @@
 package com.example.aisocket.project.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
-public class Member {
+@Entity
+@Table(name = "members")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Member extends BaseEntity {
 
-    private final Long id;
-    private final String nickname;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    public static Member create(String nickname) {
-        return new Member(null, nickname);
+    @Column(unique = true)
+    private String email;
+
+    @Column
+    private String password;
+
+    @Column(nullable = false)
+    private String nickname;
+
+    public static Member create(String email, String password, String nickname) {
+        return new Member(email, password, nickname);
     }
 
-    public static Member of(Long id, String nickname) {
-        return new Member(id, nickname);
+    public static Member of(Long id, String email, String password, String nickname) {
+        Member member = new Member(email, password, nickname);
+        member.id = id;
+        return member;
     }
 
-    private Member(Long id, String nickname) {
-        this.id = id;
+    private Member(String email, String password, String nickname) {
+        this.email = email;
+        this.password = password;
         this.nickname = nickname;
 
         validate();
@@ -26,6 +50,22 @@ public class Member {
     private void validate() {
         if (nickname == null || nickname.isBlank()) {
             throw new IllegalArgumentException("닉네임(nickname)은 필수 값입니다.");
+        }
+        validateLoginFields();
+    }
+
+    private void validateLoginFields() {
+        if (email == null && password == null) {
+            return;
+        }
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("이메일(email)은 필수 값입니다.");
+        }
+        if (!email.contains("@")) {
+            throw new IllegalArgumentException("이메일(email) 형식이 올바르지 않습니다.");
+        }
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("비밀번호(password)는 필수 값입니다.");
         }
     }
 }

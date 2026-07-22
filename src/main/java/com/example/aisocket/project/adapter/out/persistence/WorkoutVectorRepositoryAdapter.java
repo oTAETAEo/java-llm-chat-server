@@ -17,12 +17,11 @@ import java.util.stream.IntStream;
 public class WorkoutVectorRepositoryAdapter implements WorkoutVectorRepository {
 
     private final JdbcTemplate jdbcTemplate;
+
     private final ObjectMapper objectMapper;
 
     @Override
     public UUID save(WorkoutVector workoutVector) {
-        WorkoutVectorEntity entity = WorkoutVectorEntity.from(workoutVector);
-
         jdbcTemplate.update("""
                         INSERT INTO workout_vector_store (
                             id,
@@ -45,29 +44,29 @@ public class WorkoutVectorRepositoryAdapter implements WorkoutVectorRepository {
                             ?
                         )
                         """,
-                entity.getId().toString(),
-                entity.getMemberId(),
-                entity.getWorkoutId(),
-                entity.getWorkoutType().name(),
-                entity.getContent(),
-                toMetadataJson(entity),
-                toVectorLiteral(entity),
-                entity.getCreatedAt()
+                workoutVector.getId().toString(),
+                workoutVector.getMemberId(),
+                workoutVector.getWorkoutId(),
+                workoutVector.getWorkoutType().name(),
+                workoutVector.getContent(),
+                toMetadataJson(workoutVector),
+                toVectorLiteral(workoutVector),
+                workoutVector.getCreatedAt()
         );
 
-        return entity.getId();
+        return workoutVector.getId();
     }
 
-    private String toMetadataJson(WorkoutVectorEntity entity) {
+    private String toMetadataJson(WorkoutVector workoutVector) {
         try {
-            return objectMapper.writeValueAsString(entity.getMetadata());
+            return objectMapper.writeValueAsString(workoutVector.getMetadata());
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("운동 벡터 metadata JSON 변환에 실패했습니다.", e);
         }
     }
 
-    private String toVectorLiteral(WorkoutVectorEntity entity) {
-        float[] embedding = entity.getEmbedding();
+    private String toVectorLiteral(WorkoutVector workoutVector) {
+        float[] embedding = workoutVector.getEmbedding();
 
         return IntStream.range(0, embedding.length)
                 .mapToObj(i -> Float.toString(embedding[i]))

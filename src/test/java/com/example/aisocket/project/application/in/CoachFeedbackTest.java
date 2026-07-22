@@ -45,7 +45,7 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
     @Test
     @DisplayName("스트리밍 피드백 전에 운동 벡터 저장 유스케이스를 호출하고 AI 응답 조각을 전달한다")
     void getFeedbackStream() {
-        Member member = Member.of(1L, "runner");
+        Member member = Member.of(1L, null, null, "runner");
         RunningWorkout workout = runningWorkout();
         given(workoutRecordSaver.save(member, workout, AthleteTier.AMATEUR))
                 .willReturn(10L);
@@ -71,7 +71,7 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
     @Test
     @DisplayName("운동 벡터 저장에 실패하면 AI 스트리밍을 호출하지 않는다")
     void getFeedbackStreamWhenWorkoutVectorSaveFails() {
-        Member member = Member.of(1L, "runner");
+        Member member = Member.of(1L, null, null, "runner");
         RunningWorkout workout = runningWorkout();
         RuntimeException saveException = new RuntimeException("vector save failed");
         given(workoutRecordSaver.save(member, workout, AthleteTier.AMATEUR))
@@ -92,7 +92,7 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
     @Test
     @DisplayName("AI 스트리밍 호출에 실패하면 예외를 상위로 전파한다")
     void getFeedbackStreamWhenAiStreamingFails() {
-        Member member = Member.of(1L, "runner");
+        Member member = Member.of(1L, null, null, "runner");
         RunningWorkout workout = runningWorkout();
         RuntimeException aiException = new RuntimeException("ai stream failed");
         given(workoutRecordSaver.save(member, workout, AthleteTier.AMATEUR))
@@ -114,7 +114,7 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
     @Test
     @DisplayName("운동 기록 저장에 실패하면 벡터 저장과 AI 스트리밍을 호출하지 않는다")
     void getFeedbackStreamWhenWorkoutRecordFails() {
-        Member member = Member.of(1L, "runner");
+        Member member = Member.of(1L, null, null, "runner");
         RunningWorkout workout = runningWorkout();
         RuntimeException recordException = new RuntimeException("record failed");
         given(workoutRecordSaver.save(member, workout, AthleteTier.AMATEUR))
@@ -130,7 +130,9 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
     }
 
     private RunningWorkout runningWorkout() {
-        return RunningWorkout.of(
+        return RunningWorkout.create(
+                member(),
+                AthleteTier.AMATEUR,
                 new CreateCommonWorkoutCommand(
                         LocalDateTime.of(2026, 7, 18, 7, 0),
                         LocalDateTime.of(2026, 7, 18, 7, 45),
@@ -150,6 +152,11 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
                         7600
                 )
         );
+    }
+
+
+    private Member member() {
+        return Member.of(1L, null, null, "test-member");
     }
 
 }

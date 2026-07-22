@@ -15,13 +15,11 @@ public class MemberRepositoryAdapter implements MemberRepository {
 
     @Override
     public Member save(Member member) {
-        return repository.save(MemberEntity.from(member))
-                .toDomain();
+        return repository.save(member);
     }
 
     @Override
     public Optional<Member> findById(Long id) {
-        return repository.findById(id)
-                .map(MemberEntity::toDomain);
+        return repository.findById(id);
     }
 }

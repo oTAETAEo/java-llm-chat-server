@@ -21,7 +21,7 @@ class MemberRepositoryTest extends DataJpaTestSupport {
     @Test
     @DisplayName("회원을 저장하고 ID로 조회한다")
     void saveAndFindById() {
-        Member savedMember = memberRepository.save(Member.create("runner"));
+        Member savedMember = memberRepository.save(Member.create(null, null, "runner"));
 
         Optional<Member> foundMember = memberRepository.findById(savedMember.getId());
 
@@ -30,6 +30,23 @@ class MemberRepositoryTest extends DataJpaTestSupport {
         assertThat(foundMember.get().getId()).isEqualTo(savedMember.getId());
         assertThat(foundMember.get().getNickname()).isEqualTo("runner");
     }
+    @Test
+    @DisplayName("인증 정보가 있는 회원을 저장하고 ID로 조회한다")
+    void saveAndFindByIdWithAuthFields() {
+        Member savedMember = memberRepository.save(
+                Member.of(null, "runner@example.com", "encoded-password", "runner")
+        );
+
+        Optional<Member> foundMember = memberRepository.findById(savedMember.getId());
+
+        assertThat(savedMember.getId()).isNotNull();
+        assertThat(foundMember).isPresent();
+        assertThat(foundMember.get().getId()).isEqualTo(savedMember.getId());
+        assertThat(foundMember.get().getEmail()).isEqualTo("runner@example.com");
+        assertThat(foundMember.get().getPassword()).isEqualTo("encoded-password");
+        assertThat(foundMember.get().getNickname()).isEqualTo("runner");
+    }
+
     @Test
     @DisplayName("존재하지 않는 회원 ID를 조회하면 빈 Optional을 반환한다")
     void findByUnknownIdReturnsEmpty() {

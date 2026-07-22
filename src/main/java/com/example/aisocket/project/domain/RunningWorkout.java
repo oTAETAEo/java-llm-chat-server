@@ -1,33 +1,66 @@
 package com.example.aisocket.project.domain;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Getter
-public class RunningWorkout implements Workout {
+@Entity
+@Table(name = "running_workout")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class RunningWorkout extends BaseEntity implements Workout {
 
-    private final LocalDateTime startedAt;
-    private final LocalDateTime endedAt;
-    private final Double distance;
-    private final Double elevGain;
-    private final Double elevationMax;
-    private final Integer movingTime;
-    private final Double calories;
-    private final Double avgCadence;
-    private final Double maxCadence;
-    private final Double maxHeartRate;
-    private final Double avgHeartRate;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    private final Double avgPace;
-    private final Double maxPace;
-    private final Integer steps;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
 
-    public static RunningWorkout of(CreateCommonWorkoutCommand workoutCommand, CreateRunningWorkoutCommand runningWorkoutCommand){
-        return new RunningWorkout(workoutCommand, runningWorkoutCommand);
+    @Enumerated(EnumType.STRING)
+    private AthleteTier tier;
+
+    private LocalDateTime startedAt;
+    private LocalDateTime endedAt;
+    private Double distance;
+    private Double elevGain;
+    private Double elevationMax;
+    private Integer movingTime;
+    private Double calories;
+    private Double avgCadence;
+    private Double maxCadence;
+    private Double maxHeartRate;
+    private Double avgHeartRate;
+
+    private Double avgPace;
+    private Double maxPace;
+    private Integer steps;
+
+    public static RunningWorkout create(
+            Member member,
+            AthleteTier tier,
+            CreateCommonWorkoutCommand workoutCommand,
+            CreateRunningWorkoutCommand runningWorkoutCommand
+    ){
+        return new RunningWorkout(member, tier, workoutCommand, runningWorkoutCommand);
     }
 
-    private RunningWorkout(CreateCommonWorkoutCommand workoutCommand, CreateRunningWorkoutCommand runningWorkoutCommand) {
+    private RunningWorkout(Member member, AthleteTier tier, CreateCommonWorkoutCommand workoutCommand, CreateRunningWorkoutCommand runningWorkoutCommand) {
+        this.tier = tier;
+        this.member = member;
 
         this.startedAt = workoutCommand.startedAt();
         this.endedAt = workoutCommand.endedAt();
@@ -50,6 +83,7 @@ public class RunningWorkout implements Workout {
 
     @Override
     public void validate() {
+        validateRecordOwner();
         if (startedAt == null) {
             throw new IllegalArgumentException("운동 시작 시간(startedAt)은 필수 값입니다.");
         }
@@ -70,9 +104,20 @@ public class RunningWorkout implements Workout {
         }
     }
 
+    private void validateRecordOwner() {
+        if (member == null) {
+            throw new IllegalArgumentException("회원(member)은 운동 기록에 필수 값입니다.");
+        }
+        if (member.getId() == null) {
+            throw new IllegalArgumentException("회원 ID(member.id)는 운동 기록에 필수 값입니다.");
+        }
+        if (tier == null) {
+            throw new IllegalArgumentException("선수 등급(tier)은 운동 기록에 필수 값입니다.");
+        }
+    }
+
     @Override
     public WorkOutType getWorkOutType() {
         return WorkOutType.RUNNING;
     }
-
 }

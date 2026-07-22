@@ -38,8 +38,10 @@ class RunningWorkoutRepositoryTest extends DataJpaTestSupport {
     @Test
     @DisplayName("회원과 연결된 러닝 운동 기록을 저장한다")
     void saveRunningWorkout() {
-        Member member = memberRepository.save(Member.create("runner"));
-        RunningWorkout workout = RunningWorkout.of(
+        Member member = memberRepository.save(Member.create(null, null, "runner"));
+        RunningWorkout workout = RunningWorkout.create(
+                member,
+                AthleteTier.AMATEUR,
                 commonWorkoutCommand(),
                 new CreateRunningWorkoutCommand(5.48, 4.92, 7600)
         );
@@ -67,13 +69,16 @@ class RunningWorkoutRepositoryTest extends DataJpaTestSupport {
     @Test
     @DisplayName("저장되지 않은 회원으로 러닝 운동 기록을 저장하면 실패한다")
     void saveRunningWorkoutWithUnsavedMemberFails() {
-        Member unsavedMember = Member.create("runner");
-        RunningWorkout workout = RunningWorkout.of(
-                commonWorkoutCommand(),
-                new CreateRunningWorkoutCommand(5.48, 4.92, 7600)
-        );
-
-        assertThatThrownBy(() -> runningWorkoutRepository.save(unsavedMember, workout, AthleteTier.AMATEUR))
+        Member unsavedMember = Member.create(null, null, "runner");
+        assertThatThrownBy(() -> {
+                    RunningWorkout workout = RunningWorkout.create(
+                            unsavedMember,
+                            AthleteTier.AMATEUR,
+                            commonWorkoutCommand(),
+                            new CreateRunningWorkoutCommand(5.48, 4.92, 7600)
+                    );
+                    runningWorkoutRepository.save(unsavedMember, workout, AthleteTier.AMATEUR);
+                })
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("회원 ID");
     }

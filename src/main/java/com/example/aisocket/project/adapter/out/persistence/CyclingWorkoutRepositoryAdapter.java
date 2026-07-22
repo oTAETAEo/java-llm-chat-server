@@ -15,9 +15,8 @@ public class CyclingWorkoutRepositoryAdapter implements CyclingWorkoutRepository
 
     @Override
     public Long save(Member member, CyclingWorkout workout, AthleteTier tier) {
-        CyclingWorkoutEntity savedRecord =
-                repository.save(CyclingWorkoutEntity.from(workout, tier, member));
+        CyclingWorkout savedWorkout = repository.save(workout);
 
-        return savedRecord.getId();
+        return savedWorkout.getId();
     }
 }

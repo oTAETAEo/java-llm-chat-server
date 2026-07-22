@@ -1,6 +1,7 @@
 package com.example.aisocket.project.adapter.out.persistence;
 
+import com.example.aisocket.project.domain.RunningWorkout;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface RunningWorkoutJpaRepository extends JpaRepository<RunningWorkoutEntity, Long> {
+public interface RunningWorkoutJpaRepository extends JpaRepository<RunningWorkout, Long> {
 }

@@ -41,7 +41,7 @@ class WorkoutVectorSaverTest extends SpringBootIntegrationTestSupport {
     void saveRunningWorkoutVector() {
         given(embeddingGenerator.generate(anyString())).willReturn(testEmbedding());
 
-        Member member = Member.of(1L, "runner");
+        Member member = Member.of(1L, null, null, "runner");
         RunningWorkout workout = runningWorkout();
 
         UUID vectorId = workoutVectorSaver.save(member, 10L, workout, AthleteTier.AMATEUR);
@@ -66,7 +66,7 @@ class WorkoutVectorSaverTest extends SpringBootIntegrationTestSupport {
     void saveRunningWorkoutVectorWhenEmbeddingGenerationFails() {
         RuntimeException embeddingException = new RuntimeException("embedding failed");
         given(embeddingGenerator.generate(anyString())).willThrow(embeddingException);
-        Member member = Member.of(1L, "runner");
+        Member member = Member.of(1L, null, null, "runner");
         RunningWorkout workout = runningWorkout();
 
         assertThatThrownBy(() -> workoutVectorSaver.save(member, 10L, workout, AthleteTier.AMATEUR))
@@ -80,7 +80,7 @@ class WorkoutVectorSaverTest extends SpringBootIntegrationTestSupport {
     @DisplayName("벡터 저장에 실패하면 예외를 상위로 전파한다")
     void saveRunningWorkoutVectorWhenVectorStoreFails() {
         given(embeddingGenerator.generate(anyString())).willReturn(new float[]{0.1f, 0.2f, 0.3f});
-        Member member = Member.of(1L, "runner");
+        Member member = Member.of(1L, null, null, "runner");
         RunningWorkout workout = runningWorkout();
 
         assertThatThrownBy(() -> workoutVectorSaver.save(member, 10L, workout, AthleteTier.AMATEUR))
@@ -90,7 +90,9 @@ class WorkoutVectorSaverTest extends SpringBootIntegrationTestSupport {
     }
 
     private RunningWorkout runningWorkout() {
-        return RunningWorkout.of(
+        return RunningWorkout.create(
+                member(),
+                AthleteTier.AMATEUR,
                 new CreateCommonWorkoutCommand(
                         LocalDateTime.of(2026, 7, 18, 7, 0),
                         LocalDateTime.of(2026, 7, 18, 7, 45),
@@ -122,6 +124,11 @@ class WorkoutVectorSaverTest extends SpringBootIntegrationTestSupport {
         embedding[1] = 0.2f;
         embedding[2] = 0.3f;
         return embedding;
+    }
+
+
+    private Member member() {
+        return Member.of(1L, null, null, "test-member");
     }
 
 }

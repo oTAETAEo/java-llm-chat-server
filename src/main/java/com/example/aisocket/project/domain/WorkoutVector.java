@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Getter
-public class WorkoutVector {
+public class WorkoutVector extends BaseEntity {
 
     private final UUID id;
     private final Long memberId;
@@ -17,11 +17,9 @@ public class WorkoutVector {
     private final String content;
     private final Map<String, Object> metadata;
     private final float[] embedding;
-    private final LocalDateTime createdAt;
 
     public static WorkoutVector create(CreateWorkoutVectorCommand command) {
         return new WorkoutVector(
-                UUID.randomUUID(),
                 command.memberId(),
                 command.workoutId(),
                 command.workoutType(),
@@ -33,7 +31,6 @@ public class WorkoutVector {
     }
 
     private WorkoutVector(
-            UUID id,
             Long memberId,
             Long workoutId,
             WorkOutType workoutType,
@@ -42,14 +39,14 @@ public class WorkoutVector {
             float[] embedding,
             LocalDateTime createdAt
     ) {
-        this.id = id;
+        this.id = UUID.randomUUID();
         this.memberId = memberId;
         this.workoutId = workoutId;
         this.workoutType = workoutType;
         this.content = content;
         this.metadata = metadata == null ? Collections.emptyMap() : Map.copyOf(metadata);
         this.embedding = embedding == null ? new float[0] : embedding.clone();
-        this.createdAt = createdAt;
+        initializeCreatedAt(createdAt);
 
         validate();
     }
@@ -70,7 +67,7 @@ public class WorkoutVector {
         if (embedding.length == 0) {
             throw new IllegalArgumentException("임베딩 벡터(embedding)는 필수 값입니다.");
         }
-        if (createdAt == null) {
+        if (getCreatedAt() == null) {
             throw new IllegalArgumentException("생성 시각(createdAt)은 필수 값입니다.");
         }
     }

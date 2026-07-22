@@ -38,8 +38,10 @@ class CyclingWorkoutRepositoryTest extends DataJpaTestSupport {
     @Test
     @DisplayName("회원과 연결된 자전거 운동 기록을 저장한다")
     void saveCyclingWorkout() {
-        Member member = memberRepository.save(Member.create("rider"));
-        CyclingWorkout workout = CyclingWorkout.of(
+        Member member = memberRepository.save(Member.create(null, null, "rider"));
+        CyclingWorkout workout = CyclingWorkout.create(
+                member,
+                AthleteTier.PRO,
                 commonWorkoutCommand(),
                 new CreateCyclingWorkoutCommand(27.4, 44.1, 185.0, 420.0, 250.0)
         );
@@ -68,13 +70,16 @@ class CyclingWorkoutRepositoryTest extends DataJpaTestSupport {
     @Test
     @DisplayName("저장되지 않은 회원으로 자전거 운동 기록을 저장하면 실패한다")
     void saveCyclingWorkoutWithUnsavedMemberFails() {
-        Member unsavedMember = Member.create("rider");
-        CyclingWorkout workout = CyclingWorkout.of(
-                commonWorkoutCommand(),
-                new CreateCyclingWorkoutCommand(27.4, 44.1, 185.0, 420.0, 250.0)
-        );
-
-        assertThatThrownBy(() -> cyclingWorkoutRepository.save(unsavedMember, workout, AthleteTier.PRO))
+        Member unsavedMember = Member.create(null, null, "rider");
+        assertThatThrownBy(() -> {
+                    CyclingWorkout workout = CyclingWorkout.create(
+                            unsavedMember,
+                            AthleteTier.PRO,
+                            commonWorkoutCommand(),
+                            new CreateCyclingWorkoutCommand(27.4, 44.1, 185.0, 420.0, 250.0)
+                    );
+                    cyclingWorkoutRepository.save(unsavedMember, workout, AthleteTier.PRO);
+                })
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("회원 ID");
     }
