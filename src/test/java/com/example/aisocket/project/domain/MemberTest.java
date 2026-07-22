@@ -14,7 +14,11 @@ class MemberTest {
     @Test
     @DisplayName("신규 회원 생성 시 비밀번호를 해시해서 저장한다")
     void createMember() {
-        Member member = Member.create("runner@example.com", "raw-password", "runner", passwordHasher);
+        Member member = MemberFixture.builder()
+                .email("runner@example.com")
+                .rawPassword("raw-password")
+                .nickname("runner")
+                .buildNew();
 
         assertThat(member.getId()).isNull();
         assertThat(member.getEmail()).isEqualTo("runner@example.com");
@@ -25,7 +29,12 @@ class MemberTest {
     @Test
     @DisplayName("ID가 있는 회원 도메인을 생성한다")
     void createMemberWithId() {
-        Member member = Member.of(1L, "runner@example.com", "encoded-password", "runner");
+        Member member = MemberFixture.builder()
+                .id(1L)
+                .email("runner@example.com")
+                .encodedPassword("encoded-password")
+                .nickname("runner")
+                .build();
 
         assertThat(member.getId()).isEqualTo(1L);
         assertThat(member.getEmail()).isEqualTo("runner@example.com");

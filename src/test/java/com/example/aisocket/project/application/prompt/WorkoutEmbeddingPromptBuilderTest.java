@@ -11,6 +11,7 @@ import com.example.aisocket.project.domain.RunningWorkout;
 import com.example.aisocket.project.domain.WorkOutType;
 import com.example.aisocket.project.domain.Workout;
 import com.example.aisocket.project.domain.Member;
+import com.example.aisocket.project.domain.MemberFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -67,7 +68,7 @@ class WorkoutEmbeddingPromptBuilderTest {
 
     private RunningWorkout runningWorkout() {
         return RunningWorkout.create(
-                member(),
+                MemberFixture.builder().build(),
                 AthleteTier.AMATEUR,
                 commonWorkoutCommand(
                         LocalDateTime.of(2026, 7, 18, 7, 0),
@@ -81,7 +82,7 @@ class WorkoutEmbeddingPromptBuilderTest {
 
     private CyclingWorkout cyclingWorkout() {
         return CyclingWorkout.create(
-                member(),
+                MemberFixture.builder().build(),
                 AthleteTier.PRO,
                 commonWorkoutCommand(
                         LocalDateTime.of(2026, 7, 18, 9, 0),
@@ -132,8 +133,5 @@ class WorkoutEmbeddingPromptBuilderTest {
         };
     }
 
-    private Member member() {
-        return Member.of(1L, null, null, "test-member");
-    }
 
 }

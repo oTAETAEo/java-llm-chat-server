@@ -15,7 +15,7 @@ class CyclingWorkoutTest {
     @DisplayName("자전거 운동을 생성한다")
     void createCyclingWorkout() {
         CyclingWorkout workout = CyclingWorkout.create(
-                member(),
+                MemberFixture.builder().build(),
                 AthleteTier.PRO,
                 commonCommand(
                         LocalDateTime.of(2026, 7, 18, 9, 0),
@@ -36,7 +36,7 @@ class CyclingWorkoutTest {
     @DisplayName("운동 시작 시간이 없으면 자전거 운동 생성에 실패한다")
     void createWithoutStartedAtFails() {
         assertThatThrownBy(() -> CyclingWorkout.create(
-                member(),
+                MemberFixture.builder().build(),
                 AthleteTier.PRO,
                 commonCommand(null, LocalDateTime.of(2026, 7, 18, 10, 30), 42.5, 90),
                 new CreateCyclingWorkoutCommand(27.4, 44.1, 185.0, 420.0, 250.0)
@@ -48,7 +48,7 @@ class CyclingWorkoutTest {
     @DisplayName("운동 종료 시간이 없으면 자전거 운동 생성에 실패한다")
     void createWithoutEndedAtFails() {
         assertThatThrownBy(() -> CyclingWorkout.create(
-                member(),
+                MemberFixture.builder().build(),
                 AthleteTier.PRO,
                 commonCommand(LocalDateTime.of(2026, 7, 18, 9, 0), null, 42.5, 90),
                 new CreateCyclingWorkoutCommand(27.4, 44.1, 185.0, 420.0, 250.0)
@@ -60,7 +60,7 @@ class CyclingWorkoutTest {
     @DisplayName("운동 종료 시간이 시작 시간보다 빠르면 자전거 운동 생성에 실패한다")
     void createWithEndedAtBeforeStartedAtFails() {
         assertThatThrownBy(() -> CyclingWorkout.create(
-                member(),
+                MemberFixture.builder().build(),
                 AthleteTier.PRO,
                 commonCommand(
                         LocalDateTime.of(2026, 7, 18, 10, 30),
@@ -77,7 +77,7 @@ class CyclingWorkoutTest {
     @DisplayName("운동 시간이 0 이하이면 자전거 운동 생성에 실패한다")
     void createWithNonPositiveMovingTimeFails() {
         assertThatThrownBy(() -> CyclingWorkout.create(
-                member(),
+                MemberFixture.builder().build(),
                 AthleteTier.PRO,
                 commonCommand(
                         LocalDateTime.of(2026, 7, 18, 9, 0),
@@ -94,7 +94,7 @@ class CyclingWorkoutTest {
     @DisplayName("운동 거리가 음수이면 자전거 운동 생성에 실패한다")
     void createWithNegativeDistanceFails() {
         assertThatThrownBy(() -> CyclingWorkout.create(
-                member(),
+                MemberFixture.builder().build(),
                 AthleteTier.PRO,
                 commonCommand(
                         LocalDateTime.of(2026, 7, 18, 9, 0),
@@ -111,7 +111,7 @@ class CyclingWorkoutTest {
     @DisplayName("FTP가 음수이면 자전거 운동 생성에 실패한다")
     void createWithNegativeFtpFails() {
         assertThatThrownBy(() -> CyclingWorkout.create(
-                member(),
+                MemberFixture.builder().build(),
                 AthleteTier.PRO,
                 commonCommand(
                         LocalDateTime.of(2026, 7, 18, 9, 0),
@@ -145,8 +145,5 @@ class CyclingWorkoutTest {
         );
     }
 
-    private Member member() {
-        return Member.of(1L, null, null, "test-member");
-    }
 
 }

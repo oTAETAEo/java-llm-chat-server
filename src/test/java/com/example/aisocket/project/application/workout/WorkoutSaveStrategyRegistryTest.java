@@ -8,6 +8,7 @@ import com.example.aisocket.project.domain.CreateCyclingWorkoutCommand;
 import com.example.aisocket.project.domain.CreateRunningWorkoutCommand;
 import com.example.aisocket.project.domain.CyclingWorkout;
 import com.example.aisocket.project.domain.Member;
+import com.example.aisocket.project.domain.MemberFixture;
 import com.example.aisocket.project.domain.RunningWorkout;
 import com.example.aisocket.project.domain.WorkOutType;
 import com.example.aisocket.project.domain.Workout;
@@ -37,7 +38,7 @@ class WorkoutSaveStrategyRegistryTest {
     @Test
     @DisplayName("러닝 운동이면 러닝 저장 전략을 선택한다")
     void saveRunningWorkout() {
-        Member member = Member.of(1L, null, null, "runner");
+        Member member = MemberFixture.builder().id(1L).nickname("runner").build();
         RunningWorkout workout = runningWorkout();
         when(runningWorkoutRepository.save(member, workout, AthleteTier.AMATEUR)).thenReturn(10L);
 
@@ -51,7 +52,7 @@ class WorkoutSaveStrategyRegistryTest {
     @Test
     @DisplayName("자전거 운동이면 자전거 저장 전략을 선택한다")
     void saveCyclingWorkout() {
-        Member member = Member.of(1L, null, null, "rider");
+        Member member = MemberFixture.builder().id(1L).nickname("rider").build();
         CyclingWorkout workout = cyclingWorkout();
         when(cyclingWorkoutRepository.save(member, workout, AthleteTier.PRO)).thenReturn(20L);
 
@@ -65,7 +66,7 @@ class WorkoutSaveStrategyRegistryTest {
     @Test
     @DisplayName("지원하지 않는 운동 타입이면 저장 전략 선택에 실패한다")
     void saveUnsupportedWorkoutFails() {
-        assertThatThrownBy(() -> registry.save(Member.of(1L, null, null, "user"), unsupportedWorkout(), AthleteTier.AMATEUR))
+        assertThatThrownBy(() -> registry.save(MemberFixture.builder().id(1L).nickname("user").build(), unsupportedWorkout(), AthleteTier.AMATEUR))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("지원하지 않는 운동 타입");
 
@@ -74,7 +75,7 @@ class WorkoutSaveStrategyRegistryTest {
 
     private RunningWorkout runningWorkout() {
         return RunningWorkout.create(
-                member(),
+                MemberFixture.builder().build(),
                 AthleteTier.AMATEUR,
                 commonWorkoutCommand(
                         LocalDateTime.of(2026, 7, 18, 7, 0),
@@ -88,7 +89,7 @@ class WorkoutSaveStrategyRegistryTest {
 
     private CyclingWorkout cyclingWorkout() {
         return CyclingWorkout.create(
-                member(),
+                MemberFixture.builder().build(),
                 AthleteTier.PRO,
                 commonWorkoutCommand(
                         LocalDateTime.of(2026, 7, 18, 9, 0),
@@ -139,8 +140,5 @@ class WorkoutSaveStrategyRegistryTest {
         };
     }
 
-    private Member member() {
-        return Member.of(1L, null, null, "test-member");
-    }
 
 }

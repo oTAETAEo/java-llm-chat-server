@@ -6,6 +6,7 @@ import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.CreateCommonWorkoutCommand;
 import com.example.aisocket.project.domain.CreateRunningWorkoutCommand;
 import com.example.aisocket.project.domain.Member;
+import com.example.aisocket.project.domain.MemberFixture;
 import com.example.aisocket.project.domain.RunningWorkout;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,7 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
     @Test
     @DisplayName("스트리밍 피드백 전에 운동 벡터 저장 유스케이스를 호출하고 AI 응답 조각을 전달한다")
     void getFeedbackStream() {
-        Member member = Member.of(1L, null, null, "runner");
+        Member member = MemberFixture.builder().id(1L).nickname("runner").build();
         RunningWorkout workout = runningWorkout();
         given(workoutRecordSaver.save(member, workout, AthleteTier.AMATEUR))
                 .willReturn(10L);
@@ -71,7 +72,7 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
     @Test
     @DisplayName("운동 벡터 저장에 실패하면 AI 스트리밍을 호출하지 않는다")
     void getFeedbackStreamWhenWorkoutVectorSaveFails() {
-        Member member = Member.of(1L, null, null, "runner");
+        Member member = MemberFixture.builder().id(1L).nickname("runner").build();
         RunningWorkout workout = runningWorkout();
         RuntimeException saveException = new RuntimeException("vector save failed");
         given(workoutRecordSaver.save(member, workout, AthleteTier.AMATEUR))
@@ -92,7 +93,7 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
     @Test
     @DisplayName("AI 스트리밍 호출에 실패하면 예외를 상위로 전파한다")
     void getFeedbackStreamWhenAiStreamingFails() {
-        Member member = Member.of(1L, null, null, "runner");
+        Member member = MemberFixture.builder().id(1L).nickname("runner").build();
         RunningWorkout workout = runningWorkout();
         RuntimeException aiException = new RuntimeException("ai stream failed");
         given(workoutRecordSaver.save(member, workout, AthleteTier.AMATEUR))
@@ -114,7 +115,7 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
     @Test
     @DisplayName("운동 기록 저장에 실패하면 벡터 저장과 AI 스트리밍을 호출하지 않는다")
     void getFeedbackStreamWhenWorkoutRecordFails() {
-        Member member = Member.of(1L, null, null, "runner");
+        Member member = MemberFixture.builder().id(1L).nickname("runner").build();
         RunningWorkout workout = runningWorkout();
         RuntimeException recordException = new RuntimeException("record failed");
         given(workoutRecordSaver.save(member, workout, AthleteTier.AMATEUR))
@@ -131,7 +132,7 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
 
     private RunningWorkout runningWorkout() {
         return RunningWorkout.create(
-                member(),
+                MemberFixture.builder().build(),
                 AthleteTier.AMATEUR,
                 new CreateCommonWorkoutCommand(
                         LocalDateTime.of(2026, 7, 18, 7, 0),
@@ -155,8 +156,5 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
     }
 
 
-    private Member member() {
-        return Member.of(1L, null, null, "test-member");
-    }
 
 }

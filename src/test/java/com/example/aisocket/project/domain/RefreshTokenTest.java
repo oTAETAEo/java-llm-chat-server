@@ -16,7 +16,7 @@ class RefreshTokenTest {
     @Test
     @DisplayName("리프레시 토큰을 해시해서 생성한다")
     void createRefreshToken() {
-        Member member = member();
+        Member member = MemberFixture.builder().id(1L).nickname("runner").build();
         LocalDateTime expiresAt = LocalDateTime.of(2026, 7, 29, 0, 0);
 
         RefreshToken refreshToken = RefreshToken.create(member, "refresh-token", expiresAt, refreshTokenHasher);
@@ -78,7 +78,7 @@ class RefreshTokenTest {
     @Test
     @DisplayName("회원 ID가 없으면 리프레시 토큰 생성에 실패한다")
     void createRefreshTokenWithoutMemberIdFails() {
-        Member unsavedMember = Member.of(null, "runner@example.com", "encoded-password", "runner");
+        Member unsavedMember = MemberFixture.builder().id(null).nickname("runner").build();
 
         assertThatThrownBy(() -> RefreshToken.create(unsavedMember, "refresh-token", LocalDateTime.of(2026, 7, 29, 0, 0), refreshTokenHasher))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -88,7 +88,7 @@ class RefreshTokenTest {
     @Test
     @DisplayName("토큰 값이 없으면 리프레시 토큰 생성에 실패한다")
     void createRefreshTokenWithoutTokenFails() {
-        assertThatThrownBy(() -> RefreshToken.create(member(), " ", LocalDateTime.of(2026, 7, 29, 0, 0), refreshTokenHasher))
+        assertThatThrownBy(() -> RefreshToken.create(MemberFixture.builder().id(1L).nickname("runner").build(), " ", LocalDateTime.of(2026, 7, 29, 0, 0), refreshTokenHasher))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("리프레시 토큰");
     }
@@ -96,7 +96,7 @@ class RefreshTokenTest {
     @Test
     @DisplayName("만료 시간이 없으면 리프레시 토큰 생성에 실패한다")
     void createRefreshTokenWithoutExpiresAtFails() {
-        assertThatThrownBy(() -> RefreshToken.create(member(), "refresh-token", null, refreshTokenHasher))
+        assertThatThrownBy(() -> RefreshToken.create(MemberFixture.builder().id(1L).nickname("runner").build(), "refresh-token", null, refreshTokenHasher))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("만료 시간");
     }
@@ -104,16 +104,13 @@ class RefreshTokenTest {
     @Test
     @DisplayName("리프레시 토큰 해시 정책이 없으면 생성에 실패한다")
     void createRefreshTokenWithoutHasherFails() {
-        assertThatThrownBy(() -> RefreshToken.create(member(), "refresh-token", LocalDateTime.of(2026, 7, 29, 0, 0), null))
+        assertThatThrownBy(() -> RefreshToken.create(MemberFixture.builder().id(1L).nickname("runner").build(), "refresh-token", LocalDateTime.of(2026, 7, 29, 0, 0), null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("리프레시 토큰 해시 정책");
     }
 
     private RefreshToken createRefreshToken(LocalDateTime expiresAt) {
-        return RefreshToken.create(member(), "refresh-token", expiresAt, refreshTokenHasher);
+        return RefreshToken.create(MemberFixture.builder().id(1L).nickname("runner").build(), "refresh-token", expiresAt, refreshTokenHasher);
     }
 
-    private Member member() {
-        return Member.of(1L, "runner@example.com", "encoded-password", "runner");
-    }
 }
