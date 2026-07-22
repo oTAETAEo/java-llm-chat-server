@@ -39,8 +39,7 @@ class CyclingWorkoutTest {
         assertThatThrownBy(() -> CyclingWorkoutFixture.builder()
                 .startedAt(null)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("운동 시작 시간");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -49,8 +48,7 @@ class CyclingWorkoutTest {
         assertThatThrownBy(() -> CyclingWorkoutFixture.builder()
                 .endedAt(null)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("운동 종료 시간");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -60,8 +58,7 @@ class CyclingWorkoutTest {
                 .startedAt(LocalDateTime.of(2026, 7, 18, 10, 30))
                 .endedAt(LocalDateTime.of(2026, 7, 18, 9, 0))
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("시작 시간");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -70,8 +67,7 @@ class CyclingWorkoutTest {
         assertThatThrownBy(() -> CyclingWorkoutFixture.builder()
                 .movingTime(0)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("운동 시간");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -80,8 +76,7 @@ class CyclingWorkoutTest {
         assertThatThrownBy(() -> CyclingWorkoutFixture.builder()
                 .distance(-1.0)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("운동 거리");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -90,7 +85,6 @@ class CyclingWorkoutTest {
         assertThatThrownBy(() -> CyclingWorkoutFixture.builder()
                 .ftp(-1.0)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("FTP");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

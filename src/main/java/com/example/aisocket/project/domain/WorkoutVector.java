@@ -11,11 +11,17 @@ import java.util.UUID;
 public class WorkoutVector extends BaseEntity {
 
     private final UUID id;
+
     private final Long memberId;
+
     private final Long workoutId;
+
     private final WorkOutType workoutType;
+
     private final String content;
+
     private final Map<String, Object> metadata;
+
     private final float[] embedding;
 
     public static WorkoutVector create(CreateWorkoutVectorCommand command) {

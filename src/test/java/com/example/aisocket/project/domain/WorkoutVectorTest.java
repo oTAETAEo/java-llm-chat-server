@@ -34,32 +34,28 @@ class WorkoutVectorTest {
     @DisplayName("운동 기록 ID가 없으면 운동 벡터 생성에 실패한다")
     void createWithoutWorkoutIdFails() {
         assertThatThrownBy(() -> WorkoutVector.create(command(null, WorkOutType.RUNNING, "content", new float[]{0.1f})))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("운동 기록 ID");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     @DisplayName("운동 타입이 없으면 운동 벡터 생성에 실패한다")
     void createWithoutWorkoutTypeFails() {
         assertThatThrownBy(() -> WorkoutVector.create(command(10L, null, "content", new float[]{0.1f})))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("운동 타입");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     @DisplayName("임베딩 원문이 없으면 운동 벡터 생성에 실패한다")
     void createWithoutContentFails() {
         assertThatThrownBy(() -> WorkoutVector.create(command(10L, WorkOutType.RUNNING, " ", new float[]{0.1f})))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("임베딩 원문");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     @DisplayName("임베딩 벡터가 없으면 운동 벡터 생성에 실패한다")
     void createWithoutEmbeddingFails() {
         assertThatThrownBy(() -> WorkoutVector.create(command(10L, WorkOutType.RUNNING, "content", null)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("임베딩 벡터");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

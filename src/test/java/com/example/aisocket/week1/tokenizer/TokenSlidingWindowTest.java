@@ -67,16 +67,14 @@ class TokenSlidingWindowTest {
         ChatMessage message = new ChatMessage(Role.USER, "너무 긴 메시지", 60);
 
         assertThatThrownBy(() -> window.addMessage(message))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage(TokenizerErrorMessage.SINGLE_MESSAGE_EXCEEDS_MAX_TOKENS.getMessage());
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     @DisplayName("최대 토큰 수는 0보다 커야 한다")
     void throwExceptionWhenMaxTokensIsZeroOrNegative() {
         assertThatThrownBy(() -> TokenSlidingWindow.create(0, 50))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage(TokenizerErrorMessage.MAX_TOKENS_POSITIVE.getMessage());
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

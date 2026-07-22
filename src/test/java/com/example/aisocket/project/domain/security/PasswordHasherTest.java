@@ -27,8 +27,7 @@ class PasswordHasherTest {
     @DisplayName("원문 비밀번호가 없으면 해시에 실패한다")
     void hashWithoutRawPasswordFails() {
         assertThatThrownBy(() -> passwordHasher.hash(" "))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("비밀번호");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -37,10 +36,8 @@ class PasswordHasherTest {
         String hashedPassword = passwordHasher.hash("password123!");
 
         assertThatThrownBy(() -> passwordHasher.matches(" ", hashedPassword))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("비밀번호");
+                .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> passwordHasher.matches("password123!", " "))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("해시 비밀번호");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

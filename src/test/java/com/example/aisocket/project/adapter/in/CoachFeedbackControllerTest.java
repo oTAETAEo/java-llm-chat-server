@@ -1,15 +1,9 @@
 package com.example.aisocket.project.adapter.in;
 
-import com.example.aisocket.project.adapter.in.factory.CyclingWorkoutCreateStrategy;
-import com.example.aisocket.project.adapter.in.factory.RunningWorkoutCreateStrategy;
-import com.example.aisocket.project.adapter.in.factory.WorkoutFactory;
-import com.example.aisocket.project.application.in.CoachFeedback;
+import com.example.aisocket.project.application.in.CoachFeedbackService;
+import com.example.aisocket.project.application.dto.command.CoachFeedbackCommand;
 import com.example.aisocket.project.config.SecurityConfig;
-import com.example.aisocket.project.domain.AthleteTier;
-import com.example.aisocket.project.domain.CyclingWorkout;
 import com.example.aisocket.project.domain.Member;
-import com.example.aisocket.project.domain.RunningWorkout;
-import com.example.aisocket.project.domain.Workout;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -26,7 +20,6 @@ import java.util.function.Consumer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -36,29 +29,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CoachFeedbackController.class)
-@Import({
-        WorkoutFactory.class,
-        RunningWorkoutCreateStrategy.class,
-        CyclingWorkoutCreateStrategy.class,
-        SecurityConfig.class
-})
+@Import(SecurityConfig.class)
 class CoachFeedbackControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private CoachFeedback coachFeedback;
+    private CoachFeedbackService coachFeedbackService;
 
     @Test
     @DisplayName("러닝 단일 운동 피드백 SSE 요청을 처리한다")
     void generateRunningWorkoutFeedbackStream() throws Exception {
 
         doAnswer(invocation -> {
-            Consumer<String> chunkConsumer = invocation.getArgument(3);
+            Consumer<String> chunkConsumer = invocation.getArgument(2);
             chunkConsumer.accept("running feedback");
             return null;
-        }).when(coachFeedback).getFeedbackStream(any(Member.class), any(Workout.class), eq(AthleteTier.AMATEUR), any());
+        }).when(coachFeedbackService).getFeedbackStream(any(Member.class), any(CoachFeedbackCommand.class), any());
 
         MvcResult result = mockMvc.perform(post("/api/v1/coach/feedback/single/stream")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -74,21 +62,23 @@ class CoachFeedbackControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM))
                 .andExpect(content().string(containsString("running feedback")));
 
-        ArgumentCaptor<Workout> workoutCaptor = ArgumentCaptor.forClass(Workout.class);
-        verify(coachFeedback).getFeedbackStream(any(Member.class), workoutCaptor.capture(), eq(AthleteTier.AMATEUR), any());
+        ArgumentCaptor<CoachFeedbackCommand> commandCaptor = ArgumentCaptor.forClass(CoachFeedbackCommand.class);
+        verify(coachFeedbackService).getFeedbackStream(any(Member.class), commandCaptor.capture(), any());
 
-        assertThat(workoutCaptor.getValue()).isInstanceOf(RunningWorkout.class);
-        assertThat(workoutCaptor.getValue().getDistance()).isEqualTo(8.2);
+        assertThat(commandCaptor.getValue().workOutType().name()).isEqualTo("RUNNING");
+        assertThat(commandCaptor.getValue().tier().name()).isEqualTo("AMATEUR");
+        assertThat(commandCaptor.getValue().commonCommand().distance()).isEqualTo(8.2);
+        assertThat(commandCaptor.getValue().runningCommand().avgPace()).isEqualTo(5.48);
     }
 
     @Test
     @DisplayName("자전거 단일 운동 피드백 SSE 요청을 처리한다")
     void generateCyclingWorkoutFeedbackStream() throws Exception {
         doAnswer(invocation -> {
-            Consumer<String> chunkConsumer = invocation.getArgument(3);
+            Consumer<String> chunkConsumer = invocation.getArgument(2);
             chunkConsumer.accept("cycling feedback");
             return null;
-        }).when(coachFeedback).getFeedbackStream(any(Member.class), any(Workout.class), eq(AthleteTier.PRO), any());
+        }).when(coachFeedbackService).getFeedbackStream(any(Member.class), any(CoachFeedbackCommand.class), any());
 
         MvcResult result = mockMvc.perform(post("/api/v1/coach/feedback/single/stream")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -104,11 +94,13 @@ class CoachFeedbackControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM))
                 .andExpect(content().string(containsString("cycling feedback")));
 
-        ArgumentCaptor<Workout> workoutCaptor = ArgumentCaptor.forClass(Workout.class);
-        verify(coachFeedback).getFeedbackStream(any(Member.class), workoutCaptor.capture(), eq(AthleteTier.PRO), any());
+        ArgumentCaptor<CoachFeedbackCommand> commandCaptor = ArgumentCaptor.forClass(CoachFeedbackCommand.class);
+        verify(coachFeedbackService).getFeedbackStream(any(Member.class), commandCaptor.capture(), any());
 
-        assertThat(workoutCaptor.getValue()).isInstanceOf(CyclingWorkout.class);
-        assertThat(workoutCaptor.getValue().getDistance()).isEqualTo(42.5);
+        assertThat(commandCaptor.getValue().workOutType().name()).isEqualTo("CYCLING");
+        assertThat(commandCaptor.getValue().tier().name()).isEqualTo("PRO");
+        assertThat(commandCaptor.getValue().commonCommand().distance()).isEqualTo(42.5);
+        assertThat(commandCaptor.getValue().cyclingCommand().avgSpeed()).isEqualTo(27.4);
     }
 
     private String runningRequestJson() {

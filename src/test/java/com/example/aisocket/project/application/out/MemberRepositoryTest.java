@@ -49,6 +49,39 @@ class MemberRepositoryTest extends DataJpaTestSupport {
     }
 
     @Test
+    @DisplayName("회원을 이메일로 조회한다")
+    void findByEmail() {
+        Member savedMember = memberRepository.save(
+                MemberFixture.builder()
+                        .email("runner@example.com")
+                        .rawPassword("raw-password")
+                        .nickname("runner")
+                        .buildNew()
+        );
+
+        Optional<Member> foundMember = memberRepository.findByEmail("runner@example.com");
+
+        assertThat(foundMember).isPresent();
+        assertThat(foundMember.get().getId()).isEqualTo(savedMember.getId());
+        assertThat(foundMember.get().getEmail()).isEqualTo("runner@example.com");
+    }
+
+    @Test
+    @DisplayName("이메일 존재 여부를 확인한다")
+    void existsByEmail() {
+        memberRepository.save(
+                MemberFixture.builder()
+                        .email("runner@example.com")
+                        .rawPassword("raw-password")
+                        .nickname("runner")
+                        .buildNew()
+        );
+
+        assertThat(memberRepository.existsByEmail("runner@example.com")).isTrue();
+        assertThat(memberRepository.existsByEmail("unknown@example.com")).isFalse();
+    }
+
+    @Test
     @DisplayName("존재하지 않는 회원 ID를 조회하면 빈 Optional을 반환한다")
     void findByUnknownIdReturnsEmpty() {
         Optional<Member> foundMember = memberRepository.findById(999_999L);

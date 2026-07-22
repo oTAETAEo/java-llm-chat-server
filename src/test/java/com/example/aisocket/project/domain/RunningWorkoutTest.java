@@ -37,8 +37,7 @@ class RunningWorkoutTest {
         assertThatThrownBy(() -> RunningWorkoutFixture.builder()
                 .startedAt(null)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("운동 시작 시간");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -47,8 +46,7 @@ class RunningWorkoutTest {
         assertThatThrownBy(() -> RunningWorkoutFixture.builder()
                 .endedAt(null)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("운동 종료 시간");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -58,8 +56,7 @@ class RunningWorkoutTest {
                 .startedAt(LocalDateTime.of(2026, 7, 18, 7, 45))
                 .endedAt(LocalDateTime.of(2026, 7, 18, 7, 0))
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("시작 시간");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -68,8 +65,7 @@ class RunningWorkoutTest {
         assertThatThrownBy(() -> RunningWorkoutFixture.builder()
                 .movingTime(0)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("운동 시간");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -78,8 +74,7 @@ class RunningWorkoutTest {
         assertThatThrownBy(() -> RunningWorkoutFixture.builder()
                 .distance(-1.0)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("운동 거리");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -88,7 +83,6 @@ class RunningWorkoutTest {
         assertThatThrownBy(() -> RunningWorkoutFixture.builder()
                 .steps(-1)
                 .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("걸음 수");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

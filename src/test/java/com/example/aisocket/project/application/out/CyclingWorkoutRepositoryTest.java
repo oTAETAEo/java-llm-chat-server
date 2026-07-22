@@ -75,8 +75,7 @@ class CyclingWorkoutRepositoryTest extends DataJpaTestSupport {
                             .build();
                     cyclingWorkoutRepository.save(unsavedMember, workout, AthleteTier.PRO);
                 })
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("회원 ID");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
 }

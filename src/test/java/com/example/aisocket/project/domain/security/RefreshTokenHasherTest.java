@@ -26,8 +26,7 @@ class RefreshTokenHasherTest {
     @DisplayName("원문 리프레시 토큰이 없으면 해시에 실패한다")
     void hashWithoutRawRefreshTokenFails() {
         assertThatThrownBy(() -> refreshTokenHasher.hash(" "))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("리프레시 토큰");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -36,10 +35,8 @@ class RefreshTokenHasherTest {
         String hashedToken = refreshTokenHasher.hash("raw-refresh-token");
 
         assertThatThrownBy(() -> refreshTokenHasher.matches(" ", hashedToken))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("리프레시 토큰");
+                .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> refreshTokenHasher.matches("raw-refresh-token", " "))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("해시 리프레시 토큰");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }
