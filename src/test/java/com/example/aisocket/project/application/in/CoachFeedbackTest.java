@@ -3,11 +3,10 @@ package com.example.aisocket.project.application.in;
 import com.example.aisocket.project.SpringBootIntegrationTestSupport;
 import com.example.aisocket.project.application.out.AiSender;
 import com.example.aisocket.project.domain.AthleteTier;
-import com.example.aisocket.project.domain.CreateCommonWorkoutCommand;
-import com.example.aisocket.project.domain.CreateRunningWorkoutCommand;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.MemberFixture;
 import com.example.aisocket.project.domain.RunningWorkout;
+import com.example.aisocket.project.domain.RunningWorkoutFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -131,28 +130,10 @@ class CoachFeedbackTest extends SpringBootIntegrationTestSupport {
     }
 
     private RunningWorkout runningWorkout() {
-        return RunningWorkout.create(
-                MemberFixture.builder().build(),
-                AthleteTier.AMATEUR,
-                new CreateCommonWorkoutCommand(
-                        LocalDateTime.of(2026, 7, 18, 7, 0),
-                        LocalDateTime.of(2026, 7, 18, 7, 45),
-                        8.2,
-                        120.0,
-                        85.0,
-                        45,
-                        530.0,
-                        172.0,
-                        188.0,
-                        176.0,
-                        148.0
-                ),
-                new CreateRunningWorkoutCommand(
-                        5.48,
-                        4.92,
-                        7600
-                )
-        );
+        return RunningWorkoutFixture.builder()
+                .member(MemberFixture.builder().build())
+                .tier(AthleteTier.AMATEUR)
+                .build();
     }
 
 

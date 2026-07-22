@@ -3,13 +3,12 @@ package com.example.aisocket.project.application.workout;
 import com.example.aisocket.project.application.out.CyclingWorkoutRepository;
 import com.example.aisocket.project.application.out.RunningWorkoutRepository;
 import com.example.aisocket.project.domain.AthleteTier;
-import com.example.aisocket.project.domain.CreateCommonWorkoutCommand;
-import com.example.aisocket.project.domain.CreateCyclingWorkoutCommand;
-import com.example.aisocket.project.domain.CreateRunningWorkoutCommand;
 import com.example.aisocket.project.domain.CyclingWorkout;
+import com.example.aisocket.project.domain.CyclingWorkoutFixture;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.MemberFixture;
 import com.example.aisocket.project.domain.RunningWorkout;
+import com.example.aisocket.project.domain.RunningWorkoutFixture;
 import com.example.aisocket.project.domain.WorkOutType;
 import com.example.aisocket.project.domain.Workout;
 import org.junit.jupiter.api.DisplayName;
@@ -74,53 +73,20 @@ class WorkoutSaveStrategyRegistryTest {
     }
 
     private RunningWorkout runningWorkout() {
-        return RunningWorkout.create(
-                MemberFixture.builder().build(),
-                AthleteTier.AMATEUR,
-                commonWorkoutCommand(
-                        LocalDateTime.of(2026, 7, 18, 7, 0),
-                        LocalDateTime.of(2026, 7, 18, 7, 45),
-                        8.2,
-                        45
-                ),
-                new CreateRunningWorkoutCommand(5.48, 4.92, 7600)
-        );
+        return RunningWorkoutFixture.builder()
+                .member(MemberFixture.builder().build())
+                .tier(AthleteTier.AMATEUR)
+                .build();
     }
 
     private CyclingWorkout cyclingWorkout() {
-        return CyclingWorkout.create(
-                MemberFixture.builder().build(),
-                AthleteTier.PRO,
-                commonWorkoutCommand(
-                        LocalDateTime.of(2026, 7, 18, 9, 0),
-                        LocalDateTime.of(2026, 7, 18, 10, 30),
-                        42.5,
-                        90
-                ),
-                new CreateCyclingWorkoutCommand(27.4, 44.1, 185.0, 420.0, 250.0)
-        );
+        return CyclingWorkoutFixture.builder()
+                .member(MemberFixture.builder().build())
+                .tier(AthleteTier.PRO)
+                .build();
     }
 
-    private CreateCommonWorkoutCommand commonWorkoutCommand(
-            LocalDateTime startedAt,
-            LocalDateTime endedAt,
-            Double distance,
-            Integer movingTime
-    ) {
-        return new CreateCommonWorkoutCommand(
-                startedAt,
-                endedAt,
-                distance,
-                120.0,
-                85.0,
-                movingTime,
-                530.0,
-                172.0,
-                188.0,
-                176.0,
-                148.0
-        );
-    }
+
 
     private Workout unsupportedWorkout() {
         return new Workout() {

@@ -4,9 +4,8 @@ import com.example.aisocket.project.DataJpaTestSupport;
 import com.example.aisocket.project.adapter.out.persistence.CyclingWorkoutRepositoryAdapter;
 import com.example.aisocket.project.adapter.out.persistence.MemberRepositoryAdapter;
 import com.example.aisocket.project.domain.AthleteTier;
-import com.example.aisocket.project.domain.CreateCommonWorkoutCommand;
-import com.example.aisocket.project.domain.CreateCyclingWorkoutCommand;
 import com.example.aisocket.project.domain.CyclingWorkout;
+import com.example.aisocket.project.domain.CyclingWorkoutFixture;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.MemberFixture;
 import org.junit.jupiter.api.DisplayName;
@@ -15,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,12 +38,10 @@ class CyclingWorkoutRepositoryTest extends DataJpaTestSupport {
     @DisplayName("회원과 연결된 자전거 운동 기록을 저장한다")
     void saveCyclingWorkout() {
         Member member = memberRepository.save(MemberFixture.builder().nickname("rider").buildNew());
-        CyclingWorkout workout = CyclingWorkout.create(
-                member,
-                AthleteTier.PRO,
-                commonWorkoutCommand(),
-                new CreateCyclingWorkoutCommand(27.4, 44.1, 185.0, 420.0, 250.0)
-        );
+        CyclingWorkout workout = CyclingWorkoutFixture.builder()
+                .member(member)
+                .tier(AthleteTier.PRO)
+                .build();
 
         Long workoutId = cyclingWorkoutRepository.save(member, workout, AthleteTier.PRO);
 
@@ -73,31 +69,14 @@ class CyclingWorkoutRepositoryTest extends DataJpaTestSupport {
     void saveCyclingWorkoutWithUnsavedMemberFails() {
         Member unsavedMember = MemberFixture.builder().nickname("rider").buildNew();
         assertThatThrownBy(() -> {
-                    CyclingWorkout workout = CyclingWorkout.create(
-                            unsavedMember,
-                            AthleteTier.PRO,
-                            commonWorkoutCommand(),
-                            new CreateCyclingWorkoutCommand(27.4, 44.1, 185.0, 420.0, 250.0)
-                    );
+                    CyclingWorkout workout = CyclingWorkoutFixture.builder()
+                            .member(unsavedMember)
+                            .tier(AthleteTier.PRO)
+                            .build();
                     cyclingWorkoutRepository.save(unsavedMember, workout, AthleteTier.PRO);
                 })
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("회원 ID");
     }
 
-    private CreateCommonWorkoutCommand commonWorkoutCommand() {
-        return new CreateCommonWorkoutCommand(
-                LocalDateTime.of(2026, 7, 18, 9, 0),
-                LocalDateTime.of(2026, 7, 18, 10, 30),
-                42.5,
-                650.0,
-                240.0,
-                90,
-                920.0,
-                88.0,
-                104.0,
-                168.0,
-                142.0
-        );
-    }
 }
