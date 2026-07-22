@@ -18,6 +18,7 @@ public class RunningWorkout implements Workout {
     private final Double maxCadence;
     private final Double maxHeartRate;
     private final Double avgHeartRate;
+
     private final Double avgPace;
     private final Double maxPace;
     private final Integer steps;
