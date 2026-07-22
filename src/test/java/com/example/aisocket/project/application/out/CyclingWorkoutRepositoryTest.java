@@ -8,6 +8,7 @@ import com.example.aisocket.project.domain.CreateCommonWorkoutCommand;
 import com.example.aisocket.project.domain.CreateCyclingWorkoutCommand;
 import com.example.aisocket.project.domain.CyclingWorkout;
 import com.example.aisocket.project.domain.Member;
+import com.example.aisocket.project.domain.security.TestPasswordHasher;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +39,7 @@ class CyclingWorkoutRepositoryTest extends DataJpaTestSupport {
     @Test
     @DisplayName("회원과 연결된 자전거 운동 기록을 저장한다")
     void saveCyclingWorkout() {
-        Member member = memberRepository.save(Member.create(null, null, "rider"));
+        Member member = memberRepository.save(Member.create("rider@example.com", "raw-password", "rider", new TestPasswordHasher()));
         CyclingWorkout workout = CyclingWorkout.create(
                 member,
                 AthleteTier.PRO,
@@ -70,7 +71,7 @@ class CyclingWorkoutRepositoryTest extends DataJpaTestSupport {
     @Test
     @DisplayName("저장되지 않은 회원으로 자전거 운동 기록을 저장하면 실패한다")
     void saveCyclingWorkoutWithUnsavedMemberFails() {
-        Member unsavedMember = Member.create(null, null, "rider");
+        Member unsavedMember = Member.create("rider@example.com", "raw-password", "rider", new TestPasswordHasher());
         assertThatThrownBy(() -> {
                     CyclingWorkout workout = CyclingWorkout.create(
                             unsavedMember,

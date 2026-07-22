@@ -1,5 +1,6 @@
 package com.example.aisocket.project.domain;
 
+import com.example.aisocket.project.domain.security.RefreshTokenHasher;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -34,8 +35,16 @@ public class RefreshToken extends BaseEntity {
 
     private boolean revoked;
 
-    public static RefreshToken create(Member member, String token, LocalDateTime expiresAt) {
-        return new RefreshToken(member, token, expiresAt, false, LocalDateTime.now());
+    public static RefreshToken create(Member member, String rawToken, LocalDateTime expiresAt, RefreshTokenHasher refreshTokenHasher) {
+        validateRefreshTokenHasher(refreshTokenHasher);
+        String hashedToken = refreshTokenHasher.hash(rawToken);
+        return new RefreshToken(member, hashedToken, expiresAt, false, LocalDateTime.now());
+    }
+
+    private static void validateRefreshTokenHasher(RefreshTokenHasher refreshTokenHasher) {
+        if (refreshTokenHasher == null) {
+            throw new IllegalArgumentException("리프레시 토큰 해시 정책(refreshTokenHasher)은 필수 값입니다.");
+        }
     }
 
     private RefreshToken(

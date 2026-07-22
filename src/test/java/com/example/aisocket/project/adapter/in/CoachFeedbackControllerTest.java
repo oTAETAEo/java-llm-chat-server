@@ -4,6 +4,7 @@ import com.example.aisocket.project.adapter.in.factory.CyclingWorkoutCreateStrat
 import com.example.aisocket.project.adapter.in.factory.RunningWorkoutCreateStrategy;
 import com.example.aisocket.project.adapter.in.factory.WorkoutFactory;
 import com.example.aisocket.project.application.in.CoachFeedback;
+import com.example.aisocket.project.config.SecurityConfig;
 import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.CyclingWorkout;
 import com.example.aisocket.project.domain.Member;
@@ -38,7 +39,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({
         WorkoutFactory.class,
         RunningWorkoutCreateStrategy.class,
-        CyclingWorkoutCreateStrategy.class
+        CyclingWorkoutCreateStrategy.class,
+        SecurityConfig.class
 })
 class CoachFeedbackControllerTest {
 
@@ -64,6 +66,8 @@ class CoachFeedbackControllerTest {
                         .content(runningRequestJson()))
                 .andExpect(request().asyncStarted())
                 .andReturn();
+
+        result.getAsyncResult(1_000);
 
         mockMvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
@@ -92,6 +96,8 @@ class CoachFeedbackControllerTest {
                         .content(cyclingRequestJson()))
                 .andExpect(request().asyncStarted())
                 .andReturn();
+
+        result.getAsyncResult(1_000);
 
         mockMvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())

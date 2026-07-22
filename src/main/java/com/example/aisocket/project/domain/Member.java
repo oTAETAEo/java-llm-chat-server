@@ -1,5 +1,6 @@
 package com.example.aisocket.project.domain;
 
+import com.example.aisocket.project.domain.security.PasswordHasher;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -29,14 +30,22 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private String nickname;
 
-    public static Member create(String email, String password, String nickname) {
-        return new Member(email, password, nickname);
+    public static Member create(String email, String rawPassword, String nickname, PasswordHasher passwordHasher) {
+        validatePasswordHasher(passwordHasher);
+        String hashedPassword = passwordHasher.hash(rawPassword);
+        return new Member(email, hashedPassword, nickname);
     }
 
     public static Member of(Long id, String email, String password, String nickname) {
         Member member = new Member(email, password, nickname);
         member.id = id;
         return member;
+    }
+
+    private static void validatePasswordHasher(PasswordHasher passwordHasher) {
+        if (passwordHasher == null) {
+            throw new IllegalArgumentException("비밀번호 해시 정책(passwordHasher)은 필수 값입니다.");
+        }
     }
 
     private Member(String email, String password, String nickname) {

@@ -3,6 +3,7 @@ package com.example.aisocket.project.application.out;
 import com.example.aisocket.project.DataJpaTestSupport;
 import com.example.aisocket.project.adapter.out.persistence.MemberRepositoryAdapter;
 import com.example.aisocket.project.domain.Member;
+import com.example.aisocket.project.domain.security.TestPasswordHasher;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +22,7 @@ class MemberRepositoryTest extends DataJpaTestSupport {
     @Test
     @DisplayName("회원을 저장하고 ID로 조회한다")
     void saveAndFindById() {
-        Member savedMember = memberRepository.save(Member.create(null, null, "runner"));
+        Member savedMember = memberRepository.save(Member.create("runner@example.com", "raw-password", "runner", new TestPasswordHasher()));
 
         Optional<Member> foundMember = memberRepository.findById(savedMember.getId());
 
