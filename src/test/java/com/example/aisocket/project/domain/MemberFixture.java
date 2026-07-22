@@ -61,5 +61,9 @@ public final class MemberFixture {
         public Member buildNew() {
             return Member.create(email, rawPassword, nickname, PASSWORD_HASHER);
         }
+
+        public Member buildNewWithoutPasswordHasher() {
+            return Member.create(email, rawPassword, nickname, null);
+        }
     }
 }

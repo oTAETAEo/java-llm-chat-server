@@ -1,6 +1,5 @@
 package com.example.aisocket.project.domain;
 
-import com.example.aisocket.project.domain.security.TestPasswordHasher;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -8,8 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class MemberTest {
-
-    private final TestPasswordHasher passwordHasher = new TestPasswordHasher();
 
     @Test
     @DisplayName("신규 회원 생성 시 비밀번호를 해시해서 저장한다")
@@ -45,7 +42,7 @@ class MemberTest {
     @Test
     @DisplayName("닉네임이 없으면 회원 생성에 실패한다")
     void createMemberWithoutNicknameFails() {
-        assertThatThrownBy(() -> Member.create("runner@example.com", "raw-password", null, passwordHasher))
+        assertThatThrownBy(() -> MemberFixture.builder().nickname(null).buildNew())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("닉네임");
     }
@@ -53,7 +50,7 @@ class MemberTest {
     @Test
     @DisplayName("닉네임이 공백이면 회원 생성에 실패한다")
     void createMemberWithBlankNicknameFails() {
-        assertThatThrownBy(() -> Member.create("runner@example.com", "raw-password", " ", passwordHasher))
+        assertThatThrownBy(() -> MemberFixture.builder().nickname(" ").buildNew())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("닉네임");
     }
@@ -61,7 +58,7 @@ class MemberTest {
     @Test
     @DisplayName("인증 정보 생성 시 이메일이 없으면 실패한다")
     void createMemberWithAuthFieldsWithoutEmailFails() {
-        assertThatThrownBy(() -> Member.create(null, "raw-password", "runner", passwordHasher))
+        assertThatThrownBy(() -> MemberFixture.builder().email(null).buildNew())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("이메일");
     }
@@ -69,7 +66,7 @@ class MemberTest {
     @Test
     @DisplayName("인증 정보 생성 시 이메일 형식이 올바르지 않으면 실패한다")
     void createMemberWithAuthFieldsWithInvalidEmailFails() {
-        assertThatThrownBy(() -> Member.create("runner", "raw-password", "runner", passwordHasher))
+        assertThatThrownBy(() -> MemberFixture.builder().email("runner").buildNew())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("이메일");
     }
@@ -77,7 +74,7 @@ class MemberTest {
     @Test
     @DisplayName("인증 정보 생성 시 비밀번호가 없으면 실패한다")
     void createMemberWithAuthFieldsWithoutPasswordFails() {
-        assertThatThrownBy(() -> Member.create("runner@example.com", null, "runner", passwordHasher))
+        assertThatThrownBy(() -> MemberFixture.builder().rawPassword(null).buildNew())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("비밀번호");
     }
@@ -85,7 +82,7 @@ class MemberTest {
     @Test
     @DisplayName("비밀번호 해시 정책이 없으면 회원 생성에 실패한다")
     void createMemberWithoutPasswordHasherFails() {
-        assertThatThrownBy(() -> Member.create("runner@example.com", "raw-password", "runner", null))
+        assertThatThrownBy(() -> MemberFixture.builder().buildNewWithoutPasswordHasher())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("비밀번호 해시 정책");
     }
