@@ -1,6 +1,6 @@
 package com.example.aisocket.project.application.internal.member;
 
-import com.example.aisocket.project.application.dto.command.RegisterMemberCommand;
+import com.example.aisocket.project.application.dto.command.SignUpMemberCommand;
 import com.example.aisocket.project.application.out.MemberRepository;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.security.PasswordHasher;
@@ -18,7 +18,7 @@ public class MemberRegisterServiceImpl implements MemberRegisterService {
 
     @Override
     @Transactional
-    public Member register(RegisterMemberCommand command) {
+    public Member register(SignUpMemberCommand command) {
         Member member = Member.create(
                 command.email(),
                 command.rawPassword(),

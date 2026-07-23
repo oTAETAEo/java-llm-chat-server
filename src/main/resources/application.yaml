@@ -39,3 +39,8 @@ app:
     table-name: vector_store
     dimensions: 1536
     initialize-schema: true
+
+  jwt:
+    secret: ${JWT_SECRET:local-development-jwt-secret-key-32bytes-minimum}
+    access-token-ttl: 30m
+    refresh-token-ttl: 14d
