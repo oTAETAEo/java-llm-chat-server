@@ -1,6 +1,7 @@
 package com.example.aisocket.project.adapter.in;
 
 import com.example.aisocket.project.adapter.in.dto.request.FeedbackRequest;
+import com.example.aisocket.project.adapter.in.security.AuthenticationMember;
 import com.example.aisocket.project.application.in.CoachFeedbackService;
 import com.example.aisocket.project.domain.Member;
 import lombok.RequiredArgsConstructor;
@@ -21,10 +22,10 @@ public class CoachFeedbackController {
     private final CoachFeedbackService coachFeedbackService;
 
     @PostMapping(value = "/single/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter generateSingleWorkoutFeedbackStream(@RequestBody FeedbackRequest request) {
+    public SseEmitter generateSingleWorkoutFeedbackStream(
+            @AuthenticationMember Member member, @RequestBody FeedbackRequest request
+    ) {
 
-        // TODO : 스프링 시큐리티 적용 시 제거
-        Member member = Member.of(1L, null, null, "temporary-user");
         SseEmitter emitter = new SseEmitter(0L);
         Thread.startVirtualThread(() -> {
             try {

@@ -9,7 +9,7 @@ import com.example.aisocket.project.application.internal.member.MemberFinderServ
 import com.example.aisocket.project.application.internal.member.MemberRegisterService;
 import com.example.aisocket.project.application.internal.token.IssuedToken;
 import com.example.aisocket.project.application.internal.token.RefreshTokenRegisterService;
-import com.example.aisocket.project.application.internal.token.TokenProvider;
+import com.example.aisocket.project.application.internal.token.JwtTokenProvider;
 import com.example.aisocket.project.domain.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 
     private final RefreshTokenRegisterService refreshTokenRegisterService;
 
-    private final TokenProvider tokenProvider;
+    private final JwtTokenProvider tokenProvider;
 
     @Override
     @Transactional

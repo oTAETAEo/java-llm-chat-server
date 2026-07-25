@@ -17,7 +17,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class RefreshTokenRegisterServiceImplTest {
+class RefreshTokenRegisterServiceTest {
 
     private final RefreshTokenRepository refreshTokenRepository = mock(RefreshTokenRepository.class);
     private final TestRefreshTokenHasher refreshTokenHasher = new TestRefreshTokenHasher();

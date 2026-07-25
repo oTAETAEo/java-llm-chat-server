@@ -10,7 +10,7 @@ import com.example.aisocket.project.application.internal.member.MemberFinderServ
 import com.example.aisocket.project.application.internal.member.MemberRegisterService;
 import com.example.aisocket.project.application.internal.token.IssuedToken;
 import com.example.aisocket.project.application.internal.token.RefreshTokenRegisterService;
-import com.example.aisocket.project.application.internal.token.TokenProvider;
+import com.example.aisocket.project.application.internal.token.JwtTokenProvider;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.MemberFixture;
 import jakarta.validation.ConstraintViolationException;
@@ -42,7 +42,7 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
     private MemberRegisterService memberRegisterService;
 
     @MockitoBean
-    private TokenProvider tokenProvider;
+    private JwtTokenProvider tokenProvider;
 
     @MockitoBean
     private RefreshTokenRegisterService refreshTokenRegisterService;

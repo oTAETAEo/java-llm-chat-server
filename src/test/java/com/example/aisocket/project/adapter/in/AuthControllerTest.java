@@ -5,6 +5,9 @@ import com.example.aisocket.project.application.dto.command.SignUpMemberCommand;
 import com.example.aisocket.project.application.dto.result.LoginResult;
 import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
 import com.example.aisocket.project.application.in.MemberAuthService;
+import com.example.aisocket.project.adapter.in.security.JwtAuthenticationFilter;
+import com.example.aisocket.project.application.internal.token.JwtTokenValidator;
+import com.example.aisocket.project.application.out.MemberRepository;
 import com.example.aisocket.project.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,11 +32,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, JwtAuthenticationFilter.class})
 class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private JwtTokenValidator jwtTokenValidator;
+
+    @MockitoBean
+    private MemberRepository memberRepository;
 
     @MockitoBean
     private MemberAuthService memberAuthService;

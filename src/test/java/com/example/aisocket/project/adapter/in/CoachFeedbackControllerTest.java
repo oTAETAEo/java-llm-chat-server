@@ -2,24 +2,32 @@ package com.example.aisocket.project.adapter.in;
 
 import com.example.aisocket.project.application.in.CoachFeedbackService;
 import com.example.aisocket.project.application.dto.command.CoachFeedbackCommand;
+import com.example.aisocket.project.adapter.in.security.JwtAuthenticationFilter;
+import com.example.aisocket.project.application.internal.token.JwtTokenClaims;
+import com.example.aisocket.project.application.internal.token.JwtTokenValidator;
+import com.example.aisocket.project.application.out.MemberRepository;
 import com.example.aisocket.project.config.SecurityConfig;
 import com.example.aisocket.project.domain.Member;
+import com.example.aisocket.project.domain.MemberFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import jakarta.servlet.http.Cookie;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -29,11 +37,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CoachFeedbackController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, JwtAuthenticationFilter.class})
 class CoachFeedbackControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private JwtTokenValidator jwtTokenValidator;
+
+    @MockitoBean
+    private MemberRepository memberRepository;
 
     @MockitoBean
     private CoachFeedbackService coachFeedbackService;
@@ -47,8 +61,11 @@ class CoachFeedbackControllerTest {
             chunkConsumer.accept("running feedback");
             return null;
         }).when(coachFeedbackService).getFeedbackStream(any(Member.class), any(CoachFeedbackCommand.class), any());
+        Member member = authenticatedMember();
+        givenAuthenticatedMember(member);
 
         MvcResult result = mockMvc.perform(post("/api/v1/coach/feedback/single/stream")
+                        .cookie(new Cookie("accessToken", "access-token"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.TEXT_EVENT_STREAM)
                         .content(runningRequestJson()))
@@ -62,9 +79,11 @@ class CoachFeedbackControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM))
                 .andExpect(content().string(containsString("running feedback")));
 
+        ArgumentCaptor<Member> memberCaptor = ArgumentCaptor.forClass(Member.class);
         ArgumentCaptor<CoachFeedbackCommand> commandCaptor = ArgumentCaptor.forClass(CoachFeedbackCommand.class);
-        verify(coachFeedbackService).getFeedbackStream(any(Member.class), commandCaptor.capture(), any());
+        verify(coachFeedbackService).getFeedbackStream(memberCaptor.capture(), commandCaptor.capture(), any());
 
+        assertThat(memberCaptor.getValue()).isSameAs(member);
         assertThat(commandCaptor.getValue().workOutType().name()).isEqualTo("RUNNING");
         assertThat(commandCaptor.getValue().tier().name()).isEqualTo("AMATEUR");
         assertThat(commandCaptor.getValue().commonCommand().distance()).isEqualTo(8.2);
@@ -79,8 +98,11 @@ class CoachFeedbackControllerTest {
             chunkConsumer.accept("cycling feedback");
             return null;
         }).when(coachFeedbackService).getFeedbackStream(any(Member.class), any(CoachFeedbackCommand.class), any());
+        Member member = authenticatedMember();
+        givenAuthenticatedMember(member);
 
         MvcResult result = mockMvc.perform(post("/api/v1/coach/feedback/single/stream")
+                        .cookie(new Cookie("accessToken", "access-token"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.TEXT_EVENT_STREAM)
                         .content(cyclingRequestJson()))
@@ -94,13 +116,29 @@ class CoachFeedbackControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM))
                 .andExpect(content().string(containsString("cycling feedback")));
 
+        ArgumentCaptor<Member> memberCaptor = ArgumentCaptor.forClass(Member.class);
         ArgumentCaptor<CoachFeedbackCommand> commandCaptor = ArgumentCaptor.forClass(CoachFeedbackCommand.class);
-        verify(coachFeedbackService).getFeedbackStream(any(Member.class), commandCaptor.capture(), any());
+        verify(coachFeedbackService).getFeedbackStream(memberCaptor.capture(), commandCaptor.capture(), any());
 
+        assertThat(memberCaptor.getValue()).isSameAs(member);
         assertThat(commandCaptor.getValue().workOutType().name()).isEqualTo("CYCLING");
         assertThat(commandCaptor.getValue().tier().name()).isEqualTo("PRO");
         assertThat(commandCaptor.getValue().commonCommand().distance()).isEqualTo(42.5);
         assertThat(commandCaptor.getValue().cyclingCommand().avgSpeed()).isEqualTo(27.4);
+    }
+
+    private Member authenticatedMember() {
+        return MemberFixture.builder()
+                .id(1L)
+                .email("runner@example.com")
+                .nickname("runner")
+                .build();
+    }
+
+    private void givenAuthenticatedMember(Member member) {
+        given(jwtTokenValidator.validate("access-token"))
+                .willReturn(new JwtTokenClaims(member.getId(), member.getEmail(), member.getNickname(), "access"));
+        given(memberRepository.findById(member.getId())).willReturn(Optional.of(member));
     }
 
     private String runningRequestJson() {

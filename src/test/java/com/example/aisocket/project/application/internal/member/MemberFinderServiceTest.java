@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class MemberFinderServiceImplTest {
+class MemberFinderServiceTest {
 
     private final MemberRepository memberRepository = mock(MemberRepository.class);
     private final TestPasswordHasher passwordHasher = new TestPasswordHasher();

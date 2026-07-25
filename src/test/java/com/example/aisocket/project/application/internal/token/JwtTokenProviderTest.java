@@ -29,7 +29,7 @@ class JwtTokenProviderTest {
             Duration.ofDays(14)
     );
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    private final TokenProvider tokenProvider = new JwtTokenProvider(jwtProperties, clock);
+    private final JwtTokenProvider tokenProvider = new JwtTokenProviderImpl(jwtProperties, clock);
 
     @Test
     @DisplayName("회원 정보로 액세스 토큰과 리프레시 토큰을 발급한다")
