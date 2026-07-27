@@ -2,8 +2,8 @@ package com.example.aisocket.project.config;
 
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.Filter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -16,6 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private static final String[] AUTH_ENDPOINTS = {
@@ -37,7 +38,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            @Qualifier("jwtAuthenticationFilter") Filter jwtAuthenticationFilter
+            Filter jwtAuthenticationFilter
     ) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
