@@ -1,19 +1,25 @@
-package com.example.aisocket.project.application.service;
+package com.example.aisocket.project.application.in;
 
 import com.example.aisocket.project.SpringBootIntegrationTestSupport;
 import com.example.aisocket.project.application.dto.command.CoachFeedbackCommand;
-import com.example.aisocket.project.application.in.CoachFeedbackService;
 import com.example.aisocket.project.application.internal.workout.WorkoutRecordRegisterService;
 import com.example.aisocket.project.application.internal.workout.WorkoutRecordRegistration;
 import com.example.aisocket.project.application.internal.vector.WorkoutVectorRegisterService;
 import com.example.aisocket.project.application.out.AiSender;
+import com.example.aisocket.project.application.out.FeedbackMessageRepository;
+import com.example.aisocket.project.application.out.FeedbackRoomRepository;
+import com.example.aisocket.project.application.out.FeedbackRoomWorkoutRepository;
 import com.example.aisocket.project.domain.AthleteTier;
+import com.example.aisocket.project.domain.FeedbackMessage;
+import com.example.aisocket.project.domain.FeedbackMessageRole;
+import com.example.aisocket.project.domain.FeedbackRoom;
+import com.example.aisocket.project.domain.FeedbackRoomFixture;
+import com.example.aisocket.project.domain.FeedbackRoomWorkout;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.MemberFixture;
 import com.example.aisocket.project.domain.RunningWorkout;
 import com.example.aisocket.project.domain.RunningWorkoutFixture;
 import com.example.aisocket.project.domain.WorkOutType;
-import com.example.aisocket.project.domain.Workout;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -22,6 +28,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,7 +40,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
@@ -48,6 +58,15 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
 
     @MockitoBean
     private AiSender aiSender;
+
+    @MockitoBean
+    private FeedbackRoomRepository feedbackRoomRepository;
+
+    @MockitoBean
+    private FeedbackMessageRepository feedbackMessageRepository;
+
+    @MockitoBean
+    private FeedbackRoomWorkoutRepository feedbackRoomWorkoutRepository;
 
     @Test
     @DisplayName("스트리밍 피드백 전에 운동 벡터 저장 유스케이스를 호출하고 AI 응답 조각을 전달한다")
@@ -172,6 +191,115 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
 
         verify(workoutRecordRegisterService).register(member.getId(), command);
         verifyNoInteractions(workoutVectorRegisterService, aiSender);
+    }
+
+    @Test
+    @DisplayName("방 단건 운동 피드백 스트림을 생성하고 사용자 메시지, 방 운동 연결, AI 메시지를 저장한다")
+    void generateSingleWorkoutFeedbackStream() {
+        Member member = MemberFixture.builder()
+                .id(1L)
+                .nickname("runner")
+                .build();
+        FeedbackRoom room = FeedbackRoomFixture.builder().member(member).title("새 운동 피드백").build();
+        CoachFeedbackCommand command = runningCommand();
+        RunningWorkout workout = RunningWorkoutFixture.builder()
+                .member(member)
+                .tier(AthleteTier.AMATEUR)
+                .build();
+        WorkoutRecordRegistration registration = new WorkoutRecordRegistration(10L, member, workout);
+        given(feedbackRoomRepository.findByIdAndMemberId(room.getId(), member.getId())).willReturn(Optional.of(room));
+        given(workoutRecordRegisterService.register(member.getId(), command)).willReturn(registration);
+        given(feedbackRoomRepository.save(any(FeedbackRoom.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(feedbackMessageRepository.save(any(FeedbackMessage.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(feedbackRoomWorkoutRepository.save(any(FeedbackRoomWorkout.class))).willAnswer(invocation -> invocation.getArgument(0));
+        doAnswer(invocation -> {
+            Consumer<String> consumer = invocation.getArgument(1);
+            consumer.accept("첫 ");
+            consumer.accept("응답");
+            return null;
+        }).when(aiSender).sendStream(anyString(), any());
+
+        List<String> chunks = new ArrayList<>();
+        coachFeedbackService.generateSingleWorkoutFeedbackStream(member.getId(), room.getId(), command, chunks::add);
+
+        ArgumentCaptor<FeedbackMessage> messageCaptor = ArgumentCaptor.forClass(FeedbackMessage.class);
+        ArgumentCaptor<FeedbackRoomWorkout> roomWorkoutCaptor = ArgumentCaptor.forClass(FeedbackRoomWorkout.class);
+        verify(workoutRecordRegisterService).register(member.getId(), command);
+        verify(workoutVectorRegisterService).register(member, registration, AthleteTier.AMATEUR);
+        verify(feedbackRoomRepository).save(room);
+        verify(feedbackMessageRepository, times(2)).save(messageCaptor.capture());
+        verify(feedbackRoomWorkoutRepository).save(roomWorkoutCaptor.capture());
+        verify(aiSender).sendStream(anyString(), any());
+
+        List<FeedbackMessage> savedMessages = messageCaptor.getAllValues();
+        assertThat(room.getTitle()).isEqualTo("러닝 8.2km 피드백");
+        assertThat(savedMessages.get(0).getRole()).isEqualTo(FeedbackMessageRole.USER);
+        assertThat(savedMessages.get(0).getContent()).contains("운동 타입: 러닝", "거리: 8.2 km");
+        assertThat(savedMessages.get(1).getRole()).isEqualTo(FeedbackMessageRole.ASSISTANT);
+        assertThat(savedMessages.get(1).getContent()).isEqualTo("첫 응답");
+        assertThat(roomWorkoutCaptor.getValue().getRoom()).isSameAs(room);
+        assertThat(roomWorkoutCaptor.getValue().getWorkoutType()).isEqualTo(WorkOutType.RUNNING);
+        assertThat(roomWorkoutCaptor.getValue().getWorkoutId()).isEqualTo(10L);
+        assertThat(chunks).containsExactly("첫 ", "응답");
+    }
+
+    @Test
+    @DisplayName("방 단건 운동 피드백 스트림의 AI 응답이 비어 있으면 AI 메시지를 저장하지 않는다")
+    void generateSingleWorkoutFeedbackStreamWithEmptyAiResponse() {
+        Member member = MemberFixture.builder()
+                .id(1L)
+                .nickname("runner")
+                .build();
+        FeedbackRoom room = FeedbackRoomFixture.builder().member(member).build();
+        CoachFeedbackCommand command = runningCommand();
+        RunningWorkout workout = RunningWorkoutFixture.builder().member(member).build();
+        WorkoutRecordRegistration registration = new WorkoutRecordRegistration(10L, member, workout);
+        given(feedbackRoomRepository.findByIdAndMemberId(room.getId(), member.getId())).willReturn(Optional.of(room));
+        given(workoutRecordRegisterService.register(member.getId(), command)).willReturn(registration);
+        given(feedbackRoomRepository.save(any(FeedbackRoom.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(feedbackMessageRepository.save(any(FeedbackMessage.class))).willAnswer(invocation -> invocation.getArgument(0));
+        doAnswer(invocation -> null).when(aiSender).sendStream(anyString(), any());
+
+        coachFeedbackService.generateSingleWorkoutFeedbackStream(member.getId(), room.getId(), command, chunk -> {});
+
+        ArgumentCaptor<FeedbackMessage> messageCaptor = ArgumentCaptor.forClass(FeedbackMessage.class);
+        verify(feedbackMessageRepository).save(messageCaptor.capture());
+        assertThat(messageCaptor.getValue().getRole()).isEqualTo(FeedbackMessageRole.USER);
+    }
+
+    @Test
+    @DisplayName("방 단건 운동 피드백 스트림 생성 시 운동 기록 저장에 실패하면 벡터 저장과 AI 스트리밍을 호출하지 않는다")
+    void generateSingleWorkoutFeedbackStreamWhenWorkoutRecordFails() {
+        Member member = MemberFixture.builder()
+                .id(1L)
+                .nickname("runner")
+                .build();
+        FeedbackRoom room = FeedbackRoomFixture.builder().member(member).build();
+        CoachFeedbackCommand command = runningCommand();
+        RuntimeException exception = new RuntimeException("record failed");
+        given(feedbackRoomRepository.findByIdAndMemberId(room.getId(), member.getId())).willReturn(Optional.of(room));
+        given(workoutRecordRegisterService.register(member.getId(), command)).willThrow(exception);
+
+        assertThatThrownBy(() -> coachFeedbackService.generateSingleWorkoutFeedbackStream(member.getId(), room.getId(), command, chunk -> {}))
+                .isSameAs(exception);
+
+        verify(workoutRecordRegisterService).register(member.getId(), command);
+        verifyNoInteractions(workoutVectorRegisterService, aiSender);
+        verify(feedbackMessageRepository, never()).save(any(FeedbackMessage.class));
+        verify(feedbackRoomWorkoutRepository, never()).save(any(FeedbackRoomWorkout.class));
+    }
+
+    @Test
+    @DisplayName("소유한 피드백 방이 없으면 방 단건 운동 피드백 스트림 생성에 실패한다")
+    void generateSingleWorkoutFeedbackStreamWithoutOwnedRoomFails() {
+        UUID roomId = UUID.randomUUID();
+        CoachFeedbackCommand command = runningCommand();
+        given(feedbackRoomRepository.findByIdAndMemberId(roomId, 1L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> coachFeedbackService.generateSingleWorkoutFeedbackStream(1L, roomId, command, chunk -> {}))
+                .isInstanceOf(RuntimeException.class);
+
+        verifyNoInteractions(workoutRecordRegisterService, workoutVectorRegisterService, aiSender);
     }
 
     private CoachFeedbackCommand runningCommand() {

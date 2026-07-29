@@ -1,4 +1,4 @@
-package com.example.aisocket.project.application.service;
+package com.example.aisocket.project.application.in;
 
 import com.example.aisocket.project.SpringBootIntegrationTestSupport;
 import com.example.aisocket.project.application.dto.command.LoginCommand;
@@ -9,7 +9,6 @@ import com.example.aisocket.project.application.dto.result.LoginResult;
 import com.example.aisocket.project.application.dto.result.LogoutResult;
 import com.example.aisocket.project.application.dto.result.ReissueTokenResult;
 import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
-import com.example.aisocket.project.application.in.MemberAuthService;
 import com.example.aisocket.project.application.internal.member.MemberFinderService;
 import com.example.aisocket.project.application.internal.member.MemberRegisterService;
 import com.example.aisocket.project.application.internal.token.AccessTokenBlacklistService;
