@@ -36,6 +36,13 @@ public class MemberFinderServiceImpl implements MemberFinderService {
         return member;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Member findById(Long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+    }
+
     private void validatePassword(LoginCommand command, Member member) {
         if (!passwordHasher.matches(command.rawPassword(), member.getPassword())) {
             throw new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다.");

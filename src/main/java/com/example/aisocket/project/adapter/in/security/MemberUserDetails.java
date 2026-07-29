@@ -14,22 +14,28 @@ public class MemberUserDetails implements UserDetails {
 
     private static final String ROLE_USER = "ROLE_USER";
 
-    private final Member member;
+    private final Long memberId;
 
-    public Member member() {
-        return member;
+    private final String email;
+
+    private final String password;
+
+    private final String nickname;
+
+    public MemberUserDetails(Member member) {
+        this(member.getId(), member.getEmail(), member.getPassword(), member.getNickname());
     }
 
     public Long memberId() {
-        return member.getId();
+        return memberId;
     }
 
     public String email() {
-        return member.getEmail();
+        return email;
     }
 
     public String nickname() {
-        return member.getNickname();
+        return nickname;
     }
 
     @Override
@@ -39,11 +45,11 @@ public class MemberUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return member.getPassword();
+        return password;
     }
 
     @Override
     public String getUsername() {
-        return member.getEmail();
+        return email;
     }
 }

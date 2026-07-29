@@ -3,7 +3,6 @@ package com.example.aisocket.project.adapter.in;
 import com.example.aisocket.project.adapter.in.dto.request.FeedbackRequest;
 import com.example.aisocket.project.adapter.in.security.AuthenticationMember;
 import com.example.aisocket.project.application.in.CoachFeedbackService;
-import com.example.aisocket.project.domain.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,14 +22,15 @@ public class CoachFeedbackController {
 
     @PostMapping(value = "/single/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter generateSingleWorkoutFeedbackStream(
-            @AuthenticationMember Member member, @RequestBody FeedbackRequest request
+            @AuthenticationMember Long memberId, @RequestBody FeedbackRequest request
     ) {
 
         SseEmitter emitter = new SseEmitter(0L);
+
         Thread.startVirtualThread(() -> {
             try {
                 coachFeedbackService.getFeedbackStream(
-                        member, request.toCommand(), chunk -> send(emitter, chunk));
+                        memberId, request.toCommand(), chunk -> send(emitter, chunk));
                 emitter.complete();
             } catch (Exception e) {
                 emitter.completeWithError(e);

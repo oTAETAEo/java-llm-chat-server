@@ -91,7 +91,6 @@ class JwtAuthenticationFilterTest {
         assertThat(authentication).isNotNull();
         assertThat(authentication.getPrincipal()).isInstanceOf(MemberUserDetails.class);
         MemberUserDetails memberUserDetails = (MemberUserDetails) authentication.getPrincipal();
-        assertThat(memberUserDetails.member()).isSameAs(member);
         assertThat(memberUserDetails.memberId()).isEqualTo(1L);
         assertThat(memberUserDetails.email()).isEqualTo("runner@example.com");
         assertThat(memberUserDetails.nickname()).isEqualTo("runner");

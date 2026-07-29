@@ -59,14 +59,13 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
                 .build();
 
         CoachFeedbackCommand command = runningCommand();
-
         RunningWorkout workout = RunningWorkoutFixture.builder()
                 .member(member)
                 .tier(AthleteTier.AMATEUR)
                 .build();
 
-        given(workoutRecordRegisterService.register(member, command))
-                .willReturn(new WorkoutRecordRegistration(10L, workout));
+        given(workoutRecordRegisterService.register(member.getId(), command))
+                .willReturn(new WorkoutRecordRegistration(10L, member, workout));
 
         doAnswer(invocation -> {
             Consumer<String> consumer = invocation.getArgument(1);
@@ -76,11 +75,11 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
         }).when(aiSender).sendStream(anyString(), any());
 
         List<String> chunks = new ArrayList<>();
-        coachFeedbackService.getFeedbackStream(member, command, chunks::add);
+        coachFeedbackService.getFeedbackStream(member.getId(), command, chunks::add);
 
         ArgumentCaptor<String> promptCaptor = ArgumentCaptor.forClass(String.class);
         var inOrder = inOrder(workoutRecordRegisterService, workoutVectorRegisterService, aiSender);
-        inOrder.verify(workoutRecordRegisterService).register(member, command);
+        inOrder.verify(workoutRecordRegisterService).register(member.getId(), command);
         inOrder.verify(workoutVectorRegisterService).register(eq(member), any(WorkoutRecordRegistration.class), eq(AthleteTier.AMATEUR));
         assertThat(workout).isInstanceOf(RunningWorkout.class);
         inOrder.verify(aiSender).sendStream(promptCaptor.capture(), any());
@@ -98,7 +97,6 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
                 .build();
 
         CoachFeedbackCommand command = runningCommand();
-
         RuntimeException saveException = new RuntimeException("vector save failed");
 
         RunningWorkout workout = RunningWorkoutFixture.builder()
@@ -106,16 +104,16 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
                 .tier(AthleteTier.AMATEUR)
                 .build();
 
-        given(workoutRecordRegisterService.register(member, command))
-                .willReturn(new WorkoutRecordRegistration(10L, workout));
+        given(workoutRecordRegisterService.register(member.getId(), command))
+                .willReturn(new WorkoutRecordRegistration(10L, member, workout));
         given(workoutVectorRegisterService.register(eq(member), any(WorkoutRecordRegistration.class), eq(AthleteTier.AMATEUR)))
                 .willThrow(saveException);
 
         assertThatThrownBy(() ->
-                coachFeedbackService.getFeedbackStream(member, command, chunk -> {})
+                coachFeedbackService.getFeedbackStream(member.getId(), command, chunk -> {})
         ).isSameAs(saveException);
 
-        verify(workoutRecordRegisterService).register(member, command);
+        verify(workoutRecordRegisterService).register(member.getId(), command);
         verify(workoutVectorRegisterService)
                 .register(eq(member), any(WorkoutRecordRegistration.class), eq(AthleteTier.AMATEUR));
         verifyNoInteractions(aiSender);
@@ -131,7 +129,6 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
                 .build();
 
         CoachFeedbackCommand command = runningCommand();
-
         RuntimeException aiException = new RuntimeException("ai stream failed");
 
         RunningWorkout workout = RunningWorkoutFixture.builder()
@@ -139,18 +136,18 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
                 .tier(AthleteTier.AMATEUR)
                 .build();
 
-        given(workoutRecordRegisterService.register(member, command))
-                .willReturn(new WorkoutRecordRegistration(10L, workout));
+        given(workoutRecordRegisterService.register(member.getId(), command))
+                .willReturn(new WorkoutRecordRegistration(10L, member, workout));
 
         doAnswer(invocation -> {
             throw aiException;
         }).when(aiSender).sendStream(anyString(), any());
 
         assertThatThrownBy(() ->
-                coachFeedbackService.getFeedbackStream(member, command, chunk -> {})
+                coachFeedbackService.getFeedbackStream(member.getId(), command, chunk -> {})
         ).isSameAs(aiException);
 
-        verify(workoutRecordRegisterService).register(member, command);
+        verify(workoutRecordRegisterService).register(member.getId(), command);
         verify(workoutVectorRegisterService)
                 .register(eq(member), any(WorkoutRecordRegistration.class), eq(AthleteTier.AMATEUR));
         verify(aiSender).sendStream(anyString(), any());
@@ -166,15 +163,14 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
                 .build();
 
         CoachFeedbackCommand command = runningCommand();
-
         RuntimeException recordException = new RuntimeException("record failed");
-        given(workoutRecordRegisterService.register(member, command))
+        given(workoutRecordRegisterService.register(member.getId(), command))
                 .willThrow(recordException);
         assertThatThrownBy(() ->
-                coachFeedbackService.getFeedbackStream(member, command, chunk -> {})
+                coachFeedbackService.getFeedbackStream(member.getId(), command, chunk -> {})
         ).isSameAs(recordException);
 
-        verify(workoutRecordRegisterService).register(member, command);
+        verify(workoutRecordRegisterService).register(member.getId(), command);
         verifyNoInteractions(workoutVectorRegisterService, aiSender);
     }
 

@@ -39,6 +39,30 @@ class MemberFinderServiceTest {
     }
 
     @Test
+    @DisplayName("회원 ID에 해당하는 회원을 반환한다")
+    void findById() {
+        Member member = MemberFixture.builder()
+                .id(1L)
+                .email("runner@example.com")
+                .nickname("runner")
+                .build();
+        when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+
+        Member foundMember = memberFinderService.findById(1L);
+
+        assertThat(foundMember).isSameAs(member);
+    }
+
+    @Test
+    @DisplayName("회원 ID에 해당하는 회원이 없으면 실패한다")
+    void findByIdWithoutMemberFails() {
+        when(memberRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> memberFinderService.findById(1L))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     @DisplayName("로그인 이메일에 해당하는 회원이 없으면 실패한다")
     void findLoginMemberWithoutEmailFails() {
         LoginCommand command = new LoginCommand("runner@example.com", "raw-password");

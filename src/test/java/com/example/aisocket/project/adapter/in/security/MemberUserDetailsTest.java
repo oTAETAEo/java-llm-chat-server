@@ -21,7 +21,6 @@ class MemberUserDetailsTest {
 
         MemberUserDetails memberUserDetails = new MemberUserDetails(member);
 
-        assertThat(memberUserDetails.member()).isSameAs(member);
         assertThat(memberUserDetails.memberId()).isEqualTo(1L);
         assertThat(memberUserDetails.email()).isEqualTo("runner@example.com");
         assertThat(memberUserDetails.nickname()).isEqualTo("runner");

@@ -8,4 +8,6 @@ public interface MemberFinderService {
     void validateNotExistsByEmail(String email);
 
     Member findLoginMember(LoginCommand command);
+
+    Member findById(Long memberId);
 }

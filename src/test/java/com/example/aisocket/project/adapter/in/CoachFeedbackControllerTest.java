@@ -60,7 +60,7 @@ class CoachFeedbackControllerTest {
             Consumer<String> chunkConsumer = invocation.getArgument(2);
             chunkConsumer.accept("running feedback");
             return null;
-        }).when(coachFeedbackService).getFeedbackStream(any(Member.class), any(CoachFeedbackCommand.class), any());
+        }).when(coachFeedbackService).getFeedbackStream(any(Long.class), any(CoachFeedbackCommand.class), any());
         Member member = authenticatedMember();
         givenAuthenticatedMember(member);
 
@@ -79,11 +79,11 @@ class CoachFeedbackControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM))
                 .andExpect(content().string(containsString("running feedback")));
 
-        ArgumentCaptor<Member> memberCaptor = ArgumentCaptor.forClass(Member.class);
+        ArgumentCaptor<Long> memberIdCaptor = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<CoachFeedbackCommand> commandCaptor = ArgumentCaptor.forClass(CoachFeedbackCommand.class);
-        verify(coachFeedbackService).getFeedbackStream(memberCaptor.capture(), commandCaptor.capture(), any());
+        verify(coachFeedbackService).getFeedbackStream(memberIdCaptor.capture(), commandCaptor.capture(), any());
 
-        assertThat(memberCaptor.getValue()).isSameAs(member);
+        assertThat(memberIdCaptor.getValue()).isEqualTo(member.getId());
         assertThat(commandCaptor.getValue().workOutType().name()).isEqualTo("RUNNING");
         assertThat(commandCaptor.getValue().tier().name()).isEqualTo("AMATEUR");
         assertThat(commandCaptor.getValue().commonCommand().distance()).isEqualTo(8.2);
@@ -97,7 +97,7 @@ class CoachFeedbackControllerTest {
             Consumer<String> chunkConsumer = invocation.getArgument(2);
             chunkConsumer.accept("cycling feedback");
             return null;
-        }).when(coachFeedbackService).getFeedbackStream(any(Member.class), any(CoachFeedbackCommand.class), any());
+        }).when(coachFeedbackService).getFeedbackStream(any(Long.class), any(CoachFeedbackCommand.class), any());
         Member member = authenticatedMember();
         givenAuthenticatedMember(member);
 
@@ -116,11 +116,11 @@ class CoachFeedbackControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM))
                 .andExpect(content().string(containsString("cycling feedback")));
 
-        ArgumentCaptor<Member> memberCaptor = ArgumentCaptor.forClass(Member.class);
+        ArgumentCaptor<Long> memberIdCaptor = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<CoachFeedbackCommand> commandCaptor = ArgumentCaptor.forClass(CoachFeedbackCommand.class);
-        verify(coachFeedbackService).getFeedbackStream(memberCaptor.capture(), commandCaptor.capture(), any());
+        verify(coachFeedbackService).getFeedbackStream(memberIdCaptor.capture(), commandCaptor.capture(), any());
 
-        assertThat(memberCaptor.getValue()).isSameAs(member);
+        assertThat(memberIdCaptor.getValue()).isEqualTo(member.getId());
         assertThat(commandCaptor.getValue().workOutType().name()).isEqualTo("CYCLING");
         assertThat(commandCaptor.getValue().tier().name()).isEqualTo("PRO");
         assertThat(commandCaptor.getValue().commonCommand().distance()).isEqualTo(42.5);

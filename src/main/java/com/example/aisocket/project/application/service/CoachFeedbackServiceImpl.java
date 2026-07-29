@@ -7,7 +7,6 @@ import com.example.aisocket.project.application.internal.vector.WorkoutVectorReg
 import com.example.aisocket.project.application.internal.workout.WorkoutRecordRegisterService;
 import com.example.aisocket.project.application.internal.workout.WorkoutRecordRegistration;
 import com.example.aisocket.project.application.out.AiSender;
-import com.example.aisocket.project.domain.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -28,10 +27,11 @@ public class CoachFeedbackServiceImpl implements CoachFeedbackService {
     private final AiSender aiSender;
 
     @Override
-    public void getFeedbackStream(Member member, CoachFeedbackCommand command, Consumer<String> chunkConsumer) {
-        WorkoutRecordRegistration registration = workoutRecordRegisterService.register(member, command);
+    public void getFeedbackStream(Long memberId, CoachFeedbackCommand command, Consumer<String> chunkConsumer) {
 
-        workoutVectorRegisterService.register(member, registration, command.tier());
+        WorkoutRecordRegistration registration = workoutRecordRegisterService.register(memberId, command);
+
+        workoutVectorRegisterService.register(registration.member(), registration, command.tier());
 
         String prompt = coachFeedbackPromptBuilder.build(registration.workout(), command.tier());
 

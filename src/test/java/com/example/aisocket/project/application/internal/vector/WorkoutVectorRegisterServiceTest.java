@@ -38,21 +38,21 @@ class WorkoutVectorRegisterServiceTest extends SpringBootIntegrationTestSupport 
     private EmbeddingGenerator embeddingGenerator;
 
     @Test
-    @DisplayName("단일 러닝 운동 기록을 RDB와 pgvector 저장소에 함께 저장한다")
+    @DisplayName("저장된 단일 러닝 운동 기록을 pgvector 저장소에 저장한다")
     void saveRunningWorkoutVector() {
         given(embeddingGenerator.generate(anyString())).willReturn(testEmbedding());
 
         Member member = MemberFixture.builder().id(1L).nickname("runner").build();
-        RunningWorkout workout = runningWorkout();
+        RunningWorkout workout = runningWorkout(member);
 
-        UUID vectorId = workoutVectorRegisterService.register(member, new WorkoutRecordRegistration(10L, workout), AthleteTier.AMATEUR);
+        UUID vectorId = workoutVectorRegisterService.register(member, new WorkoutRecordRegistration(10L, member, workout), AthleteTier.AMATEUR);
 
         Map<String, Object> vectorRow = jdbcTemplate.queryForMap("""
                         SELECT member_id, workout_id, workout_type, content, metadata::text AS metadata
                         FROM workout_vector_store
-                        WHERE id = CAST(? AS uuid)
+                        WHERE id = ?
                         """,
-                vectorId.toString()
+                vectorId
         );
 
         assertThat(vectorRow.get("member_id")).isEqualTo(member.getId());
@@ -68,9 +68,9 @@ class WorkoutVectorRegisterServiceTest extends SpringBootIntegrationTestSupport 
         RuntimeException embeddingException = new RuntimeException("embedding failed");
         given(embeddingGenerator.generate(anyString())).willThrow(embeddingException);
         Member member = MemberFixture.builder().id(1L).nickname("runner").build();
-        RunningWorkout workout = runningWorkout();
+        RunningWorkout workout = runningWorkout(member);
 
-        assertThatThrownBy(() -> workoutVectorRegisterService.register(member, new WorkoutRecordRegistration(10L, workout), AthleteTier.AMATEUR))
+        assertThatThrownBy(() -> workoutVectorRegisterService.register(member, new WorkoutRecordRegistration(10L, member, workout), AthleteTier.AMATEUR))
                 .isSameAs(embeddingException);
 
         assertThat(countRows("workout_vector_store")).isZero();
@@ -82,17 +82,17 @@ class WorkoutVectorRegisterServiceTest extends SpringBootIntegrationTestSupport 
     void saveRunningWorkoutVectorWhenVectorStoreFails() {
         given(embeddingGenerator.generate(anyString())).willReturn(new float[]{0.1f, 0.2f, 0.3f});
         Member member = MemberFixture.builder().id(1L).nickname("runner").build();
-        RunningWorkout workout = runningWorkout();
+        RunningWorkout workout = runningWorkout(member);
 
-        assertThatThrownBy(() -> workoutVectorRegisterService.register(member, new WorkoutRecordRegistration(10L, workout), AthleteTier.AMATEUR))
+        assertThatThrownBy(() -> workoutVectorRegisterService.register(member, new WorkoutRecordRegistration(10L, member, workout), AthleteTier.AMATEUR))
                 .isInstanceOf(DataAccessException.class);
 
         verify(embeddingGenerator).generate(anyString());
     }
 
-    private RunningWorkout runningWorkout() {
+    private RunningWorkout runningWorkout(Member member) {
         return RunningWorkoutFixture.builder()
-                .member(MemberFixture.builder().build())
+                .member(member)
                 .tier(AthleteTier.AMATEUR)
                 .build();
     }

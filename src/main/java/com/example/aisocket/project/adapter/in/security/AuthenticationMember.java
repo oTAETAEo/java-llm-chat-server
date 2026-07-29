@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-@AuthenticationPrincipal(expression = "member()")
+@AuthenticationPrincipal(expression = "memberId()")
 public @interface AuthenticationMember {
 }
