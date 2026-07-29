@@ -3,6 +3,7 @@ package com.example.aisocket.project.domain;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,6 +29,28 @@ class WorkoutVectorTest {
         assertThat(workoutVector.getWorkoutType()).isEqualTo(WorkOutType.RUNNING);
         assertThat(workoutVector.getContent()).isEqualTo("러닝 운동 기록");
         assertThat(workoutVector.getCreatedAt()).isNotNull();
+    }
+
+
+    @Test
+    @DisplayName("metadata 값이 null이어도 운동 벡터를 생성한다")
+    void createWorkoutVectorWithNullMetadataValue() {
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        metadata.put("avgHeartRate", null);
+        metadata.put("source", "test");
+
+        WorkoutVector workoutVector = WorkoutVector.create(new CreateWorkoutVectorCommand(
+                1L,
+                10L,
+                WorkOutType.CYCLING,
+                "자전거 운동 기록",
+                metadata,
+                new float[]{0.1f, 0.2f, 0.3f}
+        ));
+
+        assertThat(workoutVector.getMetadata())
+                .containsEntry("avgHeartRate", null)
+                .containsEntry("source", "test");
     }
 
     @Test

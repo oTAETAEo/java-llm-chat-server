@@ -4,6 +4,7 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -50,11 +51,19 @@ public class WorkoutVector extends BaseEntity {
         this.workoutId = workoutId;
         this.workoutType = workoutType;
         this.content = content;
-        this.metadata = metadata == null ? Collections.emptyMap() : Map.copyOf(metadata);
+        this.metadata = copyMetadata(metadata);
         this.embedding = embedding == null ? new float[0] : embedding.clone();
         initializeCreatedAt(createdAt);
 
         validate();
+    }
+
+    private Map<String, Object> copyMetadata(Map<String, Object> metadata) {
+        if (metadata == null || metadata.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        return Collections.unmodifiableMap(new LinkedHashMap<>(metadata));
     }
 
     private void validate() {
