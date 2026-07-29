@@ -33,8 +33,9 @@ public class SingleWorkoutSystemInstructionSection implements SingleWorkoutPromp
                 목표 달성과 데이터 기반의 퍼포먼스 향상에 초점을 맞추어 단호하고 전문적인 톤으로 작성하세요.
                 
                 제공된 운동 데이터를 기반으로 상황에 맞는 정밀 피드백을 작성하세요.
-                
-                """;
+
+                %s
+                """.formatted(createKoreanWritingInstruction());
     }
 
     private String createAmateurSystemInstruction() {
@@ -47,7 +48,16 @@ public class SingleWorkoutSystemInstructionSection implements SingleWorkoutPromp
                 어려운 생체역학 용어는 배제하고, 이해하기 쉽고 따뜻하며 친절한 톤으로 피드백을 제시하세요.
                 
                 제공된 운동 데이터를 기반으로 상황에 맞는 정밀 피드백을 작성하세요.
-                
+
+                %s
+                """.formatted(createKoreanWritingInstruction());
+    }
+
+    private String createKoreanWritingInstruction() {
+        return """
+                한국어 작성 품질 규칙:
+                - 너는 한국어 맞춤법과 띄어쓰기 전문가야. 모든 응답은 국립국어원 표준어 규정의 문맥별 띄어쓰기 규칙을 완벽하게 준수하여 작성해야 해. 가독성을 위해 조사는 앞말에 붙여 쓰고, 의존 명사는 띄어 쓰며, 단어 사이의 공백이 어색하지 않도록 철저히 검증해줘.
                 """;
     }
+
 }
