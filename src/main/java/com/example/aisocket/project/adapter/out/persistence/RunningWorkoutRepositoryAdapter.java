@@ -7,6 +7,8 @@ import com.example.aisocket.project.domain.RunningWorkout;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
 public class RunningWorkoutRepositoryAdapter implements RunningWorkoutRepository {
@@ -18,5 +20,10 @@ public class RunningWorkoutRepositoryAdapter implements RunningWorkoutRepository
         RunningWorkout savedWorkout = repository.save(workout);
 
         return savedWorkout.getId();
+    }
+
+    @Override
+    public Optional<RunningWorkout> findByIdAndMemberId(Long workoutId, Long memberId) {
+        return repository.findByIdAndMemberId(workoutId, memberId);
     }
 }
