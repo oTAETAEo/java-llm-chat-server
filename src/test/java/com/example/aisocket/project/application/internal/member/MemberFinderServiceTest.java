@@ -2,6 +2,7 @@ package com.example.aisocket.project.application.internal.member;
 
 import com.example.aisocket.project.application.dto.command.LoginCommand;
 import com.example.aisocket.project.application.out.MemberRepository;
+import com.example.aisocket.project.common.error.ProjectException;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.MemberFixture;
 import com.example.aisocket.project.domain.security.TestPasswordHasher;
@@ -59,7 +60,7 @@ class MemberFinderServiceTest {
         when(memberRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> memberFinderService.findById(1L))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(ProjectException.class);
     }
 
     @Test
@@ -69,7 +70,7 @@ class MemberFinderServiceTest {
         when(memberRepository.findByEmail(command.email())).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> memberFinderService.findLoginMember(command))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(ProjectException.class);
     }
 
     @Test
@@ -85,6 +86,6 @@ class MemberFinderServiceTest {
         when(memberRepository.findByEmail(command.email())).thenReturn(Optional.of(member));
 
         assertThatThrownBy(() -> memberFinderService.findLoginMember(command))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(ProjectException.class);
     }
 }

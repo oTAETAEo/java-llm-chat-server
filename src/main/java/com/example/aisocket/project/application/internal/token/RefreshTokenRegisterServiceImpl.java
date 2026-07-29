@@ -1,6 +1,8 @@
 package com.example.aisocket.project.application.internal.token;
 
 import com.example.aisocket.project.application.out.RefreshTokenRepository;
+import com.example.aisocket.project.common.error.ProjectException;
+import com.example.aisocket.project.common.error.TokenErrorCode;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.RefreshToken;
 import com.example.aisocket.project.domain.security.RefreshTokenHasher;
@@ -72,13 +74,13 @@ public class RefreshTokenRegisterServiceImpl implements RefreshTokenRegisterServ
         String hashedToken = refreshTokenHasher.hash(rawRefreshToken);
 
         return refreshTokenRepository.findByToken(hashedToken)
-                .orElseThrow(() -> new IllegalArgumentException("저장된 리프레시 토큰을 찾을 수 없습니다."));
+                .orElseThrow(() -> new ProjectException(TokenErrorCode.REFRESH_TOKEN_NOT_FOUND));
     }
 
     private void validateOwner(RefreshToken refreshToken, Long memberId) {
 
         if (!Objects.equals(refreshToken.getMemberId(), memberId)) {
-            throw new IllegalArgumentException("리프레시 토큰 소유자가 일치하지 않습니다.");
+            throw new ProjectException(TokenErrorCode.REFRESH_TOKEN_FORBIDDEN);
         }
     }
 
@@ -87,7 +89,7 @@ public class RefreshTokenRegisterServiceImpl implements RefreshTokenRegisterServ
         LocalDateTime now = LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
 
         if (!refreshToken.isUsable(now)) {
-            throw new IllegalArgumentException("사용할 수 없는 리프레시 토큰입니다.");
+            throw new ProjectException(TokenErrorCode.REFRESH_TOKEN_UNUSABLE);
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.aisocket.project.application.internal.token;
 
+import com.example.aisocket.project.common.error.ProjectException;
 import com.example.aisocket.project.config.JwtProperties;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.MemberFixture;
@@ -92,7 +93,7 @@ class JwtTokenValidatorTest {
         IssuedToken issuedToken = jwtTokenProvider.issue(member);
 
         assertThatThrownBy(() -> jwtTokenValidator.validateRefreshToken(issuedToken.accessToken()))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(ProjectException.class);
     }
 
     @Test

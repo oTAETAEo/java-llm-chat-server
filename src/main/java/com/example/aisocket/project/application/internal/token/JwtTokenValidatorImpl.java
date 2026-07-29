@@ -1,5 +1,7 @@
 package com.example.aisocket.project.application.internal.token;
 
+import com.example.aisocket.project.common.error.ProjectException;
+import com.example.aisocket.project.common.error.TokenErrorCode;
 import com.example.aisocket.project.config.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -40,7 +42,7 @@ public class JwtTokenValidatorImpl implements JwtTokenValidator {
     public JwtTokenClaims validateAccessToken(String token) {
         JwtTokenClaims claims = validate(token);
         if (!ACCESS_TOKEN_TYPE.equals(claims.tokenType())) {
-            throw new IllegalArgumentException("액세스 토큰이 아닙니다.");
+            throw new ProjectException(TokenErrorCode.INVALID_ACCESS_TOKEN);
         }
         return claims;
     }
@@ -49,7 +51,7 @@ public class JwtTokenValidatorImpl implements JwtTokenValidator {
     public JwtTokenClaims validateRefreshToken(String token) {
         JwtTokenClaims claims = validate(token);
         if (!REFRESH_TOKEN_TYPE.equals(claims.tokenType())) {
-            throw new IllegalArgumentException("리프레시 토큰이 아닙니다.");
+            throw new ProjectException(TokenErrorCode.INVALID_REFRESH_TOKEN);
         }
         return claims;
     }

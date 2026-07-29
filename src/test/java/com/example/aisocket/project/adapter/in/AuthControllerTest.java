@@ -9,6 +9,8 @@ import com.example.aisocket.project.application.dto.result.LogoutResult;
 import com.example.aisocket.project.application.dto.result.ReissueTokenResult;
 import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
 import com.example.aisocket.project.application.in.MemberAuthService;
+import com.example.aisocket.project.common.error.MemberErrorCode;
+import com.example.aisocket.project.common.error.ProjectException;
 import com.example.aisocket.project.adapter.in.security.JwtAuthenticationFilter;
 import com.example.aisocket.project.application.internal.token.AccessTokenBlacklistService;
 import com.example.aisocket.project.application.internal.token.JwtTokenValidator;
@@ -36,6 +38,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
@@ -162,6 +165,31 @@ class AuthControllerTest {
         verify(memberAuthService).logout(commandCaptor.capture());
         assertThat(commandCaptor.getValue().accessToken()).isEqualTo("access-token");
         assertThat(commandCaptor.getValue().refreshToken()).isEqualTo("refresh-token");
+    }
+
+    @Test
+    @DisplayName("서비스 예외를 공통 에러 응답으로 반환한다")
+    void loginWithServiceException() throws Exception {
+        given(memberAuthService.login(any(LoginCommand.class)))
+                .willThrow(new ProjectException(MemberErrorCode.INVALID_CREDENTIALS));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginRequestJson()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.code").value("MEMBER_INVALID_CREDENTIALS"))
+                .andExpect(jsonPath("$.path").value("/api/v1/auth/login"));
+    }
+
+    @Test
+    @DisplayName("리프레시 토큰 쿠키가 없으면 공통 인증 에러 응답을 반환한다")
+    void reissueTokenWithoutRefreshTokenCookie() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/reissue"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.code").value("AUTHENTICATION_REQUIRED"))
+                .andExpect(jsonPath("$.path").value("/api/v1/auth/reissue"));
     }
 
     private String signUpRequestJson() {

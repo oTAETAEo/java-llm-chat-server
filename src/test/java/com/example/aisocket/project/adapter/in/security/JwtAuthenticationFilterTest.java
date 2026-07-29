@@ -6,6 +6,7 @@ import com.example.aisocket.project.application.internal.token.JwtTokenValidator
 import com.example.aisocket.project.application.out.MemberRepository;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.MemberFixture;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -33,10 +34,12 @@ class JwtAuthenticationFilterTest {
     private final JwtTokenValidator jwtTokenValidator = mock(JwtTokenValidator.class);
     private final AccessTokenBlacklistService accessTokenBlacklistService = mock(AccessTokenBlacklistService.class);
     private final MemberRepository memberRepository = mock(MemberRepository.class);
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
     private final JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(
             jwtTokenValidator,
             accessTokenBlacklistService,
-            memberRepository
+            memberRepository,
+            objectMapper
     );
 
     @AfterEach
@@ -116,6 +119,7 @@ class JwtAuthenticationFilterTest {
         jwtAuthenticationFilter.doFilter(request, response, filterChain);
 
         assertThat(response.getStatus()).isEqualTo(401);
+        assertThat(response.getContentAsString()).contains("AUTHENTICATION_FAILED", "인증에 실패했습니다.");
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
 
@@ -132,6 +136,7 @@ class JwtAuthenticationFilterTest {
         jwtAuthenticationFilter.doFilter(request, response, filterChain);
 
         assertThat(response.getStatus()).isEqualTo(401);
+        assertThat(response.getContentAsString()).contains("AUTHENTICATION_FAILED", "인증에 실패했습니다.");
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
 
@@ -149,6 +154,7 @@ class JwtAuthenticationFilterTest {
         jwtAuthenticationFilter.doFilter(request, response, filterChain);
 
         assertThat(response.getStatus()).isEqualTo(401);
+        assertThat(response.getContentAsString()).contains("AUTHENTICATION_FAILED", "인증에 실패했습니다.");
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
 

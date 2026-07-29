@@ -4,7 +4,12 @@ import com.example.aisocket.project.application.internal.token.AccessTokenBlackl
 import com.example.aisocket.project.application.internal.token.JwtTokenClaims;
 import com.example.aisocket.project.application.internal.token.JwtTokenValidator;
 import com.example.aisocket.project.application.out.MemberRepository;
+import com.example.aisocket.project.common.error.ErrorResponse;
+import com.example.aisocket.project.common.error.MemberErrorCode;
+import com.example.aisocket.project.common.error.ProjectException;
+import com.example.aisocket.project.common.error.TokenErrorCode;
 import com.example.aisocket.project.domain.Member;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -13,6 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -20,6 +26,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -35,6 +42,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final AccessTokenBlacklistService accessTokenBlacklistService;
 
     private final MemberRepository memberRepository;
+
+    private final ObjectMapper objectMapper;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -59,14 +68,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             validateNotBlacklisted(accessToken.get());
 
             Member member = memberRepository.findById(claims.memberId())
-                    .orElseThrow(() -> new IllegalArgumentException("인증 회원을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new ProjectException(MemberErrorCode.AUTHENTICATED_MEMBER_NOT_FOUND));
 
             saveAuthentication(request, member);
             filterChain.doFilter(request, response);
-        } catch (JwtException | IllegalArgumentException exception) {
+        } catch (JwtException | ProjectException | IllegalArgumentException exception) {
             SecurityContextHolder.clearContext();
-            response.sendError(HttpStatus.UNAUTHORIZED.value());
+            sendAuthenticationError(request, response);
         }
+    }
+
+    private void sendAuthenticationError(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        objectMapper.writeValue(
+                response.getWriter(),
+                ErrorResponse.of(TokenErrorCode.AUTHENTICATION_FAILED, request.getRequestURI())
+        );
     }
 
     private Optional<String> extractAccessToken(HttpServletRequest request) {
@@ -84,7 +103,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private void validateNotBlacklisted(String accessToken) {
         if (accessTokenBlacklistService.isBlacklisted(accessToken)) {
-            throw new IllegalArgumentException("폐기된 액세스 토큰입니다.");
+            throw new ProjectException(TokenErrorCode.BLACKLISTED_ACCESS_TOKEN);
         }
     }
 

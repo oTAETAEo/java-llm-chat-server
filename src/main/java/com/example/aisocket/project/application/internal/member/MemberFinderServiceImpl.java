@@ -2,6 +2,8 @@ package com.example.aisocket.project.application.internal.member;
 
 import com.example.aisocket.project.application.dto.command.LoginCommand;
 import com.example.aisocket.project.application.out.MemberRepository;
+import com.example.aisocket.project.common.error.MemberErrorCode;
+import com.example.aisocket.project.common.error.ProjectException;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.security.PasswordHasher;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +22,7 @@ public class MemberFinderServiceImpl implements MemberFinderService {
     @Transactional(readOnly = true)
     public void validateNotExistsByEmail(String email) {
         if (memberRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+            throw new ProjectException(MemberErrorCode.DUPLICATED_EMAIL);
         }
     }
 
@@ -29,7 +31,7 @@ public class MemberFinderServiceImpl implements MemberFinderService {
     public Member findLoginMember(LoginCommand command) {
 
         Member member = memberRepository.findByEmail(command.email())
-                .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다."));
+                .orElseThrow(() -> new ProjectException(MemberErrorCode.INVALID_CREDENTIALS));
 
         validatePassword(command, member);
 
@@ -40,12 +42,12 @@ public class MemberFinderServiceImpl implements MemberFinderService {
     @Transactional(readOnly = true)
     public Member findById(Long memberId) {
         return memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+                .orElseThrow(() -> new ProjectException(MemberErrorCode.MEMBER_NOT_FOUND));
     }
 
     private void validatePassword(LoginCommand command, Member member) {
         if (!passwordHasher.matches(command.rawPassword(), member.getPassword())) {
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다.");
+            throw new ProjectException(MemberErrorCode.INVALID_CREDENTIALS);
         }
     }
 }

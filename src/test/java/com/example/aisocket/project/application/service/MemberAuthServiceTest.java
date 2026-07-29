@@ -17,6 +17,9 @@ import com.example.aisocket.project.application.internal.token.IssuedAccessToken
 import com.example.aisocket.project.application.internal.token.IssuedToken;
 import com.example.aisocket.project.application.internal.token.RefreshTokenRegisterService;
 import com.example.aisocket.project.application.internal.token.JwtTokenProvider;
+import com.example.aisocket.project.common.error.MemberErrorCode;
+import com.example.aisocket.project.common.error.ProjectException;
+import com.example.aisocket.project.common.error.TokenErrorCode;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.RefreshToken;
 import com.example.aisocket.project.domain.security.TestRefreshTokenHasher;
@@ -84,11 +87,11 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
     void registerMemberWithDuplicatedEmailFails() {
         SignUpMemberCommand command = new SignUpMemberCommand("runner@example.com", "raw-password", "runner");
 
-        doThrow(new IllegalArgumentException("이미 사용 중인 이메일입니다."))
+        doThrow(new ProjectException(MemberErrorCode.DUPLICATED_EMAIL))
                 .when(memberFinderService).validateNotExistsByEmail("runner@example.com");
 
         assertThatThrownBy(() -> memberAuthService.signUp(command))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(ProjectException.class);
 
         verify(memberRegisterService, never()).register(any(SignUpMemberCommand.class));
     }
@@ -158,10 +161,10 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
     void loginWithInvalidCredentialFails() {
         LoginCommand command = new LoginCommand("runner@example.com", "wrong-password");
         when(memberFinderService.findLoginMember(command))
-                .thenThrow(new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다."));
+                .thenThrow(new ProjectException(MemberErrorCode.INVALID_CREDENTIALS));
 
         assertThatThrownBy(() -> memberAuthService.login(command))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(ProjectException.class);
 
         verifyNoInteractions(tokenProvider, refreshTokenRegisterService);
     }
@@ -197,10 +200,10 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
     void reissueTokenWithInvalidRefreshTokenFails() {
         ReissueTokenCommand command = new ReissueTokenCommand("invalid-refresh-token");
         when(refreshTokenRegisterService.findUsable(command.refreshToken()))
-                .thenThrow(new IllegalArgumentException("사용할 수 없는 리프레시 토큰입니다."));
+                .thenThrow(new ProjectException(TokenErrorCode.REFRESH_TOKEN_UNUSABLE));
 
         assertThatThrownBy(() -> memberAuthService.reissueToken(command))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(ProjectException.class);
 
         verify(refreshTokenRegisterService).findUsable(command.refreshToken());
         verifyNoInteractions(memberFinderService, tokenProvider);
@@ -211,10 +214,10 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
     void reissueTokenWithRevokedTokenFails() {
         ReissueTokenCommand command = new ReissueTokenCommand("old-refresh-token");
         when(refreshTokenRegisterService.findUsable(command.refreshToken()))
-                .thenThrow(new IllegalArgumentException("사용할 수 없는 리프레시 토큰입니다."));
+                .thenThrow(new ProjectException(TokenErrorCode.REFRESH_TOKEN_UNUSABLE));
 
         assertThatThrownBy(() -> memberAuthService.reissueToken(command))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(ProjectException.class);
 
         verify(refreshTokenRegisterService).findUsable(command.refreshToken());
         verifyNoInteractions(memberFinderService, tokenProvider);

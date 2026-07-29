@@ -1,6 +1,8 @@
 package com.example.aisocket.project.application.internal.token;
 
 import com.example.aisocket.project.application.out.RefreshTokenRepository;
+import com.example.aisocket.project.common.error.ProjectException;
+import com.example.aisocket.project.common.error.TokenErrorCode;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.MemberFixture;
 import com.example.aisocket.project.domain.RefreshToken;
@@ -76,7 +78,7 @@ class RefreshTokenRegisterServiceTest {
         when(refreshTokenRepository.findByToken("hashed-token:refresh-token")).thenReturn(Optional.of(refreshToken));
 
         assertThatThrownBy(() -> refreshTokenRegisterService.findUsable("refresh-token"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(ProjectException.class);
     }
 
     @Test
@@ -88,7 +90,7 @@ class RefreshTokenRegisterServiceTest {
         when(refreshTokenRepository.findByToken("hashed-token:refresh-token")).thenReturn(Optional.of(refreshToken));
 
         assertThatThrownBy(() -> refreshTokenRegisterService.findUsable("refresh-token"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(ProjectException.class);
     }
 
     @Test
@@ -100,7 +102,7 @@ class RefreshTokenRegisterServiceTest {
         when(refreshTokenRepository.findByToken("hashed-token:refresh-token")).thenReturn(Optional.of(refreshToken));
 
         assertThatThrownBy(() -> refreshTokenRegisterService.findUsable("refresh-token"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(ProjectException.class);
     }
 
     @Test
@@ -122,10 +124,10 @@ class RefreshTokenRegisterServiceTest {
     @DisplayName("JWT 타입이 리프레시 토큰이 아니면 실패한다")
     void findUsableWithAccessTokenFails() {
         when(tokenValidator.validateRefreshToken("access-token"))
-                .thenThrow(new IllegalArgumentException("리프레시 토큰이 아닙니다."));
+                .thenThrow(new ProjectException(TokenErrorCode.INVALID_REFRESH_TOKEN));
 
         assertThatThrownBy(() -> refreshTokenRegisterService.findUsable("access-token"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(ProjectException.class);
     }
 
     private JwtTokenClaims refreshClaims(Long memberId) {
