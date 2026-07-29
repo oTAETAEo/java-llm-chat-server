@@ -12,6 +12,7 @@ import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
 import com.example.aisocket.project.application.in.MemberAuthService;
 import com.example.aisocket.project.application.internal.member.MemberFinderService;
 import com.example.aisocket.project.application.internal.member.MemberRegisterService;
+import com.example.aisocket.project.application.internal.token.AccessTokenBlacklistService;
 import com.example.aisocket.project.application.internal.token.IssuedAccessToken;
 import com.example.aisocket.project.application.internal.token.IssuedToken;
 import com.example.aisocket.project.application.internal.token.RefreshTokenRegisterService;
@@ -54,6 +55,9 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
 
     @MockitoBean
     private RefreshTokenRegisterService refreshTokenRegisterService;
+
+    @MockitoBean
+    private AccessTokenBlacklistService accessTokenBlacklistService;
 
     @Test
     @DisplayName("회원가입 시 회원 등록 서비스를 호출하고 결과를 반환한다")
@@ -219,7 +223,7 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
     @Test
     @DisplayName("로그아웃 시 저장된 리프레시 토큰을 폐기한다")
     void logout() {
-        LogoutCommand command = new LogoutCommand("refresh-token");
+        LogoutCommand command = new LogoutCommand("access-token", "refresh-token");
         Member member = MemberFixture.builder().id(1L).build();
         RefreshToken savedRefreshToken = refreshToken(member);
         when(refreshTokenRegisterService.revoke(command.refreshToken())).thenReturn(savedRefreshToken);
@@ -227,6 +231,7 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
         LogoutResult result = memberAuthService.logout(command);
 
         verify(refreshTokenRegisterService).revoke(command.refreshToken());
+        verify(accessTokenBlacklistService).blacklist(command.accessToken());
         assertThat(result.memberId()).isEqualTo(1L);
     }
 

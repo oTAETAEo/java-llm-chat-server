@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 @RequiredArgsConstructor
 public class JwtTokenValidatorImpl implements JwtTokenValidator {
 
+    private static final String ACCESS_TOKEN_TYPE = "access";
     private static final String REFRESH_TOKEN_TYPE = "refresh";
 
     private final JwtProperties jwtProperties;
@@ -30,10 +31,19 @@ public class JwtTokenValidatorImpl implements JwtTokenValidator {
                 Long.valueOf(claims.getSubject()),
                 claims.get("email", String.class),
                 claims.get("nickname", String.class),
-                claims.get("tokenType", String.class)
+                claims.get("tokenType", String.class),
+                claims.getExpiration().toInstant()
         );
     }
 
+    @Override
+    public JwtTokenClaims validateAccessToken(String token) {
+        JwtTokenClaims claims = validate(token);
+        if (!ACCESS_TOKEN_TYPE.equals(claims.tokenType())) {
+            throw new IllegalArgumentException("액세스 토큰이 아닙니다.");
+        }
+        return claims;
+    }
 
     @Override
     public JwtTokenClaims validateRefreshToken(String token) {

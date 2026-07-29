@@ -129,7 +129,7 @@ class RefreshTokenRegisterServiceTest {
     }
 
     private JwtTokenClaims refreshClaims(Long memberId) {
-        return new JwtTokenClaims(memberId, "runner@example.com", "runner", "refresh");
+        return new JwtTokenClaims(memberId, "runner@example.com", "runner", "refresh", Instant.parse("2026-08-24T00:30:00Z"));
     }
 
     private RefreshToken refreshToken(Member member, String rawRefreshToken, LocalDateTime expiresAt) {

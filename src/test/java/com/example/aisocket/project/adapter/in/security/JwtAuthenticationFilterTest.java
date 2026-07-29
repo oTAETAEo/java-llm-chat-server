@@ -1,5 +1,6 @@
 package com.example.aisocket.project.adapter.in.security;
 
+import com.example.aisocket.project.application.internal.token.AccessTokenBlacklistService;
 import com.example.aisocket.project.application.internal.token.JwtTokenClaims;
 import com.example.aisocket.project.application.internal.token.JwtTokenValidator;
 import com.example.aisocket.project.application.out.MemberRepository;
@@ -18,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,9 +31,11 @@ import static org.mockito.Mockito.verify;
 class JwtAuthenticationFilterTest {
 
     private final JwtTokenValidator jwtTokenValidator = mock(JwtTokenValidator.class);
+    private final AccessTokenBlacklistService accessTokenBlacklistService = mock(AccessTokenBlacklistService.class);
     private final MemberRepository memberRepository = mock(MemberRepository.class);
     private final JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(
             jwtTokenValidator,
+            accessTokenBlacklistService,
             memberRepository
     );
 
@@ -51,7 +55,7 @@ class JwtAuthenticationFilterTest {
 
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
-        verify(jwtTokenValidator, never()).validate(org.mockito.ArgumentMatchers.anyString());
+        verify(jwtTokenValidator, never()).validateAccessToken(org.mockito.ArgumentMatchers.anyString());
     }
 
     @Test
@@ -65,7 +69,7 @@ class JwtAuthenticationFilterTest {
         jwtAuthenticationFilter.doFilter(request, response, filterChain);
 
         assertThat(response.getStatus()).isEqualTo(200);
-        verify(jwtTokenValidator, never()).validate(org.mockito.ArgumentMatchers.anyString());
+        verify(jwtTokenValidator, never()).validateAccessToken(org.mockito.ArgumentMatchers.anyString());
     }
 
     @Test
@@ -76,8 +80,9 @@ class JwtAuthenticationFilterTest {
                 .email("runner@example.com")
                 .nickname("runner")
                 .build();
-        given(jwtTokenValidator.validate("access-token"))
-                .willReturn(new JwtTokenClaims(1L, "runner@example.com", "runner", "access"));
+        given(jwtTokenValidator.validateAccessToken("access-token"))
+                .willReturn(accessClaims());
+        given(accessTokenBlacklistService.isBlacklisted("access-token")).willReturn(false);
         given(memberRepository.findById(1L)).willReturn(Optional.of(member));
         MockHttpServletRequest request = request("/api/v1/coach/feedback/single/stream");
         request.setCookies(new Cookie("accessToken", "access-token"));
@@ -101,8 +106,8 @@ class JwtAuthenticationFilterTest {
     @Test
     @DisplayName("액세스 토큰 타입이 아니면 인증에 실패한다")
     void doFilterWithRefreshTokenTypeFails() throws ServletException, IOException {
-        given(jwtTokenValidator.validate("refresh-token"))
-                .willReturn(new JwtTokenClaims(1L, "runner@example.com", "runner", "refresh"));
+        given(jwtTokenValidator.validateAccessToken("refresh-token"))
+                .willThrow(new IllegalArgumentException("액세스 토큰이 아닙니다."));
         MockHttpServletRequest request = request("/api/v1/coach/feedback/single/stream");
         request.setCookies(new Cookie("accessToken", "refresh-token"));
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -117,7 +122,7 @@ class JwtAuthenticationFilterTest {
     @Test
     @DisplayName("JWT 검증에 실패하면 인증에 실패한다")
     void doFilterWithInvalidTokenFails() throws ServletException, IOException {
-        given(jwtTokenValidator.validate("invalid-token"))
+        given(jwtTokenValidator.validateAccessToken("invalid-token"))
                 .willThrow(new JwtException("invalid token"));
         MockHttpServletRequest request = request("/api/v1/coach/feedback/single/stream");
         request.setCookies(new Cookie("accessToken", "invalid-token"));
@@ -128,6 +133,27 @@ class JwtAuthenticationFilterTest {
 
         assertThat(response.getStatus()).isEqualTo(401);
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
+
+    @Test
+    @DisplayName("블랙리스트에 등록된 액세스 토큰이면 인증에 실패한다")
+    void doFilterWithBlacklistedAccessTokenFails() throws ServletException, IOException {
+        given(jwtTokenValidator.validateAccessToken("access-token"))
+                .willReturn(accessClaims());
+        given(accessTokenBlacklistService.isBlacklisted("access-token")).willReturn(true);
+        MockHttpServletRequest request = request("/api/v1/coach/feedback/single/stream");
+        request.setCookies(new Cookie("accessToken", "access-token"));
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain filterChain = new MockFilterChain();
+
+        jwtAuthenticationFilter.doFilter(request, response, filterChain);
+
+        assertThat(response.getStatus()).isEqualTo(401);
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
+
+    private JwtTokenClaims accessClaims() {
+        return new JwtTokenClaims(1L, "runner@example.com", "runner", "access", Instant.parse("2026-08-24T00:30:00Z"));
     }
 
     private MockHttpServletRequest request(String requestUri) {

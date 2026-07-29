@@ -11,6 +11,7 @@ import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
 import com.example.aisocket.project.application.in.MemberAuthService;
 import com.example.aisocket.project.application.internal.member.MemberFinderService;
 import com.example.aisocket.project.application.internal.member.MemberRegisterService;
+import com.example.aisocket.project.application.internal.token.AccessTokenBlacklistService;
 import com.example.aisocket.project.application.internal.token.IssuedAccessToken;
 import com.example.aisocket.project.application.internal.token.IssuedToken;
 import com.example.aisocket.project.application.internal.token.JwtTokenProvider;
@@ -32,6 +33,8 @@ public class MemberAuthServiceImpl implements MemberAuthService {
     private final MemberRegisterService memberRegisterService;
 
     private final RefreshTokenRegisterService refreshTokenRegisterService;
+
+    private final AccessTokenBlacklistService accessTokenBlacklistService;
 
     private final JwtTokenProvider tokenProvider;
 
@@ -90,6 +93,8 @@ public class MemberAuthServiceImpl implements MemberAuthService {
     public LogoutResult logout(LogoutCommand command) {
 
         RefreshToken revokedRefreshToken = refreshTokenRegisterService.revoke(command.refreshToken());
+
+        accessTokenBlacklistService.blacklist(command.accessToken());
 
         return new LogoutResult(revokedRefreshToken.getMemberId());
     }

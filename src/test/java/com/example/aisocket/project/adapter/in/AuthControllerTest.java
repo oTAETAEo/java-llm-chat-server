@@ -10,6 +10,7 @@ import com.example.aisocket.project.application.dto.result.ReissueTokenResult;
 import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
 import com.example.aisocket.project.application.in.MemberAuthService;
 import com.example.aisocket.project.adapter.in.security.JwtAuthenticationFilter;
+import com.example.aisocket.project.application.internal.token.AccessTokenBlacklistService;
 import com.example.aisocket.project.application.internal.token.JwtTokenValidator;
 import com.example.aisocket.project.application.out.MemberRepository;
 import com.example.aisocket.project.config.SecurityConfig;
@@ -49,6 +50,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private MemberRepository memberRepository;
+
+    @MockitoBean
+    private AccessTokenBlacklistService accessTokenBlacklistService;
 
     @MockitoBean
     private MemberAuthService memberAuthService;
@@ -143,6 +147,7 @@ class AuthControllerTest {
                 .willReturn(new LogoutResult(1L));
 
         MvcResult mvcResult = mockMvc.perform(post("/api/v1/auth/logout")
+                        .cookie(new Cookie("accessToken", "access-token"))
                         .cookie(new Cookie("refreshToken", "refresh-token")))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -155,6 +160,7 @@ class AuthControllerTest {
 
         ArgumentCaptor<LogoutCommand> commandCaptor = ArgumentCaptor.forClass(LogoutCommand.class);
         verify(memberAuthService).logout(commandCaptor.capture());
+        assertThat(commandCaptor.getValue().accessToken()).isEqualTo("access-token");
         assertThat(commandCaptor.getValue().refreshToken()).isEqualTo("refresh-token");
     }
 

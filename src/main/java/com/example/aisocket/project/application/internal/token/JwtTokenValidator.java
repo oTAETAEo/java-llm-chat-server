@@ -4,5 +4,7 @@ public interface JwtTokenValidator {
 
     JwtTokenClaims validate(String token);
 
+    JwtTokenClaims validateAccessToken(String token);
+
     JwtTokenClaims validateRefreshToken(String token);
 }

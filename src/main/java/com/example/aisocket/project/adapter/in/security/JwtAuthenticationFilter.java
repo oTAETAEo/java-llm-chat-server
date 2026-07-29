@@ -1,5 +1,6 @@
 package com.example.aisocket.project.adapter.in.security;
 
+import com.example.aisocket.project.application.internal.token.AccessTokenBlacklistService;
 import com.example.aisocket.project.application.internal.token.JwtTokenClaims;
 import com.example.aisocket.project.application.internal.token.JwtTokenValidator;
 import com.example.aisocket.project.application.out.MemberRepository;
@@ -27,10 +28,11 @@ import java.util.Optional;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
-    private static final String ACCESS_TOKEN_TYPE = "access";
     private static final String AUTH_ENDPOINT_PREFIX = "/api/v1/auth/";
 
     private final JwtTokenValidator jwtTokenValidator;
+
+    private final AccessTokenBlacklistService accessTokenBlacklistService;
 
     private final MemberRepository memberRepository;
 
@@ -53,8 +55,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-            JwtTokenClaims claims = jwtTokenValidator.validate(accessToken.get());
-            validateAccessToken(claims);
+            JwtTokenClaims claims = jwtTokenValidator.validateAccessToken(accessToken.get());
+            validateNotBlacklisted(accessToken.get());
 
             Member member = memberRepository.findById(claims.memberId())
                     .orElseThrow(() -> new IllegalArgumentException("인증 회원을 찾을 수 없습니다."));
@@ -80,9 +82,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .findFirst();
     }
 
-    private void validateAccessToken(JwtTokenClaims claims) {
-        if (!ACCESS_TOKEN_TYPE.equals(claims.tokenType())) {
-            throw new IllegalArgumentException("액세스 토큰이 아닙니다.");
+    private void validateNotBlacklisted(String accessToken) {
+        if (accessTokenBlacklistService.isBlacklisted(accessToken)) {
+            throw new IllegalArgumentException("폐기된 액세스 토큰입니다.");
         }
     }
 

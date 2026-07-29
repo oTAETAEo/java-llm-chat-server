@@ -3,6 +3,7 @@ package com.example.aisocket.project.adapter.in;
 import com.example.aisocket.project.application.in.CoachFeedbackService;
 import com.example.aisocket.project.application.dto.command.CoachFeedbackCommand;
 import com.example.aisocket.project.adapter.in.security.JwtAuthenticationFilter;
+import com.example.aisocket.project.application.internal.token.AccessTokenBlacklistService;
 import com.example.aisocket.project.application.internal.token.JwtTokenClaims;
 import com.example.aisocket.project.application.internal.token.JwtTokenValidator;
 import com.example.aisocket.project.application.out.MemberRepository;
@@ -21,6 +22,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -48,6 +50,9 @@ class CoachFeedbackControllerTest {
 
     @MockitoBean
     private MemberRepository memberRepository;
+
+    @MockitoBean
+    private AccessTokenBlacklistService accessTokenBlacklistService;
 
     @MockitoBean
     private CoachFeedbackService coachFeedbackService;
@@ -136,8 +141,9 @@ class CoachFeedbackControllerTest {
     }
 
     private void givenAuthenticatedMember(Member member) {
-        given(jwtTokenValidator.validate("access-token"))
-                .willReturn(new JwtTokenClaims(member.getId(), member.getEmail(), member.getNickname(), "access"));
+        given(jwtTokenValidator.validateAccessToken("access-token"))
+                .willReturn(new JwtTokenClaims(member.getId(), member.getEmail(), member.getNickname(), "access", Instant.parse("2026-08-24T00:30:00Z")));
+        given(accessTokenBlacklistService.isBlacklisted("access-token")).willReturn(false);
         given(memberRepository.findById(member.getId())).willReturn(Optional.of(member));
     }
 
