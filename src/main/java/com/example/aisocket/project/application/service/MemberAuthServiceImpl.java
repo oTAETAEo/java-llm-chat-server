@@ -1,16 +1,22 @@
 package com.example.aisocket.project.application.service;
 
 import com.example.aisocket.project.application.dto.command.LoginCommand;
+import com.example.aisocket.project.application.dto.command.LogoutCommand;
+import com.example.aisocket.project.application.dto.command.ReissueTokenCommand;
 import com.example.aisocket.project.application.dto.command.SignUpMemberCommand;
 import com.example.aisocket.project.application.dto.result.LoginResult;
+import com.example.aisocket.project.application.dto.result.LogoutResult;
+import com.example.aisocket.project.application.dto.result.ReissueTokenResult;
 import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
 import com.example.aisocket.project.application.in.MemberAuthService;
 import com.example.aisocket.project.application.internal.member.MemberFinderService;
 import com.example.aisocket.project.application.internal.member.MemberRegisterService;
+import com.example.aisocket.project.application.internal.token.IssuedAccessToken;
 import com.example.aisocket.project.application.internal.token.IssuedToken;
-import com.example.aisocket.project.application.internal.token.RefreshTokenRegisterService;
 import com.example.aisocket.project.application.internal.token.JwtTokenProvider;
+import com.example.aisocket.project.application.internal.token.RefreshTokenRegisterService;
 import com.example.aisocket.project.domain.Member;
+import com.example.aisocket.project.domain.RefreshToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,5 +65,32 @@ public class MemberAuthServiceImpl implements MemberAuthService {
                 issuedToken.accessTokenExpiresAt(),
                 issuedToken.refreshTokenExpiresAt()
         );
+    }
+
+    @Override
+    @Transactional
+    public ReissueTokenResult reissueToken(ReissueTokenCommand command) {
+
+        RefreshToken refreshToken = refreshTokenRegisterService.findUsable(command.refreshToken());
+
+        Member member = memberFinderService.findById(refreshToken.getMemberId());
+        IssuedAccessToken issuedAccessToken = tokenProvider.issueAccessToken(member);
+
+        return new ReissueTokenResult(
+                member.getId(),
+                member.getEmail(),
+                member.getNickname(),
+                issuedAccessToken.accessToken(),
+                issuedAccessToken.accessTokenExpiresAt()
+        );
+    }
+
+    @Override
+    @Transactional
+    public LogoutResult logout(LogoutCommand command) {
+
+        RefreshToken revokedRefreshToken = refreshTokenRegisterService.revoke(command.refreshToken());
+
+        return new LogoutResult(revokedRefreshToken.getMemberId());
     }
 }

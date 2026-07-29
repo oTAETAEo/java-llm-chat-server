@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class JwtTokenProviderTest {
 
     private static final String SECRET = "test-jwt-secret-key-must-be-at-least-32-bytes";
-    private static final Instant NOW = Instant.parse("2026-07-24T00:00:00Z");
+    private static final Instant NOW = Instant.parse("2026-08-24T00:00:00Z");
 
     private final JwtProperties jwtProperties = new JwtProperties(
             SECRET,
@@ -55,6 +55,27 @@ class JwtTokenProviderTest {
         assertThat(accessClaims.get("nickname", String.class)).isEqualTo("runner");
         assertThat(refreshClaims.getSubject()).isEqualTo("1");
         assertThat(refreshClaims.get("tokenType", String.class)).isEqualTo("refresh");
+    }
+
+    @Test
+    @DisplayName("회원 정보로 액세스 토큰만 발급한다")
+    void issueAccessToken() {
+        Member member = MemberFixture.builder()
+                .id(1L)
+                .email("runner@example.com")
+                .nickname("runner")
+                .build();
+
+        IssuedAccessToken issuedAccessToken = tokenProvider.issueAccessToken(member);
+
+        Claims accessClaims = parseClaims(issuedAccessToken.accessToken());
+
+        assertThat(issuedAccessToken.accessToken()).isNotBlank();
+        assertThat(issuedAccessToken.accessTokenExpiresAt()).isEqualTo(NOW.plus(Duration.ofMinutes(30)));
+        assertThat(accessClaims.getSubject()).isEqualTo("1");
+        assertThat(accessClaims.get("tokenType", String.class)).isEqualTo("access");
+        assertThat(accessClaims.get("email", String.class)).isEqualTo("runner@example.com");
+        assertThat(accessClaims.get("nickname", String.class)).isEqualTo("runner");
     }
 
     private Claims parseClaims(String token) {

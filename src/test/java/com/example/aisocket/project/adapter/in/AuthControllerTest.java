@@ -1,8 +1,12 @@
 package com.example.aisocket.project.adapter.in;
 
 import com.example.aisocket.project.application.dto.command.LoginCommand;
+import com.example.aisocket.project.application.dto.command.LogoutCommand;
+import com.example.aisocket.project.application.dto.command.ReissueTokenCommand;
 import com.example.aisocket.project.application.dto.command.SignUpMemberCommand;
 import com.example.aisocket.project.application.dto.result.LoginResult;
+import com.example.aisocket.project.application.dto.result.LogoutResult;
+import com.example.aisocket.project.application.dto.result.ReissueTokenResult;
 import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
 import com.example.aisocket.project.application.in.MemberAuthService;
 import com.example.aisocket.project.adapter.in.security.JwtAuthenticationFilter;
@@ -23,6 +27,8 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.Instant;
 import java.util.List;
+
+import jakarta.servlet.http.Cookie;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -99,6 +105,57 @@ class AuthControllerTest {
         verify(memberAuthService).login(commandCaptor.capture());
         assertThat(commandCaptor.getValue().email()).isEqualTo("runner@example.com");
         assertThat(commandCaptor.getValue().rawPassword()).isEqualTo("raw-password");
+    }
+
+    @Test
+    @DisplayName("리프레시 토큰 쿠키로 토큰 재발급 요청을 처리한다")
+    void reissueToken() throws Exception {
+
+        given(memberAuthService.reissueToken(any(ReissueTokenCommand.class)))
+                .willReturn(new ReissueTokenResult(
+                        1L,
+                        "runner@example.com",
+                        "runner",
+                        "new-access-token",
+                        Instant.parse("2026-07-24T00:30:00Z")
+                ));
+
+        MvcResult mvcResult = mockMvc.perform(post("/api/v1/auth/reissue")
+                        .cookie(new Cookie("refreshToken", "old-refresh-token")))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        List<String> cookies = mvcResult.getResponse().getHeaders(HttpHeaders.SET_COOKIE);
+        assertThat(cookies).anySatisfy(cookie -> assertThat(cookie)
+                .contains("accessToken=new-access-token", "Path=/", "HttpOnly", "SameSite=Lax"));
+        assertThat(cookies).noneSatisfy(cookie -> assertThat(cookie).contains("refreshToken="));
+
+        ArgumentCaptor<ReissueTokenCommand> commandCaptor = ArgumentCaptor.forClass(ReissueTokenCommand.class);
+        verify(memberAuthService).reissueToken(commandCaptor.capture());
+        assertThat(commandCaptor.getValue().refreshToken()).isEqualTo("old-refresh-token");
+    }
+
+    @Test
+    @DisplayName("리프레시 토큰 쿠키로 로그아웃 요청을 처리하고 토큰 쿠키를 삭제한다")
+    void logout() throws Exception {
+
+        given(memberAuthService.logout(any(LogoutCommand.class)))
+                .willReturn(new LogoutResult(1L));
+
+        MvcResult mvcResult = mockMvc.perform(post("/api/v1/auth/logout")
+                        .cookie(new Cookie("refreshToken", "refresh-token")))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        List<String> cookies = mvcResult.getResponse().getHeaders(HttpHeaders.SET_COOKIE);
+        assertThat(cookies).anySatisfy(cookie -> assertThat(cookie)
+                .contains("accessToken=", "Path=/", "Max-Age=0", "HttpOnly", "SameSite=Lax"));
+        assertThat(cookies).anySatisfy(cookie -> assertThat(cookie)
+                .contains("refreshToken=", "Path=/", "Max-Age=0", "HttpOnly", "SameSite=Lax"));
+
+        ArgumentCaptor<LogoutCommand> commandCaptor = ArgumentCaptor.forClass(LogoutCommand.class);
+        verify(memberAuthService).logout(commandCaptor.capture());
+        assertThat(commandCaptor.getValue().refreshToken()).isEqualTo("refresh-token");
     }
 
     private String signUpRequestJson() {

@@ -8,8 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +20,10 @@ public class RefreshTokenRegisterServiceImpl implements RefreshTokenRegisterServ
     private final RefreshTokenRepository refreshTokenRepository;
 
     private final RefreshTokenHasher refreshTokenHasher;
+
+    private final JwtTokenValidator tokenValidator;
+
+    private final Clock clock;
 
     @Override
     @Transactional
@@ -31,5 +37,57 @@ public class RefreshTokenRegisterServiceImpl implements RefreshTokenRegisterServ
         );
 
         return refreshTokenRepository.save(refreshToken);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public RefreshToken findUsable(String rawRefreshToken) {
+
+        JwtTokenClaims claims = tokenValidator.validateRefreshToken(rawRefreshToken);
+
+        RefreshToken refreshToken = findSavedRefreshToken(rawRefreshToken);
+
+        validateOwner(refreshToken, claims.memberId());
+        validateUsable(refreshToken);
+
+        return refreshToken;
+    }
+
+    @Override
+    @Transactional
+    public RefreshToken revoke(String rawRefreshToken) {
+
+        JwtTokenClaims claims = tokenValidator.validateRefreshToken(rawRefreshToken);
+
+        RefreshToken refreshToken = findSavedRefreshToken(rawRefreshToken);
+
+        validateOwner(refreshToken, claims.memberId());
+        refreshToken.revoke();
+
+        return refreshTokenRepository.save(refreshToken);
+    }
+
+    private RefreshToken findSavedRefreshToken(String rawRefreshToken) {
+
+        String hashedToken = refreshTokenHasher.hash(rawRefreshToken);
+
+        return refreshTokenRepository.findByToken(hashedToken)
+                .orElseThrow(() -> new IllegalArgumentException("저장된 리프레시 토큰을 찾을 수 없습니다."));
+    }
+
+    private void validateOwner(RefreshToken refreshToken, Long memberId) {
+
+        if (!Objects.equals(refreshToken.getMemberId(), memberId)) {
+            throw new IllegalArgumentException("리프레시 토큰 소유자가 일치하지 않습니다.");
+        }
+    }
+
+    private void validateUsable(RefreshToken refreshToken) {
+
+        LocalDateTime now = LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
+
+        if (!refreshToken.isUsable(now)) {
+            throw new IllegalArgumentException("사용할 수 없는 리프레시 토큰입니다.");
+        }
     }
 }

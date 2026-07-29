@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class JwtTokenValidatorTest {
 
     private static final String SECRET = "test-jwt-secret-key-must-be-at-least-32-bytes";
-    private static final Instant NOW = Instant.parse("2026-07-24T00:00:00Z");
+    private static final Instant NOW = Instant.parse("2026-08-24T00:00:00Z");
 
     private final JwtProperties jwtProperties = new JwtProperties(
             SECRET,
@@ -63,6 +63,36 @@ class JwtTokenValidatorTest {
         assertThat(claims.email()).isEqualTo("runner@example.com");
         assertThat(claims.nickname()).isEqualTo("runner");
         assertThat(claims.tokenType()).isEqualTo("refresh");
+    }
+
+    @Test
+    @DisplayName("리프레시 토큰 타입을 검증하고 클레임을 반환한다")
+    void validateRefreshTokenType() {
+        Member member = MemberFixture.builder()
+                .id(1L)
+                .email("runner@example.com")
+                .nickname("runner")
+                .build();
+        IssuedToken issuedToken = jwtTokenProvider.issue(member);
+
+        JwtTokenClaims claims = jwtTokenValidator.validateRefreshToken(issuedToken.refreshToken());
+
+        assertThat(claims.memberId()).isEqualTo(1L);
+        assertThat(claims.tokenType()).isEqualTo("refresh");
+    }
+
+    @Test
+    @DisplayName("액세스 토큰을 리프레시 토큰으로 검증하면 실패한다")
+    void validateRefreshTokenWithAccessTokenFails() {
+        Member member = MemberFixture.builder()
+                .id(1L)
+                .email("runner@example.com")
+                .nickname("runner")
+                .build();
+        IssuedToken issuedToken = jwtTokenProvider.issue(member);
+
+        assertThatThrownBy(() -> jwtTokenValidator.validateRefreshToken(issuedToken.accessToken()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

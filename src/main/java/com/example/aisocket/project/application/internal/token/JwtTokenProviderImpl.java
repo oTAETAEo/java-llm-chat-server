@@ -37,6 +37,17 @@ public class JwtTokenProviderImpl implements JwtTokenProvider {
         return new IssuedToken(accessToken, refreshToken, accessTokenExpiresAt, refreshTokenExpiresAt);
     }
 
+    @Override
+    public IssuedAccessToken issueAccessToken(Member member) {
+
+        Instant issuedAt = Instant.now(clock);
+        Instant accessTokenExpiresAt = issuedAt.plus(jwtProperties.accessTokenTtl());
+
+        String accessToken = createToken(member, ACCESS_TOKEN_TYPE, issuedAt, accessTokenExpiresAt);
+
+        return new IssuedAccessToken(accessToken, accessTokenExpiresAt);
+    }
+
     private String createToken(Member member, String tokenType, Instant issuedAt, Instant expiresAt) {
         return Jwts.builder()
                 .subject(String.valueOf(member.getId()))

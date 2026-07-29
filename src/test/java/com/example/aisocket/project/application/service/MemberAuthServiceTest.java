@@ -2,16 +2,23 @@ package com.example.aisocket.project.application.service;
 
 import com.example.aisocket.project.SpringBootIntegrationTestSupport;
 import com.example.aisocket.project.application.dto.command.LoginCommand;
+import com.example.aisocket.project.application.dto.command.LogoutCommand;
+import com.example.aisocket.project.application.dto.command.ReissueTokenCommand;
 import com.example.aisocket.project.application.dto.command.SignUpMemberCommand;
 import com.example.aisocket.project.application.dto.result.LoginResult;
+import com.example.aisocket.project.application.dto.result.LogoutResult;
+import com.example.aisocket.project.application.dto.result.ReissueTokenResult;
 import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
 import com.example.aisocket.project.application.in.MemberAuthService;
 import com.example.aisocket.project.application.internal.member.MemberFinderService;
 import com.example.aisocket.project.application.internal.member.MemberRegisterService;
+import com.example.aisocket.project.application.internal.token.IssuedAccessToken;
 import com.example.aisocket.project.application.internal.token.IssuedToken;
 import com.example.aisocket.project.application.internal.token.RefreshTokenRegisterService;
 import com.example.aisocket.project.application.internal.token.JwtTokenProvider;
 import com.example.aisocket.project.domain.Member;
+import com.example.aisocket.project.domain.RefreshToken;
+import com.example.aisocket.project.domain.security.TestRefreshTokenHasher;
 import com.example.aisocket.project.domain.MemberFixture;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -154,6 +162,88 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
         verifyNoInteractions(tokenProvider, refreshTokenRegisterService);
     }
 
+    @Test
+    @DisplayName("리프레시 토큰 재발급 시 기존 토큰을 폐기하고 새 토큰을 발급한다")
+    void reissueToken() {
+        ReissueTokenCommand command = new ReissueTokenCommand("old-refresh-token");
+        Member member = MemberFixture.builder()
+                .id(1L)
+                .email("runner@example.com")
+                .nickname("runner")
+                .build();
+        IssuedAccessToken newIssuedAccessToken = new IssuedAccessToken(
+                "new-access-token",
+                Instant.parse("2026-07-24T00:30:00Z")
+        );
+        when(refreshTokenRegisterService.findUsable(command.refreshToken())).thenReturn(refreshToken(member));
+        when(memberFinderService.findById(1L)).thenReturn(member);
+        when(tokenProvider.issueAccessToken(member)).thenReturn(newIssuedAccessToken);
+
+        ReissueTokenResult result = memberAuthService.reissueToken(command);
+
+        verify(refreshTokenRegisterService).findUsable(command.refreshToken());
+        verify(memberFinderService).findById(1L);
+        verify(tokenProvider).issueAccessToken(member);
+        assertThat(result.memberId()).isEqualTo(1L);
+        assertThat(result.accessToken()).isEqualTo("new-access-token");
+    }
+
+    @Test
+    @DisplayName("리프레시 토큰 검증에 실패하면 토큰 재발급에 실패한다")
+    void reissueTokenWithInvalidRefreshTokenFails() {
+        ReissueTokenCommand command = new ReissueTokenCommand("invalid-refresh-token");
+        when(refreshTokenRegisterService.findUsable(command.refreshToken()))
+                .thenThrow(new IllegalArgumentException("사용할 수 없는 리프레시 토큰입니다."));
+
+        assertThatThrownBy(() -> memberAuthService.reissueToken(command))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(refreshTokenRegisterService).findUsable(command.refreshToken());
+        verifyNoInteractions(memberFinderService, tokenProvider);
+    }
+
+    @Test
+    @DisplayName("저장된 리프레시 토큰이 폐기 상태이면 토큰 재발급에 실패한다")
+    void reissueTokenWithRevokedTokenFails() {
+        ReissueTokenCommand command = new ReissueTokenCommand("old-refresh-token");
+        when(refreshTokenRegisterService.findUsable(command.refreshToken()))
+                .thenThrow(new IllegalArgumentException("사용할 수 없는 리프레시 토큰입니다."));
+
+        assertThatThrownBy(() -> memberAuthService.reissueToken(command))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(refreshTokenRegisterService).findUsable(command.refreshToken());
+        verifyNoInteractions(memberFinderService, tokenProvider);
+    }
+
+    @Test
+    @DisplayName("로그아웃 시 저장된 리프레시 토큰을 폐기한다")
+    void logout() {
+        LogoutCommand command = new LogoutCommand("refresh-token");
+        Member member = MemberFixture.builder().id(1L).build();
+        RefreshToken savedRefreshToken = refreshToken(member);
+        when(refreshTokenRegisterService.revoke(command.refreshToken())).thenReturn(savedRefreshToken);
+
+        LogoutResult result = memberAuthService.logout(command);
+
+        verify(refreshTokenRegisterService).revoke(command.refreshToken());
+        assertThat(result.memberId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("로그아웃 요청이 없으면 서비스 검증에 실패한다")
+    void logoutWithoutCommandFails() {
+        assertThatThrownBy(() -> memberAuthService.logout(null))
+                .isInstanceOf(ConstraintViolationException.class);
+    }
+
+    @Test
+    @DisplayName("토큰 재발급 요청이 없으면 서비스 검증에 실패한다")
+    void reissueTokenWithoutCommandFails() {
+        assertThatThrownBy(() -> memberAuthService.reissueToken(null))
+                .isInstanceOf(ConstraintViolationException.class);
+    }
+
     private IssuedToken issuedToken() {
         return new IssuedToken(
                 "access-token",
@@ -162,4 +252,14 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
                 Instant.parse("2026-08-07T00:00:00Z")
         );
     }
+
+    private RefreshToken refreshToken(Member member) {
+        return RefreshToken.create(
+                member,
+                "refresh-token",
+                LocalDateTime.of(2026, 8, 7, 0, 0),
+                new TestRefreshTokenHasher()
+        );
+    }
+
 }
