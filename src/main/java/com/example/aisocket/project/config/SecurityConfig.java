@@ -1,5 +1,6 @@
 package com.example.aisocket.project.config;
 
+import com.example.aisocket.project.common.error.CommonErrorCode;
 import com.example.aisocket.project.common.error.ErrorResponse;
 import com.example.aisocket.project.common.error.TokenErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -74,12 +75,7 @@ public class SecurityConfig {
                             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
                             objectMapper.writeValue(
                                     response.getWriter(),
-                                    ErrorResponse.of(
-                                            HttpStatus.FORBIDDEN,
-                                            "ACCESS_DENIED",
-                                            "접근 권한이 없습니다.",
-                                            request.getRequestURI()
-                                    )
+                                    ErrorResponse.of(CommonErrorCode.ACCESS_DENIED, request.getRequestURI())
                             );
                         })
                 )

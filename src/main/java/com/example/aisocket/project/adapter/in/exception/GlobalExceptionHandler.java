@@ -1,7 +1,9 @@
 package com.example.aisocket.project.adapter.in.exception;
 
+import com.example.aisocket.project.common.error.CommonErrorCode;
 import com.example.aisocket.project.common.error.ErrorResponse;
 import com.example.aisocket.project.common.error.ProjectException;
+import com.example.aisocket.project.common.error.TokenErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +37,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest()
                 .body(ErrorResponse.of(
-                        HttpStatus.BAD_REQUEST,
-                        "BAD_REQUEST",
+                        CommonErrorCode.BAD_REQUEST,
                         exception.getMessage(),
                         request.getRequestURI()
                 ));
@@ -55,8 +56,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.of(
-                        HttpStatus.UNAUTHORIZED,
-                        "AUTHENTICATION_REQUIRED",
+                        TokenErrorCode.AUTHENTICATION_REQUIRED,
                         "인증 쿠키가 필요합니다: " + exception.getCookieName(),
                         request.getRequestURI()
                 ));
@@ -75,11 +75,8 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest()
                 .body(ErrorResponse.of(
-                        HttpStatus.BAD_REQUEST,
-                        "INVALID_PARAMETER",
-                        "요청 파라미터 형식이 올바르지 않습니다.",
-                        request.getRequestURI()
-                ));
+                        CommonErrorCode.INVALID_PARAMETER,
+                        request.getRequestURI()));
     }
 
     @ExceptionHandler(Exception.class)
@@ -88,10 +85,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ErrorResponse.of(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        "INTERNAL_SERVER_ERROR",
-                        "서버 내부 오류가 발생했습니다.",
-                        request.getRequestURI()
-                ));
+                        CommonErrorCode.INTERNAL_SERVER_ERROR,
+                        request.getRequestURI()));
     }
 }

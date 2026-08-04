@@ -17,6 +17,10 @@ public record ErrorResponse(
         return of(errorCode.status(), errorCode.code(), errorCode.message(), path);
     }
 
+    public static ErrorResponse of(ErrorCode errorCode, String message, String path) {
+        return of(errorCode.status(), errorCode.code(), message, path);
+    }
+
     public static ErrorResponse of(HttpStatus status, String code, String message, String path) {
         return new ErrorResponse(
                 Instant.now(),

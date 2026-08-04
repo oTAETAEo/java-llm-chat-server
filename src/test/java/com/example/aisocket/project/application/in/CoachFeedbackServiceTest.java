@@ -77,11 +77,13 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
                 .nickname("runner")
                 .build();
 
-        CoachFeedbackCommand command = runningCommand();
+
         RunningWorkout workout = RunningWorkoutFixture.builder()
                 .member(member)
                 .tier(AthleteTier.AMATEUR)
                 .build();
+
+        CoachFeedbackCommand command = runningCommand();
 
         given(workoutRecordRegisterService.register(member.getId(), command))
                 .willReturn(new WorkoutRecordRegistration(10L, member, workout));
@@ -97,11 +99,13 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
         coachFeedbackService.getFeedbackStream(member.getId(), command, chunks::add);
 
         ArgumentCaptor<String> promptCaptor = ArgumentCaptor.forClass(String.class);
+
         var inOrder = inOrder(workoutRecordRegisterService, workoutVectorRegisterService, aiSender);
         inOrder.verify(workoutRecordRegisterService).register(member.getId(), command);
         inOrder.verify(workoutVectorRegisterService).register(eq(member), any(WorkoutRecordRegistration.class), eq(AthleteTier.AMATEUR));
-        assertThat(workout).isInstanceOf(RunningWorkout.class);
         inOrder.verify(aiSender).sendStream(promptCaptor.capture(), any());
+
+        assertThat(workout).isInstanceOf(RunningWorkout.class);
         assertThat(promptCaptor.getValue()).contains("[기본 운동 통계 정보]", "[러닝 전용 분석 지표]");
         assertThat(chunks).containsExactly("첫 번째 응답", "두 번째 응답");
     }
@@ -133,8 +137,7 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
         ).isSameAs(saveException);
 
         verify(workoutRecordRegisterService).register(member.getId(), command);
-        verify(workoutVectorRegisterService)
-                .register(eq(member), any(WorkoutRecordRegistration.class), eq(AthleteTier.AMATEUR));
+        verify(workoutVectorRegisterService).register(eq(member), any(WorkoutRecordRegistration.class), eq(AthleteTier.AMATEUR));
         verifyNoInteractions(aiSender);
     }
 
