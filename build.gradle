@@ -27,6 +27,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+    implementation 'com.garmin:fit:21.205.0'
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
 
     compileOnly 'org.projectlombok:lombok'
