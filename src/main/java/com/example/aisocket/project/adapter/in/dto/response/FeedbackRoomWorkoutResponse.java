@@ -5,6 +5,7 @@ import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.WorkOutType;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record FeedbackRoomWorkoutResponse(
         Long workoutId,
@@ -28,8 +29,22 @@ public record FeedbackRoomWorkoutResponse(
         Double ftp,
         Double avgPace,
         Double maxPace,
-        Integer steps
+        Integer steps,
+        List<SensorSampleResponse> samples
 ) {
+
+    public record SensorSampleResponse(
+            Integer elapsedSeconds,
+            Double distance,
+            Double latitude,
+            Double longitude,
+            Double altitude,
+            Integer heartRate,
+            Integer cadence,
+            Double speed,
+            Integer power
+    ) {
+    }
 
     public static FeedbackRoomWorkoutResponse from(FeedbackRoomWorkoutResult result) {
         return new FeedbackRoomWorkoutResponse(
@@ -54,7 +69,20 @@ public record FeedbackRoomWorkoutResponse(
                 result.ftp(),
                 result.avgPace(),
                 result.maxPace(),
-                result.steps()
+                result.steps(),
+                result.samples().stream()
+                        .map(sample -> new SensorSampleResponse(
+                                sample.elapsedSeconds(),
+                                sample.distance(),
+                                sample.latitude(),
+                                sample.longitude(),
+                                sample.altitude(),
+                                sample.heartRate(),
+                                sample.cadence(),
+                                sample.speed(),
+                                sample.power()
+                        ))
+                        .toList()
         );
     }
 }

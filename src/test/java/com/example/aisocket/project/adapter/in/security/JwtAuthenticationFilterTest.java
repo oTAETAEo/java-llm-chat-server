@@ -31,6 +31,9 @@ import static org.mockito.Mockito.verify;
 
 class JwtAuthenticationFilterTest {
 
+    private static final String FEEDBACK_STREAM_PATH =
+            "/api/v1/coach/feedback/rooms/6a69e3a4-9d98-83ee-932f-d69cd46770a0/single/stream";
+
     private final JwtTokenValidator jwtTokenValidator = mock(JwtTokenValidator.class);
     private final AccessTokenBlacklistService accessTokenBlacklistService = mock(AccessTokenBlacklistService.class);
     private final MemberRepository memberRepository = mock(MemberRepository.class);
@@ -50,7 +53,7 @@ class JwtAuthenticationFilterTest {
     @Test
     @DisplayName("액세스 토큰 쿠키가 없으면 인증 없이 다음 필터로 진행한다")
     void doFilterWithoutAccessToken() throws ServletException, IOException {
-        MockHttpServletRequest request = request("/api/v1/coach/feedback/single/stream");
+        MockHttpServletRequest request = request(FEEDBACK_STREAM_PATH);
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain filterChain = new MockFilterChain();
 
@@ -87,7 +90,7 @@ class JwtAuthenticationFilterTest {
                 .willReturn(accessClaims());
         given(accessTokenBlacklistService.isBlacklisted("access-token")).willReturn(false);
         given(memberRepository.findById(1L)).willReturn(Optional.of(member));
-        MockHttpServletRequest request = request("/api/v1/coach/feedback/single/stream");
+        MockHttpServletRequest request = request(FEEDBACK_STREAM_PATH);
         request.setCookies(new Cookie("accessToken", "access-token"));
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain filterChain = new MockFilterChain();
@@ -111,7 +114,7 @@ class JwtAuthenticationFilterTest {
     void doFilterWithRefreshTokenTypeFails() throws ServletException, IOException {
         given(jwtTokenValidator.validateAccessToken("refresh-token"))
                 .willThrow(new IllegalArgumentException("액세스 토큰이 아닙니다."));
-        MockHttpServletRequest request = request("/api/v1/coach/feedback/single/stream");
+        MockHttpServletRequest request = request(FEEDBACK_STREAM_PATH);
         request.setCookies(new Cookie("accessToken", "refresh-token"));
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain filterChain = new MockFilterChain();
@@ -128,7 +131,7 @@ class JwtAuthenticationFilterTest {
     void doFilterWithInvalidTokenFails() throws ServletException, IOException {
         given(jwtTokenValidator.validateAccessToken("invalid-token"))
                 .willThrow(new JwtException("invalid token"));
-        MockHttpServletRequest request = request("/api/v1/coach/feedback/single/stream");
+        MockHttpServletRequest request = request(FEEDBACK_STREAM_PATH);
         request.setCookies(new Cookie("accessToken", "invalid-token"));
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain filterChain = new MockFilterChain();
@@ -146,7 +149,7 @@ class JwtAuthenticationFilterTest {
         given(jwtTokenValidator.validateAccessToken("access-token"))
                 .willReturn(accessClaims());
         given(accessTokenBlacklistService.isBlacklisted("access-token")).willReturn(true);
-        MockHttpServletRequest request = request("/api/v1/coach/feedback/single/stream");
+        MockHttpServletRequest request = request(FEEDBACK_STREAM_PATH);
         request.setCookies(new Cookie("accessToken", "access-token"));
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain filterChain = new MockFilterChain();

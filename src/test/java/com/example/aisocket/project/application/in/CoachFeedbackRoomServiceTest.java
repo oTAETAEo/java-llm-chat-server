@@ -4,15 +4,9 @@ import com.example.aisocket.project.SpringBootIntegrationTestSupport;
 import com.example.aisocket.project.application.dto.result.FeedbackRoomDetailResult;
 import com.example.aisocket.project.application.dto.result.FeedbackRoomSummaryResult;
 import com.example.aisocket.project.application.dto.result.FeedbackRoomWorkoutResult;
+import com.example.aisocket.project.application.internal.feedback.FeedbackRoomRecordService;
 import com.example.aisocket.project.application.internal.member.MemberFinderService;
-import com.example.aisocket.project.application.out.CyclingWorkoutRepository;
-import com.example.aisocket.project.application.out.FeedbackMessageRepository;
-import com.example.aisocket.project.application.out.FeedbackRoomRepository;
-import com.example.aisocket.project.application.out.FeedbackRoomWorkoutRepository;
-import com.example.aisocket.project.application.out.RunningWorkoutRepository;
-import com.example.aisocket.project.common.error.ProjectException;
-import com.example.aisocket.project.domain.CyclingWorkout;
-import com.example.aisocket.project.domain.CyclingWorkoutFixture;
+import com.example.aisocket.project.application.internal.workout.FeedbackRoomWorkoutQueryService;
 import com.example.aisocket.project.domain.FeedbackMessage;
 import com.example.aisocket.project.domain.FeedbackMessageFixture;
 import com.example.aisocket.project.domain.FeedbackMessageRole;
@@ -22,7 +16,6 @@ import com.example.aisocket.project.domain.FeedbackRoomWorkout;
 import com.example.aisocket.project.domain.FeedbackRoomWorkoutFixture;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.MemberFixture;
-import com.example.aisocket.project.domain.RunningWorkout;
 import com.example.aisocket.project.domain.RunningWorkoutFixture;
 import com.example.aisocket.project.domain.WorkOutType;
 import org.junit.jupiter.api.DisplayName;
@@ -31,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,19 +42,10 @@ class CoachFeedbackRoomServiceTest extends SpringBootIntegrationTestSupport {
     private MemberFinderService memberFinderService;
 
     @MockitoBean
-    private FeedbackRoomRepository feedbackRoomRepository;
+    private FeedbackRoomRecordService feedbackRoomRecordService;
 
     @MockitoBean
-    private FeedbackMessageRepository feedbackMessageRepository;
-
-    @MockitoBean
-    private FeedbackRoomWorkoutRepository feedbackRoomWorkoutRepository;
-
-    @MockitoBean
-    private RunningWorkoutRepository runningWorkoutRepository;
-
-    @MockitoBean
-    private CyclingWorkoutRepository cyclingWorkoutRepository;
+    private FeedbackRoomWorkoutQueryService feedbackRoomWorkoutQueryService;
 
     @Test
     @DisplayName("피드백 방을 생성한다")
@@ -73,12 +56,12 @@ class CoachFeedbackRoomServiceTest extends SpringBootIntegrationTestSupport {
                 .title("새 운동 피드백")
                 .build();
         given(memberFinderService.findById(member.getId())).willReturn(member);
-        given(feedbackRoomRepository.create(member, "새 운동 피드백")).willReturn(room);
+        given(feedbackRoomRecordService.createRoom(member, "새 운동 피드백")).willReturn(room);
 
         FeedbackRoomSummaryResult result = coachFeedbackRoomService.createRoom(member.getId());
 
         verify(memberFinderService).findById(member.getId());
-        verify(feedbackRoomRepository).create(member, "새 운동 피드백");
+        verify(feedbackRoomRecordService).createRoom(member, "새 운동 피드백");
         assertThat(result.roomId()).isEqualTo(room.getId());
         assertThat(result.title()).isEqualTo("새 운동 피드백");
         assertThat(result.pinned()).isFalse();
@@ -90,12 +73,12 @@ class CoachFeedbackRoomServiceTest extends SpringBootIntegrationTestSupport {
         Member member = member();
         FeedbackRoom first = FeedbackRoomFixture.builder().member(member).title("러닝 피드백").build();
         FeedbackRoom second = FeedbackRoomFixture.builder().member(member).title("자전거 피드백").build();
-        given(feedbackRoomRepository.findRecentByMemberId(member.getId()))
+        given(feedbackRoomRecordService.findRecentRooms(member.getId()))
                 .willReturn(List.of(first, second));
 
         List<FeedbackRoomSummaryResult> results = coachFeedbackRoomService.findRecentRooms(member.getId());
 
-        verify(feedbackRoomRepository).findRecentByMemberId(member.getId());
+        verify(feedbackRoomRecordService).findRecentRooms(member.getId());
         assertThat(results).extracting(FeedbackRoomSummaryResult::title)
                 .containsExactly("러닝 피드백", "자전거 피드백");
     }
@@ -106,11 +89,11 @@ class CoachFeedbackRoomServiceTest extends SpringBootIntegrationTestSupport {
         Member member = member();
         FeedbackRoom room = FeedbackRoomFixture.builder().member(member).title("고정 피드백").build();
         room.pin();
-        given(feedbackRoomRepository.findPinnedByMemberId(member.getId())).willReturn(List.of(room));
+        given(feedbackRoomRecordService.findPinnedRooms(member.getId())).willReturn(List.of(room));
 
         List<FeedbackRoomSummaryResult> results = coachFeedbackRoomService.findPinnedRooms(member.getId());
 
-        verify(feedbackRoomRepository).findPinnedByMemberId(member.getId());
+        verify(feedbackRoomRecordService).findPinnedRooms(member.getId());
         assertThat(results).hasSize(1);
         assertThat(results.get(0).title()).isEqualTo("고정 피드백");
         assertThat(results.get(0).pinned()).isTrue();
@@ -121,12 +104,12 @@ class CoachFeedbackRoomServiceTest extends SpringBootIntegrationTestSupport {
     void renameRoom() {
         Member member = member();
         FeedbackRoom room = FeedbackRoomFixture.builder().member(member).title("이전 제목").build();
-        given(feedbackRoomRepository.findByIdAndMemberId(room.getId(), member.getId())).willReturn(Optional.of(room));
-        given(feedbackRoomRepository.save(room)).willReturn(room);
+        given(feedbackRoomRecordService.findOwnedRoom(member.getId(), room.getId())).willReturn(room);
+        given(feedbackRoomRecordService.saveRoom(room)).willReturn(room);
 
         FeedbackRoomSummaryResult result = coachFeedbackRoomService.renameRoom(member.getId(), room.getId(), "새 제목");
 
-        verify(feedbackRoomRepository).save(room);
+        verify(feedbackRoomRecordService).saveRoom(room);
         assertThat(room.getTitle()).isEqualTo("새 제목");
         assertThat(result.title()).isEqualTo("새 제목");
     }
@@ -136,15 +119,15 @@ class CoachFeedbackRoomServiceTest extends SpringBootIntegrationTestSupport {
     void pinAndUnpinRoom() {
         Member member = member();
         FeedbackRoom room = FeedbackRoomFixture.builder().member(member).build();
-        given(feedbackRoomRepository.findByIdAndMemberId(room.getId(), member.getId())).willReturn(Optional.of(room));
-        given(feedbackRoomRepository.save(room)).willReturn(room);
+        given(feedbackRoomRecordService.findOwnedRoom(member.getId(), room.getId())).willReturn(room);
+        given(feedbackRoomRecordService.saveRoom(room)).willReturn(room);
 
         FeedbackRoomSummaryResult pinned = coachFeedbackRoomService.pinRoom(member.getId(), room.getId());
         FeedbackRoomSummaryResult unpinned = coachFeedbackRoomService.unpinRoom(member.getId(), room.getId());
 
         assertThat(pinned.pinned()).isTrue();
         assertThat(unpinned.pinned()).isFalse();
-        verify(feedbackRoomRepository, times(2)).save(room);
+        verify(feedbackRoomRecordService, times(2)).saveRoom(room);
     }
 
     @Test
@@ -152,13 +135,13 @@ class CoachFeedbackRoomServiceTest extends SpringBootIntegrationTestSupport {
     void deleteRoom() {
         Member member = member();
         FeedbackRoom room = FeedbackRoomFixture.builder().member(member).build();
-        given(feedbackRoomRepository.findByIdAndMemberId(room.getId(), member.getId())).willReturn(Optional.of(room));
-        given(feedbackRoomRepository.save(room)).willReturn(room);
+        given(feedbackRoomRecordService.findOwnedRoom(member.getId(), room.getId())).willReturn(room);
+        given(feedbackRoomRecordService.saveRoom(room)).willReturn(room);
 
         coachFeedbackRoomService.deleteRoom(member.getId(), room.getId());
 
         assertThat(room.getDeletedAt()).isNotNull();
-        verify(feedbackRoomRepository).save(room);
+        verify(feedbackRoomRecordService).saveRoom(room);
     }
 
     @Test
@@ -174,12 +157,12 @@ class CoachFeedbackRoomServiceTest extends SpringBootIntegrationTestSupport {
                 .room(room)
                 .content("AI 답변")
                 .buildAssistantMessage();
-        given(feedbackRoomRepository.findByIdAndMemberId(room.getId(), member.getId())).willReturn(Optional.of(room));
-        given(feedbackMessageRepository.findByRoomId(room.getId())).willReturn(List.of(userMessage, assistantMessage));
+        given(feedbackRoomRecordService.findOwnedRoom(member.getId(), room.getId())).willReturn(room);
+        given(feedbackRoomRecordService.findMessages(room.getId())).willReturn(List.of(userMessage, assistantMessage));
 
         FeedbackRoomDetailResult result = coachFeedbackRoomService.findRoom(member.getId(), room.getId());
 
-        verify(feedbackMessageRepository).findByRoomId(room.getId());
+        verify(feedbackRoomRecordService).findMessages(room.getId());
         assertThat(result.roomId()).isEqualTo(room.getId());
         assertThat(result.messages()).hasSize(2);
         assertThat(result.messages()).extracting(message -> message.role())
@@ -187,8 +170,8 @@ class CoachFeedbackRoomServiceTest extends SpringBootIntegrationTestSupport {
     }
 
     @Test
-    @DisplayName("피드백 방의 러닝 운동 데이터를 조회한다")
-    void findRoomWorkoutsWithRunningWorkout() {
+    @DisplayName("피드백 방의 운동 데이터를 조회한다")
+    void findRoomWorkouts() {
         Member member = member();
         FeedbackRoom room = FeedbackRoomFixture.builder().member(member).build();
         FeedbackRoomWorkout roomWorkout = FeedbackRoomWorkoutFixture.builder()
@@ -196,72 +179,30 @@ class CoachFeedbackRoomServiceTest extends SpringBootIntegrationTestSupport {
                 .workoutType(WorkOutType.RUNNING)
                 .workoutId(10L)
                 .build();
-        RunningWorkout workout = RunningWorkoutFixture.builder().member(member).build();
-        given(feedbackRoomRepository.findByIdAndMemberId(room.getId(), member.getId())).willReturn(Optional.of(room));
-        given(feedbackRoomWorkoutRepository.findByRoomId(room.getId())).willReturn(List.of(roomWorkout));
-        given(runningWorkoutRepository.findByIdAndMemberId(10L, member.getId())).willReturn(Optional.of(workout));
+        FeedbackRoomWorkoutResult workoutResult = FeedbackRoomWorkoutResult.from(
+                RunningWorkoutFixture.builder().member(member).build()
+        );
+        given(feedbackRoomRecordService.findOwnedRoom(member.getId(), room.getId())).willReturn(room);
+        given(feedbackRoomRecordService.findRoomWorkouts(room.getId())).willReturn(List.of(roomWorkout));
+        given(feedbackRoomWorkoutQueryService.findWorkout(member.getId(), roomWorkout)).willReturn(workoutResult);
 
         List<FeedbackRoomWorkoutResult> results = coachFeedbackRoomService.findRoomWorkouts(member.getId(), room.getId());
 
-        verify(runningWorkoutRepository).findByIdAndMemberId(10L, member.getId());
-        verifyNoInteractions(cyclingWorkoutRepository);
-        assertThat(results).hasSize(1);
-        assertThat(results.get(0).workOutType()).isEqualTo(WorkOutType.RUNNING);
-    }
-
-    @Test
-    @DisplayName("피드백 방의 자전거 운동 데이터를 조회한다")
-    void findRoomWorkoutsWithCyclingWorkout() {
-        Member member = member();
-        FeedbackRoom room = FeedbackRoomFixture.builder().member(member).build();
-        FeedbackRoomWorkout roomWorkout = FeedbackRoomWorkoutFixture.builder()
-                .room(room)
-                .workoutType(WorkOutType.CYCLING)
-                .workoutId(20L)
-                .build();
-        CyclingWorkout workout = CyclingWorkoutFixture.builder().member(member).build();
-        given(feedbackRoomRepository.findByIdAndMemberId(room.getId(), member.getId())).willReturn(Optional.of(room));
-        given(feedbackRoomWorkoutRepository.findByRoomId(room.getId())).willReturn(List.of(roomWorkout));
-        given(cyclingWorkoutRepository.findByIdAndMemberId(20L, member.getId())).willReturn(Optional.of(workout));
-
-        List<FeedbackRoomWorkoutResult> results = coachFeedbackRoomService.findRoomWorkouts(member.getId(), room.getId());
-
-        verify(cyclingWorkoutRepository).findByIdAndMemberId(20L, member.getId());
-        verifyNoInteractions(runningWorkoutRepository);
-        assertThat(results).hasSize(1);
-        assertThat(results.get(0).workOutType()).isEqualTo(WorkOutType.CYCLING);
+        verify(feedbackRoomWorkoutQueryService).findWorkout(member.getId(), roomWorkout);
+        assertThat(results).containsExactly(workoutResult);
     }
 
     @Test
     @DisplayName("소유한 피드백 방이 없으면 조회에 실패한다")
     void findRoomWithoutOwnedRoomFails() {
         UUID roomId = UUID.randomUUID();
-        given(feedbackRoomRepository.findByIdAndMemberId(roomId, 1L)).willReturn(Optional.empty());
+        given(feedbackRoomRecordService.findOwnedRoom(1L, roomId)).willThrow(new RuntimeException("room not found"));
 
         assertThatThrownBy(() -> coachFeedbackRoomService.findRoom(1L, roomId))
-                .isInstanceOf(ProjectException.class);
+                .isInstanceOf(RuntimeException.class);
 
-        verifyNoInteractions(feedbackMessageRepository);
+        verifyNoInteractions(feedbackRoomWorkoutQueryService);
     }
-
-    @Test
-    @DisplayName("피드백 방 운동의 원본 운동 기록이 없으면 조회에 실패한다")
-    void findRoomWorkoutsWithoutWorkoutFails() {
-        Member member = member();
-        FeedbackRoom room = FeedbackRoomFixture.builder().member(member).build();
-        FeedbackRoomWorkout roomWorkout = FeedbackRoomWorkoutFixture.builder()
-                .room(room)
-                .workoutType(WorkOutType.RUNNING)
-                .workoutId(10L)
-                .build();
-        given(feedbackRoomRepository.findByIdAndMemberId(room.getId(), member.getId())).willReturn(Optional.of(room));
-        given(feedbackRoomWorkoutRepository.findByRoomId(room.getId())).willReturn(List.of(roomWorkout));
-        given(runningWorkoutRepository.findByIdAndMemberId(10L, member.getId())).willReturn(Optional.empty());
-
-        assertThatThrownBy(() -> coachFeedbackRoomService.findRoomWorkouts(member.getId(), room.getId()))
-                .isInstanceOf(ProjectException.class);
-    }
-
 
     private Member member() {
         return MemberFixture.builder()
@@ -270,5 +211,4 @@ class CoachFeedbackRoomServiceTest extends SpringBootIntegrationTestSupport {
                 .nickname("runner")
                 .build();
     }
-
 }

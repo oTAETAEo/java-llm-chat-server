@@ -6,6 +6,7 @@ import com.example.aisocket.project.domain.RunningWorkout;
 import com.example.aisocket.project.domain.WorkOutType;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record FeedbackRoomWorkoutResult(
         Long workoutId,
@@ -29,10 +30,28 @@ public record FeedbackRoomWorkoutResult(
         Double ftp,
         Double avgPace,
         Double maxPace,
-        Integer steps
+        Integer steps,
+        List<SensorSampleResult> samples
 ) {
 
+    public record SensorSampleResult(
+            Integer elapsedSeconds,
+            Double distance,
+            Double latitude,
+            Double longitude,
+            Double altitude,
+            Integer heartRate,
+            Integer cadence,
+            Double speed,
+            Integer power
+    ) {
+    }
+
     public static FeedbackRoomWorkoutResult from(RunningWorkout workout) {
+        return from(workout, List.of());
+    }
+
+    public static FeedbackRoomWorkoutResult from(RunningWorkout workout, List<SensorSampleResult> samples) {
         return new FeedbackRoomWorkoutResult(
                 workout.getId(),
                 workout.getWorkOutType(),
@@ -55,11 +74,16 @@ public record FeedbackRoomWorkoutResult(
                 null,
                 workout.getAvgPace(),
                 workout.getMaxPace(),
-                workout.getSteps()
+                workout.getSteps(),
+                samples
         );
     }
 
     public static FeedbackRoomWorkoutResult from(CyclingWorkout workout) {
+        return from(workout, List.of());
+    }
+
+    public static FeedbackRoomWorkoutResult from(CyclingWorkout workout, List<SensorSampleResult> samples) {
         return new FeedbackRoomWorkoutResult(
                 workout.getId(),
                 workout.getWorkOutType(),
@@ -82,7 +106,8 @@ public record FeedbackRoomWorkoutResult(
                 workout.getFtp(),
                 null,
                 null,
-                null
+                null,
+                samples
         );
     }
 }

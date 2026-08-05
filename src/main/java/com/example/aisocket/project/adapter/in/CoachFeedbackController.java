@@ -1,6 +1,7 @@
 package com.example.aisocket.project.adapter.in;
 
 import com.example.aisocket.project.adapter.in.dto.request.FeedbackRequest;
+import com.example.aisocket.project.adapter.in.dto.request.FeedbackWithSensorRequest;
 import com.example.aisocket.project.adapter.in.security.AuthenticationMember;
 import com.example.aisocket.project.application.in.CoachFeedbackService;
 import lombok.RequiredArgsConstructor;
@@ -22,27 +23,6 @@ public class CoachFeedbackController {
 
     private final CoachFeedbackService coachFeedbackService;
 
-
-    @PostMapping(value = "/v1/coach/feedback/single/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter generateSingleWorkoutFeedbackStream(
-            @AuthenticationMember Long memberId, @RequestBody FeedbackRequest request
-    ) {
-
-        SseEmitter emitter = new SseEmitter(0L);
-
-        Thread.startVirtualThread(() -> {
-            try {
-                coachFeedbackService.getFeedbackStream(
-                        memberId, request.toCommand(), chunk -> send(emitter, chunk));
-                emitter.complete();
-            } catch (Exception e) {
-                emitter.completeWithError(e);
-            }
-        });
-
-        return emitter;
-    }
-
     @PostMapping(value = "/v1/coach/feedback/rooms/{roomId}/single/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter generateRoomSingleWorkoutFeedbackStream(
             @AuthenticationMember Long memberId,
@@ -56,6 +36,28 @@ public class CoachFeedbackController {
             try {
                 coachFeedbackService.generateSingleWorkoutFeedbackStream(
                         memberId, roomId, request.toCommand(), chunk -> send(emitter, chunk));
+                emitter.complete();
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+            }
+        });
+
+        return emitter;
+    }
+
+    @PostMapping(value = "/v2/coach/feedback/rooms/{roomId}/single/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter generateRoomSingleWorkoutFeedbackStreamV2(
+            @AuthenticationMember Long memberId,
+            @PathVariable UUID roomId,
+            @RequestBody FeedbackWithSensorRequest request
+    ) {
+
+        SseEmitter emitter = new SseEmitter(0L);
+
+        Thread.startVirtualThread(() -> {
+            try {
+                coachFeedbackService.generateSingleWorkoutFeedbackStream(
+                        memberId, roomId, request.toCommand(), request.toSensorCommand(), chunk -> send(emitter, chunk));
                 emitter.complete();
             } catch (Exception e) {
                 emitter.completeWithError(e);
