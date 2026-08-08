@@ -21,11 +21,14 @@ public class RunningWorkoutSaveStrategy implements WorkoutSaveStrategy {
     }
 
     @Override
-    public Long save(Member member, Workout workout, AthleteTier tier) {
+    public WorkoutSaveResult save(Member member, Workout workout, AthleteTier tier) {
         if (!(workout instanceof RunningWorkout runningWorkout)) {
             throw new IllegalArgumentException("러닝 운동 데이터가 아닙니다.");
         }
 
-        return runningWorkoutRepository.save(member, runningWorkout, tier);
+        return runningWorkoutRepository.findDuplicate(member.getId(), runningWorkout)
+                .map(existingWorkout -> new WorkoutSaveResult(existingWorkout.getId(), false))
+                .orElseGet(() -> new WorkoutSaveResult(
+                        runningWorkoutRepository.save(member, runningWorkout, tier), true));
     }
 }

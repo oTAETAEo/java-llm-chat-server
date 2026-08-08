@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -75,6 +76,22 @@ class RunningWorkoutRepositoryTest extends DataJpaTestSupport {
                     runningWorkoutRepository.save(unsavedMember, workout, AthleteTier.AMATEUR);
                 })
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("회원, 시작/종료 시간, 거리, 이동 시간이 같은 러닝 운동을 중복으로 조회한다")
+    void findDuplicateRunningWorkout() {
+        Member member = memberRepository.save(MemberFixture.builder().nickname("runner").buildNew());
+        RunningWorkout workout = RunningWorkoutFixture.builder()
+                .member(member)
+                .tier(AthleteTier.AMATEUR)
+                .build();
+        Long workoutId = runningWorkoutRepository.save(member, workout, AthleteTier.AMATEUR);
+
+        Optional<RunningWorkout> duplicate = runningWorkoutRepository.findDuplicate(member.getId(), workout);
+
+        assertThat(duplicate).isPresent();
+        assertThat(duplicate.get().getId()).isEqualTo(workoutId);
     }
 
 }

@@ -20,7 +20,7 @@ public class WorkoutSensorDataRegisterServiceImpl implements WorkoutSensorDataRe
 
     @Override
     public void register(WorkoutRecordRegistration registration, CreateWorkoutSensorDataCommand command) {
-        if (command == null) {
+        if (command == null || !registration.created()) {
             return;
         }
         if (registration.workout() instanceof RunningWorkout runningWorkout) {

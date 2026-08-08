@@ -24,7 +24,7 @@ public class WorkoutSaveStrategyRegistry {
                 ));
     }
 
-    public Long save(Member member, Workout workout, AthleteTier tier) {
+    public WorkoutSaveResult save(Member member, Workout workout, AthleteTier tier) {
         WorkoutSaveStrategy saver = savers.get(workout.getWorkOutType());
         if (saver == null) {
             throw new IllegalArgumentException("지원하지 않는 운동 타입입니다: " + workout.getWorkOutType());

@@ -26,8 +26,8 @@ public class WorkoutRecordRegisterServiceImpl implements WorkoutRecordRegisterSe
 
         Workout workout = workoutFactory.create(member, command.tier(), command);
 
-        Long workoutId = workoutSaveStrategyRegistry.save(member, workout, command.tier());
+        WorkoutSaveResult saveResult = workoutSaveStrategyRegistry.save(member, workout, command.tier());
 
-        return new WorkoutRecordRegistration(workoutId, member, workout);
+        return new WorkoutRecordRegistration(saveResult.workoutId(), member, workout, saveResult.created());
     }
 }

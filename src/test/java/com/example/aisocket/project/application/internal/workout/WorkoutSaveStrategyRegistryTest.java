@@ -16,10 +16,12 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -39,11 +41,14 @@ class WorkoutSaveStrategyRegistryTest {
     void saveRunningWorkout() {
         Member member = MemberFixture.builder().id(1L).nickname("runner").build();
         RunningWorkout workout = runningWorkout();
+        when(runningWorkoutRepository.findDuplicate(member.getId(), workout)).thenReturn(Optional.empty());
         when(runningWorkoutRepository.save(member, workout, AthleteTier.AMATEUR)).thenReturn(10L);
 
-        Long workoutId = registry.save(member, workout, AthleteTier.AMATEUR);
+        WorkoutSaveResult result = registry.save(member, workout, AthleteTier.AMATEUR);
 
-        assertThat(workoutId).isEqualTo(10L);
+        assertThat(result.workoutId()).isEqualTo(10L);
+        assertThat(result.created()).isTrue();
+        verify(runningWorkoutRepository).findDuplicate(member.getId(), workout);
         verify(runningWorkoutRepository).save(member, workout, AthleteTier.AMATEUR);
         verifyNoInteractions(cyclingWorkoutRepository);
     }
@@ -53,12 +58,51 @@ class WorkoutSaveStrategyRegistryTest {
     void saveCyclingWorkout() {
         Member member = MemberFixture.builder().id(1L).nickname("rider").build();
         CyclingWorkout workout = cyclingWorkout();
+        when(cyclingWorkoutRepository.findDuplicate(member.getId(), workout)).thenReturn(Optional.empty());
         when(cyclingWorkoutRepository.save(member, workout, AthleteTier.PRO)).thenReturn(20L);
 
-        Long workoutId = registry.save(member, workout, AthleteTier.PRO);
+        WorkoutSaveResult result = registry.save(member, workout, AthleteTier.PRO);
 
-        assertThat(workoutId).isEqualTo(20L);
+        assertThat(result.workoutId()).isEqualTo(20L);
+        assertThat(result.created()).isTrue();
+        verify(cyclingWorkoutRepository).findDuplicate(member.getId(), workout);
         verify(cyclingWorkoutRepository).save(member, workout, AthleteTier.PRO);
+        verifyNoInteractions(runningWorkoutRepository);
+    }
+
+    @Test
+    @DisplayName("동일한 러닝 운동이 이미 있으면 기존 운동 ID를 재사용한다")
+    void reuseDuplicateRunningWorkout() {
+        Member member = MemberFixture.builder().id(1L).nickname("runner").build();
+        RunningWorkout workout = runningWorkout();
+        RunningWorkout existingWorkout = mock(RunningWorkout.class);
+        when(existingWorkout.getId()).thenReturn(10L);
+        when(runningWorkoutRepository.findDuplicate(member.getId(), workout)).thenReturn(Optional.of(existingWorkout));
+
+        WorkoutSaveResult result = registry.save(member, workout, AthleteTier.AMATEUR);
+
+        assertThat(result.workoutId()).isEqualTo(10L);
+        assertThat(result.created()).isFalse();
+        verify(runningWorkoutRepository).findDuplicate(member.getId(), workout);
+        verify(runningWorkoutRepository, never()).save(member, workout, AthleteTier.AMATEUR);
+        verifyNoInteractions(cyclingWorkoutRepository);
+    }
+
+    @Test
+    @DisplayName("동일한 자전거 운동이 이미 있으면 기존 운동 ID를 재사용한다")
+    void reuseDuplicateCyclingWorkout() {
+        Member member = MemberFixture.builder().id(1L).nickname("rider").build();
+        CyclingWorkout workout = cyclingWorkout();
+        CyclingWorkout existingWorkout = mock(CyclingWorkout.class);
+        when(existingWorkout.getId()).thenReturn(20L);
+        when(cyclingWorkoutRepository.findDuplicate(member.getId(), workout)).thenReturn(Optional.of(existingWorkout));
+
+        WorkoutSaveResult result = registry.save(member, workout, AthleteTier.PRO);
+
+        assertThat(result.workoutId()).isEqualTo(20L);
+        assertThat(result.created()).isFalse();
+        verify(cyclingWorkoutRepository).findDuplicate(member.getId(), workout);
+        verify(cyclingWorkoutRepository, never()).save(member, workout, AthleteTier.PRO);
         verifyNoInteractions(runningWorkoutRepository);
     }
 
@@ -84,8 +128,6 @@ class WorkoutSaveStrategyRegistryTest {
                 .tier(AthleteTier.PRO)
                 .build();
     }
-
-
 
     private Workout unsupportedWorkout() {
         return new Workout() {

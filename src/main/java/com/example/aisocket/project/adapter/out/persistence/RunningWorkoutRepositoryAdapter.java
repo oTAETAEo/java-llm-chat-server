@@ -26,4 +26,15 @@ public class RunningWorkoutRepositoryAdapter implements RunningWorkoutRepository
     public Optional<RunningWorkout> findByIdAndMemberId(Long workoutId, Long memberId) {
         return repository.findByIdAndMemberId(workoutId, memberId);
     }
+
+    @Override
+    public Optional<RunningWorkout> findDuplicate(Long memberId, RunningWorkout workout) {
+        return repository.findFirstByMemberIdAndStartedAtAndEndedAtAndDistanceAndMovingTime(
+                memberId,
+                workout.getStartedAt(),
+                workout.getEndedAt(),
+                workout.getDistance(),
+                workout.getMovingTime()
+        );
+    }
 }

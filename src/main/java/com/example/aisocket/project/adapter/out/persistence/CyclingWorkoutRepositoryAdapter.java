@@ -26,4 +26,15 @@ public class CyclingWorkoutRepositoryAdapter implements CyclingWorkoutRepository
     public Optional<CyclingWorkout> findByIdAndMemberId(Long workoutId, Long memberId) {
         return repository.findByIdAndMemberId(workoutId, memberId);
     }
+
+    @Override
+    public Optional<CyclingWorkout> findDuplicate(Long memberId, CyclingWorkout workout) {
+        return repository.findFirstByMemberIdAndStartedAtAndEndedAtAndDistanceAndMovingTime(
+                memberId,
+                workout.getStartedAt(),
+                workout.getEndedAt(),
+                workout.getDistance(),
+                workout.getMovingTime()
+        );
+    }
 }

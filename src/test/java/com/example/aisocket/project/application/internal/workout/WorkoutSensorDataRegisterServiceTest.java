@@ -74,4 +74,18 @@ class WorkoutSensorDataRegisterServiceTest extends SpringBootIntegrationTestSupp
 
         verifyNoInteractions(runningWorkoutSensorDataRepository, cyclingWorkoutSensorDataRepository);
     }
+
+    @Test
+    @DisplayName("중복 운동이면 센서 데이터를 다시 저장하지 않는다")
+    void registerDuplicateWorkoutSensorData() {
+        Member member = MemberFixture.builder().id(1L).build();
+        RunningWorkout workout = RunningWorkoutFixture.builder()
+                .member(member)
+                .build();
+        CreateWorkoutSensorDataCommand command = new CreateWorkoutSensorDataCommand("[{\"heartRate\":150}]");
+
+        workoutSensorDataRegisterService.register(new WorkoutRecordRegistration(10L, member, workout, false), command);
+
+        verifyNoInteractions(runningWorkoutSensorDataRepository, cyclingWorkoutSensorDataRepository);
+    }
 }

@@ -72,7 +72,9 @@ public class CoachFeedbackServiceImpl implements CoachFeedbackService {
 
     private WorkoutRecordRegistration registerWorkoutAndVector(Long memberId, CoachFeedbackCommand command) {
         WorkoutRecordRegistration registration = workoutRecordRegisterService.register(memberId, command);
-        workoutVectorRegisterService.register(registration.member(), registration, command.tier());
+        if (registration.created()) {
+            workoutVectorRegisterService.register(registration.member(), registration, command.tier());
+        }
         return registration;
     }
 

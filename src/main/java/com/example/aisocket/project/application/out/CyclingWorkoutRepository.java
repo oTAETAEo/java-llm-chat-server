@@ -12,4 +12,6 @@ public interface CyclingWorkoutRepository {
 
     Optional<CyclingWorkout> findByIdAndMemberId(Long workoutId, Long memberId);
 
+    Optional<CyclingWorkout> findDuplicate(Long memberId, CyclingWorkout workout);
+
 }

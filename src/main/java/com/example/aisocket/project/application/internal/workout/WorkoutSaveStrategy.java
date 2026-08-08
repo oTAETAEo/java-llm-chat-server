@@ -9,5 +9,5 @@ public interface WorkoutSaveStrategy {
 
     WorkOutType supportType();
 
-    Long save(Member member, Workout workout, AthleteTier tier);
+    WorkoutSaveResult save(Member member, Workout workout, AthleteTier tier);
 }

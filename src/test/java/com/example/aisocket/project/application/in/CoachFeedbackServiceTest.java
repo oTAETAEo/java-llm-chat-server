@@ -120,6 +120,43 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
     }
 
     @Test
+    @DisplayName("중복 운동이면 기존 운동 ID로 피드백을 연결하고 벡터와 센서 데이터는 새로 저장하지 않는다")
+    void generateSingleWorkoutFeedbackStreamWithDuplicateWorkout() {
+        Member member = MemberFixture.builder()
+                .id(1L)
+                .nickname("runner")
+                .build();
+        FeedbackRoom room = FeedbackRoomFixture.builder().member(member).build();
+        CoachFeedbackCommand command = runningCommand();
+        RunningWorkout workout = RunningWorkoutFixture.builder()
+                .member(member)
+                .tier(AthleteTier.AMATEUR)
+                .build();
+        WorkoutRecordRegistration registration = new WorkoutRecordRegistration(10L, member, workout, false);
+        CreateWorkoutSensorDataCommand sensorCommand = new CreateWorkoutSensorDataCommand(
+                "[{\"elapsedSeconds\":0,\"heartRate\":150}]"
+        );
+
+        given(feedbackRoomRecordService.findOwnedRoom(member.getId(), room.getId())).willReturn(room);
+        given(workoutRecordRegisterService.register(member.getId(), command)).willReturn(registration);
+        doAnswer(invocation -> {
+            Consumer<String> consumer = invocation.getArgument(1);
+            consumer.accept("기존 운동 피드백");
+            return null;
+        }).when(aiSender).sendStream(anyString(), any());
+
+        List<String> chunks = new ArrayList<>();
+        coachFeedbackService.generateSingleWorkoutFeedbackStream(member.getId(), room.getId(), command, sensorCommand, chunks::add);
+
+        verify(workoutRecordRegisterService).register(member.getId(), command);
+        verify(workoutVectorRegisterService, never()).register(any(), any(), any());
+        verify(workoutSensorDataRegisterService).register(registration, sensorCommand);
+        verify(feedbackRoomRecordService).saveUserWorkoutRecord(room, command, WorkOutType.RUNNING, 10L);
+        verify(feedbackRoomRecordService).saveAssistantMessage(room, WorkOutType.RUNNING, 10L, "기존 운동 피드백");
+        assertThat(chunks).containsExactly("기존 운동 피드백");
+    }
+
+    @Test
     @DisplayName("방 단건 운동 피드백 스트림의 AI 응답이 비어 있으면 AI 메시지를 저장하지 않는다")
     void generateSingleWorkoutFeedbackStreamWithEmptyAiResponse() {
         Member member = MemberFixture.builder()
@@ -183,7 +220,5 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
                 null
         );
     }
-
-
 
 }
