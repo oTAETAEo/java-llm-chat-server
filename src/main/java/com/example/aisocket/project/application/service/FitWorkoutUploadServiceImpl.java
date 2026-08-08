@@ -7,11 +7,15 @@ import com.example.aisocket.project.application.internal.fit.FitFileParser;
 import com.example.aisocket.project.application.internal.fit.FitParseResult;
 import com.example.aisocket.project.application.internal.workout.WorkoutRecordRegisterService;
 import com.example.aisocket.project.application.internal.workout.WorkoutRecordRegistration;
+import com.example.aisocket.project.application.internal.workout.WorkoutSensorDataRegisterService;
 import com.example.aisocket.project.common.error.ProjectException;
 import com.example.aisocket.project.common.error.WorkoutErrorCode;
 import com.example.aisocket.project.domain.AthleteTier;
+import com.example.aisocket.project.domain.CreateWorkoutSensorDataCommand;
 import com.example.aisocket.project.domain.WorkoutInputSource;
 import com.example.aisocket.project.domain.WorkoutTitle;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +34,10 @@ public class FitWorkoutUploadServiceImpl implements FitWorkoutUploadService {
     private final FitFileParser fitFileParser;
 
     private final WorkoutRecordRegisterService workoutRecordRegisterService;
+
+    private final WorkoutSensorDataRegisterService workoutSensorDataRegisterService;
+
+    private final ObjectMapper objectMapper;
 
     @Override
     public FitWorkoutPreviewResult upload(Long memberId, AthleteTier tier, MultipartFile file) {
@@ -60,6 +68,7 @@ public class FitWorkoutUploadServiceImpl implements FitWorkoutUploadService {
     private FitWorkoutSaveResult.SavedWorkoutResult save(Long memberId, AthleteTier tier, MultipartFile file) {
         FitParseResult parseResult = fitFileParser.parse(file);
         WorkoutRecordRegistration registration = workoutRecordRegisterService.register(memberId, parseResult.toCommand(tier));
+        workoutSensorDataRegisterService.register(registration, toSensorCommand(parseResult));
 
         return new FitWorkoutSaveResult.SavedWorkoutResult(
                 file.getOriginalFilename(),
@@ -74,6 +83,18 @@ public class FitWorkoutUploadServiceImpl implements FitWorkoutUploadService {
                 parseResult.distance(),
                 parseResult.movingTime()
         );
+    }
+
+    private CreateWorkoutSensorDataCommand toSensorCommand(FitParseResult parseResult) {
+        if (parseResult.samples().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return new CreateWorkoutSensorDataCommand(objectMapper.writeValueAsString(parseResult.samples()));
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("FIT 센서 데이터를 JSON으로 변환할 수 없습니다.", exception);
+        }
     }
 
     private FitWorkoutPreviewResult toResult(AthleteTier tier, FitParseResult parseResult) {
