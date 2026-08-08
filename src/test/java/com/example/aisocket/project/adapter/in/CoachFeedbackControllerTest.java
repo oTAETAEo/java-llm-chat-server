@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.Instant;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -33,6 +34,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
@@ -133,6 +135,36 @@ class CoachFeedbackControllerTest {
                 any()
         );
         assertThat(sensorCommandCaptor.getValue().samplesJson()).contains("\"heartRate\":150", "\"latitude\":37.1");
+    }
+
+    @Test
+    @DisplayName("피드백 스트림 생성 실패 시 사용자용 에러 이벤트를 응답한다")
+    void generateRoomSingleWorkoutFeedbackStreamFailure() throws Exception {
+        Member member = authenticatedMember();
+        givenAuthenticatedMember(member);
+        UUID roomId = UUID.fromString("6a69e3a4-9d98-83ee-932f-d69cd46770a0");
+        doThrow(new IllegalStateException("OpenAI timeout"))
+                .when(coachFeedbackService)
+                .generateSingleWorkoutFeedbackStream(any(Long.class), any(UUID.class), any(CoachFeedbackCommand.class), any());
+
+        MvcResult result = mockMvc.perform(post("/api/v1/coach/feedback/rooms/{roomId}/single/stream", roomId)
+                        .cookie(new Cookie("accessToken", "access-token"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.TEXT_EVENT_STREAM)
+                        .content(runningRequestJson()))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        result.getAsyncResult(1_000);
+
+        MvcResult dispatched = mockMvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM))
+                .andExpect(content().string(containsString("event:error")))
+                .andReturn();
+
+        assertThat(dispatched.getResponse().getContentAsString(StandardCharsets.UTF_8))
+                .contains("피드백 생성 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.");
     }
 
     private Member authenticatedMember() {

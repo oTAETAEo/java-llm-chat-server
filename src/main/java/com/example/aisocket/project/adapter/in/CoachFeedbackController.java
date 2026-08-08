@@ -5,6 +5,7 @@ import com.example.aisocket.project.adapter.in.dto.request.FeedbackWithSensorReq
 import com.example.aisocket.project.adapter.in.security.AuthenticationMember;
 import com.example.aisocket.project.application.in.CoachFeedbackService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,7 +20,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@Slf4j
 public class CoachFeedbackController {
+
+    private static final String FEEDBACK_STREAM_ERROR_MESSAGE = "피드백 생성 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.";
 
     private final CoachFeedbackService coachFeedbackService;
 
@@ -38,7 +42,7 @@ public class CoachFeedbackController {
                         memberId, roomId, request.toCommand(), chunk -> send(emitter, chunk));
                 emitter.complete();
             } catch (Exception e) {
-                emitter.completeWithError(e);
+                handleStreamFailure(emitter, memberId, roomId, e);
             }
         });
 
@@ -60,7 +64,7 @@ public class CoachFeedbackController {
                         memberId, roomId, request.toCommand(), request.toSensorCommand(), chunk -> send(emitter, chunk));
                 emitter.complete();
             } catch (Exception e) {
-                emitter.completeWithError(e);
+                handleStreamFailure(emitter, memberId, roomId, e);
             }
         });
 
@@ -77,7 +81,23 @@ public class CoachFeedbackController {
         }
     }
 
+    private void handleStreamFailure(SseEmitter emitter, Long memberId, UUID roomId, Exception exception) {
+        log.error("피드백 스트림 생성에 실패했습니다. memberId={}, roomId={}", memberId, roomId, exception);
+        try {
+            emitter.send(SseEmitter.event()
+                    .name("error")
+                    .data(new FeedbackStreamError(FEEDBACK_STREAM_ERROR_MESSAGE), MediaType.APPLICATION_JSON));
+            emitter.complete();
+        } catch (IOException sendFailure) {
+            log.warn("피드백 스트림 실패 이벤트 전송에 실패했습니다. memberId={}, roomId={}", memberId, roomId, sendFailure);
+            emitter.completeWithError(exception);
+        }
+    }
+
     private record FeedbackStreamChunk(String content) {
+    }
+
+    private record FeedbackStreamError(String message) {
     }
 
 }

@@ -45,6 +45,9 @@ spring:
         options:
           model: gpt-4o-mini
 
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
 app:
   vector-store:
     table-name: vector_store
@@ -55,3 +58,6 @@ app:
     secret: ${JWT_SECRET:local-development-jwt-secret-key-32bytes-minimum}
     access-token-ttl: 30m
     refresh-token-ttl: 14d
+
+server:
+  shutdown: graceful
