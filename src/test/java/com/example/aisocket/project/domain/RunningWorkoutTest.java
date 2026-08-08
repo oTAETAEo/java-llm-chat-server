@@ -65,6 +65,24 @@ class RunningWorkoutTest {
     }
 
     @Test
+    @DisplayName("러닝 운동 제목과 입력 출처를 갱신한다")
+    void updateRunningWorkoutMetadata() {
+        RunningWorkout workout = RunningWorkoutFixture.builder()
+                .title("이전 러닝")
+                .inputSource(WorkoutInputSource.DIRECT_INPUT)
+                .build();
+        RunningWorkout updatedWorkout = RunningWorkoutFixture.builder()
+                .title("새 러닝")
+                .inputSource(WorkoutInputSource.FIT_FILE)
+                .build();
+
+        workout.updateMetadataFrom(updatedWorkout);
+
+        assertThat(workout.getTitle()).isEqualTo("새 러닝");
+        assertThat(workout.getInputSource()).isEqualTo(WorkoutInputSource.FIT_FILE);
+    }
+
+    @Test
     @DisplayName("러닝 운동 제목이 공백이면 도메인 기본 제목을 사용한다")
     void createRunningWorkoutWithBlankTitle() {
         Member member = MemberFixture.builder().build();

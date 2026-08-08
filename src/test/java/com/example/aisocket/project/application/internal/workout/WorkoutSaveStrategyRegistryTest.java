@@ -84,6 +84,7 @@ class WorkoutSaveStrategyRegistryTest {
         assertThat(result.workoutId()).isEqualTo(10L);
         assertThat(result.created()).isFalse();
         verify(runningWorkoutRepository).findDuplicate(member.getId(), workout);
+        verify(existingWorkout).updateMetadataFrom(workout);
         verify(runningWorkoutRepository, never()).save(member, workout, AthleteTier.AMATEUR);
         verifyNoInteractions(cyclingWorkoutRepository);
     }
@@ -102,6 +103,7 @@ class WorkoutSaveStrategyRegistryTest {
         assertThat(result.workoutId()).isEqualTo(20L);
         assertThat(result.created()).isFalse();
         verify(cyclingWorkoutRepository).findDuplicate(member.getId(), workout);
+        verify(existingWorkout).updateMetadataFrom(workout);
         verify(cyclingWorkoutRepository, never()).save(member, workout, AthleteTier.PRO);
         verifyNoInteractions(runningWorkoutRepository);
     }

@@ -4,6 +4,8 @@ import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.RunningWorkout;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface RunningWorkoutRepository {
@@ -14,4 +16,14 @@ public interface RunningWorkoutRepository {
 
     Optional<RunningWorkout> findDuplicate(Long memberId, RunningWorkout workout);
 
+    List<RunningWorkout> findDashboardWorkouts(Long memberId, LocalDateTime from, LocalDateTime toExclusive);
+
+    List<RunningWorkout> findDashboardHistories(
+            Long memberId,
+            LocalDateTime from,
+            LocalDateTime toExclusive,
+            LocalDateTime cursorStartedAt,
+            Long cursorWorkoutId,
+            int size
+    );
 }

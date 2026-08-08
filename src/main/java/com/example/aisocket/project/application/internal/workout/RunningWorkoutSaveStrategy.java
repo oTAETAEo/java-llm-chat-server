@@ -27,7 +27,10 @@ public class RunningWorkoutSaveStrategy implements WorkoutSaveStrategy {
         }
 
         return runningWorkoutRepository.findDuplicate(member.getId(), runningWorkout)
-                .map(existingWorkout -> new WorkoutSaveResult(existingWorkout.getId(), false))
+                .map(existingWorkout -> {
+                    existingWorkout.updateMetadataFrom(runningWorkout);
+                    return new WorkoutSaveResult(existingWorkout.getId(), false);
+                })
                 .orElseGet(() -> new WorkoutSaveResult(
                         runningWorkoutRepository.save(member, runningWorkout, tier), true));
     }

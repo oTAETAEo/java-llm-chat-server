@@ -159,6 +159,18 @@ public class CyclingWorkout extends BaseEntity implements Workout {
         this.feedbackCount++;
     }
 
+    public void updateMetadataFrom(CyclingWorkout workout) {
+        if (workout == null) {
+            throw new IllegalArgumentException("갱신할 자전거 운동(workout)은 필수 값입니다.");
+        }
+        if (workout.getInputSource() == null) {
+            throw new IllegalArgumentException("운동 입력 출처(inputSource)는 필수 값입니다.");
+        }
+
+        this.title = normalizeTitleOrDefault(workout.getTitle());
+        this.inputSource = workout.getInputSource();
+    }
+
     @Override
     public WorkOutType getWorkOutType() {
         return WorkOutType.CYCLING;

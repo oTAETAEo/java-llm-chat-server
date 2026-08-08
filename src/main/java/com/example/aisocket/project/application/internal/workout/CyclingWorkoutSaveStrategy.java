@@ -27,7 +27,10 @@ public class CyclingWorkoutSaveStrategy implements WorkoutSaveStrategy {
         }
 
         return cyclingWorkoutRepository.findDuplicate(member.getId(), cyclingWorkout)
-                .map(existingWorkout -> new WorkoutSaveResult(existingWorkout.getId(), false))
+                .map(existingWorkout -> {
+                    existingWorkout.updateMetadataFrom(cyclingWorkout);
+                    return new WorkoutSaveResult(existingWorkout.getId(), false);
+                })
                 .orElseGet(() -> new WorkoutSaveResult(
                         cyclingWorkoutRepository.save(member, cyclingWorkout, tier),
                         true
