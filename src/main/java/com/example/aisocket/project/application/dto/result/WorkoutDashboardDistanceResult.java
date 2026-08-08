@@ -5,6 +5,9 @@ import java.time.LocalDateTime;
 public record WorkoutDashboardDistanceResult(
         String label,
         LocalDateTime startedAt,
-        Double distance
+        Double distance,
+        Integer movingTime,
+        Double avgHeartRate,
+        Double elevGain
 ) {
 }

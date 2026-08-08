@@ -45,11 +45,21 @@ public record WorkoutDashboardSummaryResponse(
     public record DistanceResponse(
             String label,
             LocalDateTime startedAt,
-            Double distance
+            Double distance,
+            Integer movingTime,
+            Double avgHeartRate,
+            Double elevGain
     ) {
 
         public static DistanceResponse from(WorkoutDashboardDistanceResult result) {
-            return new DistanceResponse(result.label(), result.startedAt(), result.distance());
+            return new DistanceResponse(
+                    result.label(),
+                    result.startedAt(),
+                    result.distance(),
+                    result.movingTime(),
+                    result.avgHeartRate(),
+                    result.elevGain()
+            );
         }
     }
 }

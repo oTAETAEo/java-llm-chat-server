@@ -68,7 +68,14 @@ public class WorkoutDashboardServiceImpl implements WorkoutDashboardService {
                 average(cyclingWorkouts.stream().map(CyclingWorkout::getAvgPower)),
                 histories.stream()
                         .limit(8)
-                        .map(item -> new WorkoutDashboardDistanceResult(item.title(), item.startedAt(), item.distance()))
+                        .map(item -> new WorkoutDashboardDistanceResult(
+                                item.title(),
+                                item.startedAt(),
+                                item.distance(),
+                                item.movingTime(),
+                                item.avgHeartRate(),
+                                item.elevGain()
+                        ))
                         .toList()
         );
     }
