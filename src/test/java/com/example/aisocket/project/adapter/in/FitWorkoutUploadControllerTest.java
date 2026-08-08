@@ -2,6 +2,7 @@ package com.example.aisocket.project.adapter.in;
 
 import com.example.aisocket.project.adapter.in.security.JwtAuthenticationFilter;
 import com.example.aisocket.project.application.dto.result.FitWorkoutPreviewResult;
+import com.example.aisocket.project.application.dto.result.FitWorkoutSaveResult;
 import com.example.aisocket.project.application.in.FitWorkoutUploadService;
 import com.example.aisocket.project.application.internal.token.AccessTokenBlacklistService;
 import com.example.aisocket.project.application.internal.token.JwtTokenClaims;
@@ -24,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -88,6 +90,38 @@ class FitWorkoutUploadControllerTest {
         assertThat(fileCaptor.getValue().getOriginalFilename()).isEqualTo("activity.fit");
     }
 
+    @Test
+    @DisplayName("다중 FIT 파일 업로드를 운동 기록 저장 응답으로 처리한다")
+    void uploadAll() throws Exception {
+        Member member = authenticatedMember();
+        givenAuthenticatedMember(member);
+        MockMultipartFile firstFile = new MockMultipartFile("files", "morning.fit", "application/octet-stream", new byte[]{1, 2, 3});
+        MockMultipartFile secondFile = new MockMultipartFile("files", "evening.fit", "application/octet-stream", new byte[]{4, 5, 6});
+
+        given(fitWorkoutUploadService.uploadAll(eq(member.getId()), eq(AthleteTier.AMATEUR), any()))
+                .willReturn(saveResult());
+
+        mockMvc.perform(multipart("/api/v1/workouts/fit/records")
+                        .file(firstFile)
+                        .file(secondFile)
+                        .cookie(new Cookie("accessToken", "access-token"))
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.totalCount").value(2))
+                .andExpect(jsonPath("$.createdCount").value(1))
+                .andExpect(jsonPath("$.duplicatedCount").value(1))
+                .andExpect(jsonPath("$.items[0].fileName").value("morning.fit"))
+                .andExpect(jsonPath("$.items[0].workoutId").value(10))
+                .andExpect(jsonPath("$.items[0].workOutType").value("RUNNING"))
+                .andExpect(jsonPath("$.items[0].inputSource").value("FIT_FILE"))
+                .andExpect(jsonPath("$.items[0].created").value(true));
+
+        ArgumentCaptor<List<MultipartFile>> filesCaptor = ArgumentCaptor.forClass(List.class);
+        verify(fitWorkoutUploadService).uploadAll(eq(member.getId()), eq(AthleteTier.AMATEUR), filesCaptor.capture());
+        assertThat(filesCaptor.getValue()).hasSize(2);
+        assertThat(filesCaptor.getValue().get(0).getOriginalFilename()).isEqualTo("morning.fit");
+    }
+
     private FitWorkoutPreviewResult result() {
         return new FitWorkoutPreviewResult(
                 WorkOutType.RUNNING,
@@ -125,6 +159,37 @@ class FitWorkoutUploadControllerTest {
                         null
                 ))
         );
+    }
+
+    private FitWorkoutSaveResult saveResult() {
+        return FitWorkoutSaveResult.from(List.of(
+                new FitWorkoutSaveResult.SavedWorkoutResult(
+                        "morning.fit",
+                        10L,
+                        WorkOutType.RUNNING,
+                        AthleteTier.AMATEUR,
+                        "러닝 10.0km",
+                        WorkoutInputSource.FIT_FILE,
+                        true,
+                        LocalDateTime.parse("2026-08-05T00:00:00"),
+                        LocalDateTime.parse("2026-08-05T00:50:00"),
+                        10.0,
+                        3000
+                ),
+                new FitWorkoutSaveResult.SavedWorkoutResult(
+                        "evening.fit",
+                        10L,
+                        WorkOutType.RUNNING,
+                        AthleteTier.AMATEUR,
+                        "러닝 10.0km",
+                        WorkoutInputSource.FIT_FILE,
+                        false,
+                        LocalDateTime.parse("2026-08-05T00:00:00"),
+                        LocalDateTime.parse("2026-08-05T00:50:00"),
+                        10.0,
+                        3000
+                )
+        ));
     }
 
     private Member authenticatedMember() {
