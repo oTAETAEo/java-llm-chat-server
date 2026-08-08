@@ -7,6 +7,7 @@ import com.example.aisocket.project.application.internal.prompt.CoachFeedbackPro
 import com.example.aisocket.project.application.internal.vector.WorkoutVectorRegisterService;
 import com.example.aisocket.project.application.internal.workout.WorkoutRecordRegisterService;
 import com.example.aisocket.project.application.internal.workout.WorkoutRecordRegistration;
+import com.example.aisocket.project.application.internal.workout.WorkoutFeedbackCountService;
 import com.example.aisocket.project.application.internal.workout.WorkoutSensorDataRegisterService;
 import com.example.aisocket.project.application.out.AiSender;
 import com.example.aisocket.project.domain.CreateWorkoutSensorDataCommand;
@@ -29,6 +30,8 @@ public class CoachFeedbackServiceImpl implements CoachFeedbackService {
     private final WorkoutVectorRegisterService workoutVectorRegisterService;
 
     private final WorkoutSensorDataRegisterService workoutSensorDataRegisterService;
+
+    private final WorkoutFeedbackCountService workoutFeedbackCountService;
 
     private final FeedbackRoomRecordService feedbackRoomRecordService;
 
@@ -56,6 +59,7 @@ public class CoachFeedbackServiceImpl implements CoachFeedbackService {
         Long workoutId = registration.workoutId();
         WorkOutType workOutType = registration.workout().getWorkOutType();
         feedbackRoomRecordService.saveUserWorkoutRecord(room, command, workOutType, workoutId);
+        workoutFeedbackCountService.increase(memberId, workOutType, workoutId);
 
         String prompt = coachFeedbackPromptBuilder.build(registration.workout(), command.tier());
         StringBuilder fullResponse = new StringBuilder();

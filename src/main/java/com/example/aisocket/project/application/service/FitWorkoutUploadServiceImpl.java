@@ -5,6 +5,8 @@ import com.example.aisocket.project.application.in.FitWorkoutUploadService;
 import com.example.aisocket.project.application.internal.fit.FitFileParser;
 import com.example.aisocket.project.application.internal.fit.FitParseResult;
 import com.example.aisocket.project.domain.AthleteTier;
+import com.example.aisocket.project.domain.WorkoutInputSource;
+import com.example.aisocket.project.domain.WorkoutTitle;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -29,6 +31,8 @@ public class FitWorkoutUploadServiceImpl implements FitWorkoutUploadService {
         return new FitWorkoutPreviewResult(
                 parseResult.workOutType(),
                 tier,
+                WorkoutTitle.defaultTitle(parseResult.workOutType(), parseResult.distance()),
+                WorkoutInputSource.FIT_FILE,
                 parseResult.startedAt(),
                 parseResult.endedAt(),
                 parseResult.distance(),

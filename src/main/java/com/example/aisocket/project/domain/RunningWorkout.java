@@ -1,5 +1,6 @@
 package com.example.aisocket.project.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -27,11 +28,22 @@ public class RunningWorkout extends BaseEntity implements Workout {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
+    @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private AthleteTier tier;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private WorkoutInputSource inputSource;
+
+    @Column(nullable = false)
+    private Long feedbackCount = 0L;
 
     private LocalDateTime startedAt;
     private LocalDateTime endedAt;
@@ -52,15 +64,26 @@ public class RunningWorkout extends BaseEntity implements Workout {
     public static RunningWorkout create(
             Member member,
             AthleteTier tier,
+            String title,
+            WorkoutInputSource inputSource,
             CreateCommonWorkoutCommand workoutCommand,
             CreateRunningWorkoutCommand runningWorkoutCommand
     ){
-        return new RunningWorkout(member, tier, workoutCommand, runningWorkoutCommand);
+        return new RunningWorkout(member, tier, title, inputSource, workoutCommand, runningWorkoutCommand);
     }
 
-    private RunningWorkout(Member member, AthleteTier tier, CreateCommonWorkoutCommand workoutCommand, CreateRunningWorkoutCommand runningWorkoutCommand) {
+    private RunningWorkout(
+            Member member,
+            AthleteTier tier,
+            String title,
+            WorkoutInputSource inputSource,
+            CreateCommonWorkoutCommand workoutCommand,
+            CreateRunningWorkoutCommand runningWorkoutCommand
+    ) {
         this.tier = tier;
         this.member = member;
+        this.inputSource = inputSource;
+        this.feedbackCount = 0L;
 
         this.startedAt = workoutCommand.startedAt();
         this.endedAt = workoutCommand.endedAt();
@@ -77,6 +100,7 @@ public class RunningWorkout extends BaseEntity implements Workout {
         this.avgPace = runningWorkoutCommand.avgPace();
         this.maxPace = runningWorkoutCommand.maxPace();
         this.steps = runningWorkoutCommand.steps();
+        this.title = normalizeTitleOrDefault(title);
 
         validate();
     }
@@ -114,6 +138,21 @@ public class RunningWorkout extends BaseEntity implements Workout {
         if (tier == null) {
             throw new IllegalArgumentException("선수 등급(tier)은 운동 기록에 필수 값입니다.");
         }
+        if (inputSource == null) {
+            throw new IllegalArgumentException("운동 입력 출처(inputSource)는 필수 값입니다.");
+        }
+    }
+
+    private String normalizeTitleOrDefault(String title) {
+        return WorkoutTitle.normalizeOrDefault(title, WorkOutType.RUNNING, distance);
+    }
+
+    public Long getFeedbackCount() {
+        return feedbackCount;
+    }
+
+    public void increaseFeedbackCount() {
+        this.feedbackCount++;
     }
 
     @Override

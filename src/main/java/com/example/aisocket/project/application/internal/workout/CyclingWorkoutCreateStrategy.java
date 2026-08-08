@@ -18,6 +18,13 @@ public class CyclingWorkoutCreateStrategy implements WorkoutCreateStrategy {
 
     @Override
     public Workout create(Member member, AthleteTier tier, CoachFeedbackCommand command) {
-        return CyclingWorkout.create(member, tier, command.commonCommand(), command.cyclingCommand());
+        return CyclingWorkout.create(
+                member,
+                tier,
+                command.title(),
+                command.inputSource(),
+                command.commonCommand(),
+                command.cyclingCommand()
+        );
     }
 }

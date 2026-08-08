@@ -46,6 +46,8 @@ public final class RunningWorkoutFixture {
         private Double avgPace = DEFAULT_AVG_PACE;
         private Double maxPace = DEFAULT_MAX_PACE;
         private Integer steps = DEFAULT_STEPS;
+        private String title = null;
+        private WorkoutInputSource inputSource = WorkoutInputSource.DIRECT_INPUT;
 
         private Builder() {
         }
@@ -130,8 +132,18 @@ public final class RunningWorkoutFixture {
             return this;
         }
 
+        public Builder title(String title) {
+            this.title = title;
+            return this;
+        }
+
+        public Builder inputSource(WorkoutInputSource inputSource) {
+            this.inputSource = inputSource;
+            return this;
+        }
+
         public RunningWorkout build() {
-            return RunningWorkout.create(member, tier, commonCommand(), runningCommand());
+            return RunningWorkout.create(member, tier, title, inputSource, commonCommand(), runningCommand());
         }
 
         public CreateCommonWorkoutCommand commonCommand() {

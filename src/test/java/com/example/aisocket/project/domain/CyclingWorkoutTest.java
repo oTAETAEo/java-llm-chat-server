@@ -28,9 +28,73 @@ class CyclingWorkoutTest {
                 .build();
 
         assertThat(workout.getWorkOutType()).isEqualTo(WorkOutType.CYCLING);
+        assertThat(workout.getTitle()).isEqualTo("자전거 42.5km");
+        assertThat(workout.getInputSource()).isEqualTo(WorkoutInputSource.DIRECT_INPUT);
+        assertThat(workout.getFeedbackCount()).isZero();
         assertThat(workout.getDistance()).isEqualTo(42.5);
         assertThat(workout.getAvgSpeed()).isEqualTo(27.4);
         assertThat(workout.getFtp()).isEqualTo(250.0);
+    }
+
+    @Test
+    @DisplayName("자전거 운동 피드백 횟수를 1 증가시킨다")
+    void increaseCyclingWorkoutFeedbackCount() {
+        CyclingWorkout workout = CyclingWorkoutFixture.builder()
+                .member(MemberFixture.builder().build())
+                .build();
+
+        workout.increaseFeedbackCount();
+
+        assertThat(workout.getFeedbackCount()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("자전거 운동 제목과 입력 출처를 저장한다")
+    void createCyclingWorkoutWithMetadata() {
+        Member member = MemberFixture.builder().build();
+
+        CyclingWorkout workout = CyclingWorkout.create(
+                member,
+                AthleteTier.PRO,
+                "한강 템포 라이딩",
+                WorkoutInputSource.FIT_FILE,
+                CyclingWorkoutFixture.builder().commonCommand(),
+                CyclingWorkoutFixture.builder().cyclingCommand()
+        );
+
+        assertThat(workout.getTitle()).isEqualTo("한강 템포 라이딩");
+        assertThat(workout.getInputSource()).isEqualTo(WorkoutInputSource.FIT_FILE);
+    }
+
+    @Test
+    @DisplayName("자전거 운동 제목이 공백이면 도메인 기본 제목을 사용한다")
+    void createCyclingWorkoutWithBlankTitle() {
+        Member member = MemberFixture.builder().build();
+
+        CyclingWorkout workout = CyclingWorkout.create(
+                member,
+                AthleteTier.PRO,
+                "  ",
+                WorkoutInputSource.DIRECT_INPUT,
+                CyclingWorkoutFixture.builder().commonCommand(),
+                CyclingWorkoutFixture.builder().cyclingCommand()
+        );
+
+        assertThat(workout.getTitle()).isEqualTo("자전거 42.5km");
+        assertThat(workout.getInputSource()).isEqualTo(WorkoutInputSource.DIRECT_INPUT);
+    }
+
+    @Test
+    @DisplayName("자전거 운동 입력 출처가 없으면 생성에 실패한다")
+    void createCyclingWorkoutWithoutInputSourceFails() {
+        assertThatThrownBy(() -> CyclingWorkout.create(
+                MemberFixture.builder().build(),
+                AthleteTier.PRO,
+                null,
+                null,
+                CyclingWorkoutFixture.builder().commonCommand(),
+                CyclingWorkoutFixture.builder().cyclingCommand()
+        )).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

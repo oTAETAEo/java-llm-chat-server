@@ -4,6 +4,7 @@ import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.CyclingWorkout;
 import com.example.aisocket.project.domain.RunningWorkout;
 import com.example.aisocket.project.domain.WorkOutType;
+import com.example.aisocket.project.domain.WorkoutInputSource;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,6 +13,9 @@ public record FeedbackRoomWorkoutResult(
         Long workoutId,
         WorkOutType workOutType,
         AthleteTier tier,
+        String title,
+        WorkoutInputSource inputSource,
+        Long feedbackCount,
         LocalDateTime startedAt,
         LocalDateTime endedAt,
         Double distance,
@@ -56,6 +60,9 @@ public record FeedbackRoomWorkoutResult(
                 workout.getId(),
                 workout.getWorkOutType(),
                 workout.getTier(),
+                workout.getTitle(),
+                workout.getInputSource(),
+                workout.getFeedbackCount(),
                 workout.getStartedAt(),
                 workout.getEndedAt(),
                 workout.getDistance(),
@@ -88,6 +95,9 @@ public record FeedbackRoomWorkoutResult(
                 workout.getId(),
                 workout.getWorkOutType(),
                 workout.getTier(),
+                workout.getTitle(),
+                workout.getInputSource(),
+                workout.getFeedbackCount(),
                 workout.getStartedAt(),
                 workout.getEndedAt(),
                 workout.getDistance(),

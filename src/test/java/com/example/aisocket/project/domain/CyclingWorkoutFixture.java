@@ -50,6 +50,8 @@ public final class CyclingWorkoutFixture {
         private Double avgPower = DEFAULT_AVG_POWER;
         private Double maxPower = DEFAULT_MAX_POWER;
         private Double ftp = DEFAULT_FTP;
+        private String title = null;
+        private WorkoutInputSource inputSource = WorkoutInputSource.DIRECT_INPUT;
 
         private Builder() {
         }
@@ -144,8 +146,18 @@ public final class CyclingWorkoutFixture {
             return this;
         }
 
+        public Builder title(String title) {
+            this.title = title;
+            return this;
+        }
+
+        public Builder inputSource(WorkoutInputSource inputSource) {
+            this.inputSource = inputSource;
+            return this;
+        }
+
         public CyclingWorkout build() {
-            return CyclingWorkout.create(member, tier, commonCommand(), cyclingCommand());
+            return CyclingWorkout.create(member, tier, title, inputSource, commonCommand(), cyclingCommand());
         }
 
         public CreateCommonWorkoutCommand commonCommand() {

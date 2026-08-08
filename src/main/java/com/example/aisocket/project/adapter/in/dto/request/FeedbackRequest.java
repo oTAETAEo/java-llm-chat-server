@@ -6,6 +6,7 @@ import com.example.aisocket.project.domain.CreateCommonWorkoutCommand;
 import com.example.aisocket.project.domain.CreateCyclingWorkoutCommand;
 import com.example.aisocket.project.domain.CreateRunningWorkoutCommand;
 import com.example.aisocket.project.domain.WorkOutType;
+import com.example.aisocket.project.domain.WorkoutInputSource;
 
 import java.time.LocalDateTime;
 
@@ -13,6 +14,8 @@ public record FeedbackRequest(
 
         WorkOutType workOutType,
         AthleteTier tier,
+        String title,
+        WorkoutInputSource inputSource,
 
         LocalDateTime startedAt,
         LocalDateTime endedAt,
@@ -45,7 +48,9 @@ public record FeedbackRequest(
                 tier,
                 toCommonCommand(),
                 toRunningCommand(),
-                toCyclingCommand()
+                toCyclingCommand(),
+                title,
+                inputSource
         );
     }
 

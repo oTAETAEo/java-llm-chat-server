@@ -6,6 +6,7 @@ import com.example.aisocket.project.domain.CreateCommonWorkoutCommand;
 import com.example.aisocket.project.domain.CreateCyclingWorkoutCommand;
 import com.example.aisocket.project.domain.CreateRunningWorkoutCommand;
 import com.example.aisocket.project.domain.WorkOutType;
+import com.example.aisocket.project.domain.WorkoutInputSource;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -65,7 +66,9 @@ public record FitParseResult(
                         avgHeartRate
                 ),
                 new CreateRunningWorkoutCommand(avgPace, maxPace, steps),
-                new CreateCyclingWorkoutCommand(avgSpeed, maxSpeed, avgPower, maxPower, ftp)
+                new CreateCyclingWorkoutCommand(avgSpeed, maxSpeed, avgPower, maxPower, ftp),
+                null,
+                WorkoutInputSource.FIT_FILE
         );
     }
 }

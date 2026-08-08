@@ -15,6 +15,7 @@ import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.MemberFixture;
 import com.example.aisocket.project.domain.RunningWorkoutFixture;
 import com.example.aisocket.project.domain.WorkOutType;
+import com.example.aisocket.project.domain.WorkoutInputSource;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -112,7 +113,9 @@ class FeedbackRoomRecordServiceTest extends SpringBootIntegrationTestSupport {
                 AthleteTier.AMATEUR,
                 RunningWorkoutFixture.builder().commonCommand(),
                 RunningWorkoutFixture.builder().runningCommand(),
-                null
+                null,
+                null,
+                WorkoutInputSource.DIRECT_INPUT
         );
     }
 }

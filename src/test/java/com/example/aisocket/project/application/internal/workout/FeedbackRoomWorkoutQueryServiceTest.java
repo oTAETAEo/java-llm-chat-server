@@ -55,18 +55,21 @@ class FeedbackRoomWorkoutQueryServiceTest extends SpringBootIntegrationTestSuppo
                 .workoutId(10L)
                 .build();
         RunningWorkout workout = RunningWorkoutFixture.builder().member(member).build();
+        workout.increaseFeedbackCount();
+        workout.increaseFeedbackCount();
         given(runningWorkoutRepository.findByIdAndMemberId(10L, member.getId())).willReturn(Optional.of(workout));
         given(runningWorkoutSensorDataRepository.findSamplesJsonByWorkoutId(workout.getId()))
                 .willReturn(Optional.of("""
                         [{"elapsedSeconds":0,"heartRate":150,"latitude":37.1}]
                         """));
-
         FeedbackRoomWorkoutResult result = feedbackRoomWorkoutQueryService.findWorkout(member.getId(), roomWorkout);
 
         verify(runningWorkoutRepository).findByIdAndMemberId(10L, member.getId());
         verify(runningWorkoutSensorDataRepository).findSamplesJsonByWorkoutId(workout.getId());
         verifyNoInteractions(cyclingWorkoutRepository);
         assertThat(result.workOutType()).isEqualTo(WorkOutType.RUNNING);
+        assertThat(result.title()).isEqualTo("러닝 8.2km");
+        assertThat(result.feedbackCount()).isEqualTo(2L);
         assertThat(result.samples()).hasSize(1);
         assertThat(result.samples().get(0).heartRate()).isEqualTo(150);
         assertThat(result.samples().get(0).latitude()).isEqualTo(37.1);
@@ -81,16 +84,18 @@ class FeedbackRoomWorkoutQueryServiceTest extends SpringBootIntegrationTestSuppo
                 .workoutId(20L)
                 .build();
         CyclingWorkout workout = CyclingWorkoutFixture.builder().member(member).build();
+        workout.increaseFeedbackCount();
         given(cyclingWorkoutRepository.findByIdAndMemberId(20L, member.getId())).willReturn(Optional.of(workout));
         given(cyclingWorkoutSensorDataRepository.findSamplesJsonByWorkoutId(workout.getId()))
                 .willReturn(Optional.empty());
-
         FeedbackRoomWorkoutResult result = feedbackRoomWorkoutQueryService.findWorkout(member.getId(), roomWorkout);
 
         verify(cyclingWorkoutRepository).findByIdAndMemberId(20L, member.getId());
         verify(cyclingWorkoutSensorDataRepository).findSamplesJsonByWorkoutId(workout.getId());
         verifyNoInteractions(runningWorkoutRepository);
         assertThat(result.workOutType()).isEqualTo(WorkOutType.CYCLING);
+        assertThat(result.title()).isEqualTo("자전거 42.5km");
+        assertThat(result.feedbackCount()).isEqualTo(1L);
         assertThat(result.samples()).isEmpty();
     }
 

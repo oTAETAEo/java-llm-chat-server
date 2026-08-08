@@ -26,9 +26,73 @@ class RunningWorkoutTest {
                 .build();
 
         assertThat(workout.getWorkOutType()).isEqualTo(WorkOutType.RUNNING);
+        assertThat(workout.getTitle()).isEqualTo("러닝 8.2km");
+        assertThat(workout.getInputSource()).isEqualTo(WorkoutInputSource.DIRECT_INPUT);
+        assertThat(workout.getFeedbackCount()).isZero();
         assertThat(workout.getDistance()).isEqualTo(8.2);
         assertThat(workout.getAvgPace()).isEqualTo(5.48);
         assertThat(workout.getSteps()).isEqualTo(7600);
+    }
+
+    @Test
+    @DisplayName("러닝 운동 피드백 횟수를 1 증가시킨다")
+    void increaseRunningWorkoutFeedbackCount() {
+        RunningWorkout workout = RunningWorkoutFixture.builder()
+                .member(MemberFixture.builder().build())
+                .build();
+
+        workout.increaseFeedbackCount();
+
+        assertThat(workout.getFeedbackCount()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("러닝 운동 제목과 입력 출처를 저장한다")
+    void createRunningWorkoutWithMetadata() {
+        Member member = MemberFixture.builder().build();
+
+        RunningWorkout workout = RunningWorkout.create(
+                member,
+                AthleteTier.AMATEUR,
+                "남산 순환 러닝",
+                WorkoutInputSource.FIT_FILE,
+                RunningWorkoutFixture.builder().commonCommand(),
+                RunningWorkoutFixture.builder().runningCommand()
+        );
+
+        assertThat(workout.getTitle()).isEqualTo("남산 순환 러닝");
+        assertThat(workout.getInputSource()).isEqualTo(WorkoutInputSource.FIT_FILE);
+    }
+
+    @Test
+    @DisplayName("러닝 운동 제목이 공백이면 도메인 기본 제목을 사용한다")
+    void createRunningWorkoutWithBlankTitle() {
+        Member member = MemberFixture.builder().build();
+
+        RunningWorkout workout = RunningWorkout.create(
+                member,
+                AthleteTier.AMATEUR,
+                "  ",
+                WorkoutInputSource.DIRECT_INPUT,
+                RunningWorkoutFixture.builder().commonCommand(),
+                RunningWorkoutFixture.builder().runningCommand()
+        );
+
+        assertThat(workout.getTitle()).isEqualTo("러닝 8.2km");
+        assertThat(workout.getInputSource()).isEqualTo(WorkoutInputSource.DIRECT_INPUT);
+    }
+
+    @Test
+    @DisplayName("러닝 운동 입력 출처가 없으면 생성에 실패한다")
+    void createRunningWorkoutWithoutInputSourceFails() {
+        assertThatThrownBy(() -> RunningWorkout.create(
+                MemberFixture.builder().build(),
+                AthleteTier.AMATEUR,
+                null,
+                null,
+                RunningWorkoutFixture.builder().commonCommand(),
+                RunningWorkoutFixture.builder().runningCommand()
+        )).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

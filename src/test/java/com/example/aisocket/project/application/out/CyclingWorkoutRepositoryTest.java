@@ -47,7 +47,7 @@ class CyclingWorkoutRepositoryTest extends DataJpaTestSupport {
         Long workoutId = cyclingWorkoutRepository.save(member, workout, AthleteTier.PRO);
 
         Map<String, Object> row = jdbcTemplate.queryForMap("""
-                        SELECT member_id, tier, started_at, ended_at, distance, avg_speed, avg_power, ftp
+                        SELECT member_id, tier, title, input_source, feedback_count, started_at, ended_at, distance, avg_speed, avg_power, ftp
                         FROM cycling_workout
                         WHERE id = ?
                         """,
@@ -57,6 +57,9 @@ class CyclingWorkoutRepositoryTest extends DataJpaTestSupport {
         assertThat(workoutId).isNotNull();
         assertThat(row.get("member_id")).isEqualTo(member.getId());
         assertThat(row.get("tier")).isEqualTo(AthleteTier.PRO.name());
+        assertThat(row.get("title")).isEqualTo("자전거 42.5km");
+        assertThat(row.get("input_source")).isEqualTo("DIRECT_INPUT");
+        assertThat(((Number) row.get("feedback_count")).longValue()).isZero();
         assertThat(row.get("started_at").toString()).contains("2026-07-18 09:00");
         assertThat(row.get("ended_at").toString()).contains("2026-07-18 10:30");
         assertThat(((Number) row.get("distance")).doubleValue()).isEqualTo(42.5);

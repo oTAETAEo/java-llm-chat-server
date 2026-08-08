@@ -3,6 +3,7 @@ package com.example.aisocket.project.application.in;
 import com.example.aisocket.project.SpringBootIntegrationTestSupport;
 import com.example.aisocket.project.application.dto.command.CoachFeedbackCommand;
 import com.example.aisocket.project.application.internal.feedback.FeedbackRoomRecordService;
+import com.example.aisocket.project.application.internal.workout.WorkoutFeedbackCountService;
 import com.example.aisocket.project.application.internal.workout.WorkoutRecordRegisterService;
 import com.example.aisocket.project.application.internal.workout.WorkoutRecordRegistration;
 import com.example.aisocket.project.application.internal.workout.WorkoutSensorDataRegisterService;
@@ -17,6 +18,7 @@ import com.example.aisocket.project.domain.MemberFixture;
 import com.example.aisocket.project.domain.RunningWorkout;
 import com.example.aisocket.project.domain.RunningWorkoutFixture;
 import com.example.aisocket.project.domain.WorkOutType;
+import com.example.aisocket.project.domain.WorkoutInputSource;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +59,9 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
     @MockitoBean
     private WorkoutSensorDataRegisterService workoutSensorDataRegisterService;
 
+    @MockitoBean
+    private WorkoutFeedbackCountService workoutFeedbackCountService;
+
     @Test
     @DisplayName("방 단건 운동 피드백 스트림을 생성하고 사용자 메시지, 방 운동 연결, AI 메시지를 저장한다")
     void generateSingleWorkoutFeedbackStream() {
@@ -86,6 +91,7 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
         verify(workoutRecordRegisterService).register(member.getId(), command);
         verify(workoutVectorRegisterService).register(member, registration, AthleteTier.AMATEUR);
         verify(feedbackRoomRecordService).saveUserWorkoutRecord(room, command, WorkOutType.RUNNING, 10L);
+        verify(workoutFeedbackCountService).increase(member.getId(), WorkOutType.RUNNING, 10L);
         verify(feedbackRoomRecordService).saveAssistantMessage(room, WorkOutType.RUNNING, 10L, "첫 응답");
         verify(aiSender).sendStream(anyString(), any());
 
@@ -152,6 +158,7 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
         verify(workoutVectorRegisterService, never()).register(any(), any(), any());
         verify(workoutSensorDataRegisterService).register(registration, sensorCommand);
         verify(feedbackRoomRecordService).saveUserWorkoutRecord(room, command, WorkOutType.RUNNING, 10L);
+        verify(workoutFeedbackCountService).increase(member.getId(), WorkOutType.RUNNING, 10L);
         verify(feedbackRoomRecordService).saveAssistantMessage(room, WorkOutType.RUNNING, 10L, "기존 운동 피드백");
         assertThat(chunks).containsExactly("기존 운동 피드백");
     }
@@ -194,7 +201,7 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
                 .isSameAs(exception);
 
         verify(workoutRecordRegisterService).register(member.getId(), command);
-        verifyNoInteractions(workoutVectorRegisterService, aiSender);
+        verifyNoInteractions(workoutVectorRegisterService, workoutFeedbackCountService, aiSender);
         verify(feedbackRoomRecordService, never()).saveUserWorkoutRecord(any(), any(), any(), any());
     }
 
@@ -208,7 +215,7 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
         assertThatThrownBy(() -> coachFeedbackService.generateSingleWorkoutFeedbackStream(1L, roomId, command, chunk -> {}))
                 .isInstanceOf(RuntimeException.class);
 
-        verifyNoInteractions(workoutRecordRegisterService, workoutVectorRegisterService, aiSender);
+        verifyNoInteractions(workoutRecordRegisterService, workoutVectorRegisterService, workoutFeedbackCountService, aiSender);
     }
 
     private CoachFeedbackCommand runningCommand() {
@@ -217,7 +224,9 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
                 AthleteTier.AMATEUR,
                 RunningWorkoutFixture.builder().commonCommand(),
                 RunningWorkoutFixture.builder().runningCommand(),
-                null
+                null,
+                null,
+                WorkoutInputSource.DIRECT_INPUT
         );
     }
 

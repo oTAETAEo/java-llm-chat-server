@@ -12,6 +12,7 @@ import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.Member;
 import com.example.aisocket.project.domain.MemberFixture;
 import com.example.aisocket.project.domain.WorkOutType;
+import com.example.aisocket.project.domain.WorkoutInputSource;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -75,6 +76,8 @@ class FitWorkoutUploadControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.workOutType").value("RUNNING"))
                 .andExpect(jsonPath("$.tier").value("PRO"))
+                .andExpect(jsonPath("$.title").value("10K 페이스 점검"))
+                .andExpect(jsonPath("$.inputSource").value("FIT_FILE"))
                 .andExpect(jsonPath("$.distance").value(10.0))
                 .andExpect(jsonPath("$.ftp").doesNotExist())
                 .andExpect(jsonPath("$.samples[0].latitude").value(37.1))
@@ -89,6 +92,8 @@ class FitWorkoutUploadControllerTest {
         return new FitWorkoutPreviewResult(
                 WorkOutType.RUNNING,
                 AthleteTier.PRO,
+                "10K 페이스 점검",
+                WorkoutInputSource.FIT_FILE,
                 LocalDateTime.parse("2026-08-05T00:00:00"),
                 LocalDateTime.parse("2026-08-05T00:50:00"),
                 10.0,

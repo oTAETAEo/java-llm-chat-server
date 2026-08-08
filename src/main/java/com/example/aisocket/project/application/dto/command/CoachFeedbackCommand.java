@@ -5,6 +5,7 @@ import com.example.aisocket.project.domain.CreateCommonWorkoutCommand;
 import com.example.aisocket.project.domain.CreateCyclingWorkoutCommand;
 import com.example.aisocket.project.domain.CreateRunningWorkoutCommand;
 import com.example.aisocket.project.domain.WorkOutType;
+import com.example.aisocket.project.domain.WorkoutInputSource;
 import jakarta.validation.constraints.NotNull;
 
 public record CoachFeedbackCommand(
@@ -19,6 +20,11 @@ public record CoachFeedbackCommand(
 
         CreateRunningWorkoutCommand runningCommand,
 
-        CreateCyclingWorkoutCommand cyclingCommand
+        CreateCyclingWorkoutCommand cyclingCommand,
+
+        String title,
+
+        @NotNull(message = "운동 입력 출처(inputSource)는 필수 값입니다.")
+        WorkoutInputSource inputSource
 ) {
 }

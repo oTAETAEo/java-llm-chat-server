@@ -3,6 +3,7 @@ package com.example.aisocket.project.adapter.in.dto.response;
 import com.example.aisocket.project.application.dto.result.FeedbackRoomWorkoutResult;
 import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.WorkOutType;
+import com.example.aisocket.project.domain.WorkoutInputSource;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,6 +12,9 @@ public record FeedbackRoomWorkoutResponse(
         Long workoutId,
         WorkOutType workOutType,
         AthleteTier tier,
+        String title,
+        WorkoutInputSource inputSource,
+        Long feedbackCount,
         LocalDateTime startedAt,
         LocalDateTime endedAt,
         Double distance,
@@ -51,6 +55,9 @@ public record FeedbackRoomWorkoutResponse(
                 result.workoutId(),
                 result.workOutType(),
                 result.tier(),
+                result.title(),
+                result.inputSource(),
+                result.feedbackCount(),
                 result.startedAt(),
                 result.endedAt(),
                 result.distance(),

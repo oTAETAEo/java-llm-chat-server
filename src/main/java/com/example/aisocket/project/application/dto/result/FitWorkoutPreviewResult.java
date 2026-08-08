@@ -2,6 +2,7 @@ package com.example.aisocket.project.application.dto.result;
 
 import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.WorkOutType;
+import com.example.aisocket.project.domain.WorkoutInputSource;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -9,6 +10,8 @@ import java.util.List;
 public record FitWorkoutPreviewResult(
         WorkOutType workOutType,
         AthleteTier tier,
+        String title,
+        WorkoutInputSource inputSource,
         LocalDateTime startedAt,
         LocalDateTime endedAt,
         Double distance,
