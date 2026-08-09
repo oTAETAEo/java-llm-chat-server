@@ -36,7 +36,7 @@ public class GarminFitFileParser implements FitFileParser {
     public FitParseResult parse(MultipartFile file) {
         validateFile(file);
 
-        byte[] bytes = readBytes(file); // stream 형식으로 변경
+        byte[] bytes = readBytes(file); // stream 형식으로 변경 JSONParser 연결
         validateFitSignature(bytes);
 
         FitSummaryCollector collector = new FitSummaryCollector();
