@@ -28,14 +28,12 @@ public class WorkoutDashboardController {
             @RequestParam(defaultValue = "ALL") String period,
             @RequestParam(defaultValue = "ALL") String workOutType,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
-    ) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
         return WorkoutDashboardSummaryResponse.from(
                 workoutDashboardService.getSummary(
                         memberId,
-                        new WorkoutDashboardFilterCommand(period, workOutType, startDate, endDate)
-                )
-        );
+                        new WorkoutDashboardFilterCommand(period, workOutType, startDate, endDate)));
     }
 
     @GetMapping("/histories")
@@ -46,8 +44,8 @@ public class WorkoutDashboardController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) String cursor,
-            @RequestParam(required = false) Integer size
-    ) {
+            @RequestParam(required = false) Integer size) {
+
         return CursorPageResponse.from(
                 workoutDashboardService.getHistories(
                         memberId,
@@ -55,7 +53,6 @@ public class WorkoutDashboardController {
                         cursor,
                         size
                 ),
-                WorkoutHistoryItemResponse::from
-        );
-    }
+                WorkoutHistoryItemResponse::from);}
+
 }
