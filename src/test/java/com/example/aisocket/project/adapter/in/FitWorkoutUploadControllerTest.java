@@ -63,8 +63,11 @@ class FitWorkoutUploadControllerTest {
     @Test
     @DisplayName("단일 FIT 파일 업로드를 파싱 미리보기 응답으로 처리한다")
     void upload() throws Exception {
+
         Member member = authenticatedMember();
+
         givenAuthenticatedMember(member);
+
         MockMultipartFile file = new MockMultipartFile("file", "activity.fit", "application/octet-stream", new byte[]{1, 2, 3});
 
         given(fitWorkoutUploadService.upload(eq(member.getId()), eq(AthleteTier.PRO), any()))
