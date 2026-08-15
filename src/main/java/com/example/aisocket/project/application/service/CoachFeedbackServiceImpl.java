@@ -14,6 +14,7 @@ import com.example.aisocket.project.domain.CreateWorkoutSensorDataCommand;
 import com.example.aisocket.project.domain.FeedbackRoom;
 import com.example.aisocket.project.domain.WorkOutType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -23,6 +24,7 @@ import java.util.function.Consumer;
 @Service
 @Validated
 @RequiredArgsConstructor
+@Slf4j
 public class CoachFeedbackServiceImpl implements CoachFeedbackService {
 
     private final WorkoutRecordRegisterService workoutRecordRegisterService;
@@ -66,11 +68,19 @@ public class CoachFeedbackServiceImpl implements CoachFeedbackService {
 
         aiSender.sendStream(prompt, chunk -> {
             fullResponse.append(chunk);
-            chunkConsumer.accept(chunk);
+            sendChunkIfPossible(memberId, roomId, chunkConsumer, chunk);
         });
 
         if (!fullResponse.isEmpty()) {
             feedbackRoomRecordService.saveAssistantMessage(room, workOutType, workoutId, fullResponse.toString());
+        }
+    }
+
+    private void sendChunkIfPossible(Long memberId, UUID roomId, Consumer<String> chunkConsumer, String chunk) {
+        try {
+            chunkConsumer.accept(chunk);
+        } catch (RuntimeException exception) {
+            log.warn("피드백 스트림 전송이 중단되었습니다. AI 응답 저장은 계속합니다. memberId={}, roomId={}", memberId, roomId, exception);
         }
     }
 

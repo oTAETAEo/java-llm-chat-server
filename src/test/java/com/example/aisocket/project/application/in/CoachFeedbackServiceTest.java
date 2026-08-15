@@ -185,6 +185,41 @@ class CoachFeedbackServiceTest extends SpringBootIntegrationTestSupport {
     }
 
     @Test
+    @DisplayName("클라이언트 스트림 전송이 실패해도 AI 응답은 끝까지 저장한다")
+    void generateSingleWorkoutFeedbackStreamSavesAiResponseWhenChunkConsumerFails() {
+        Member member = MemberFixture.builder()
+                .id(1L)
+                .nickname("runner")
+                .build();
+        FeedbackRoom room = FeedbackRoomFixture.builder().member(member).build();
+        CoachFeedbackCommand command = runningCommand();
+        RunningWorkout workout = RunningWorkoutFixture.builder()
+                .member(member)
+                .tier(AthleteTier.AMATEUR)
+                .build();
+        WorkoutRecordRegistration registration = new WorkoutRecordRegistration(10L, member, workout);
+        given(feedbackRoomRecordService.findOwnedRoom(member.getId(), room.getId())).willReturn(room);
+        given(workoutRecordRegisterService.register(member.getId(), command)).willReturn(registration);
+        doAnswer(invocation -> {
+            Consumer<String> consumer = invocation.getArgument(1);
+            consumer.accept("끊겨도 ");
+            consumer.accept("저장");
+            return null;
+        }).when(aiSender).sendStream(anyString(), any());
+
+        coachFeedbackService.generateSingleWorkoutFeedbackStream(
+                member.getId(),
+                room.getId(),
+                command,
+                chunk -> {
+                    throw new IllegalStateException("broken pipe");
+                }
+        );
+
+        verify(feedbackRoomRecordService).saveAssistantMessage(room, WorkOutType.RUNNING, 10L, "끊겨도 저장");
+    }
+
+    @Test
     @DisplayName("방 단건 운동 피드백 스트림 생성 시 운동 기록 저장에 실패하면 벡터 저장과 AI 스트리밍을 호출하지 않는다")
     void generateSingleWorkoutFeedbackStreamWhenWorkoutRecordFails() {
         Member member = MemberFixture.builder()

@@ -16,6 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @RestController
 @RequestMapping("/api")
@@ -35,14 +36,15 @@ public class CoachFeedbackController {
     ) {
 
         SseEmitter emitter = new SseEmitter(0L);
+        AtomicBoolean connected = new AtomicBoolean(true);
 
         Thread.startVirtualThread(() -> {
             try {
                 coachFeedbackService.generateSingleWorkoutFeedbackStream(
-                        memberId, roomId, request.toCommand(), chunk -> send(emitter, chunk));
-                emitter.complete();
+                        memberId, roomId, request.toCommand(), chunk -> send(emitter, connected, memberId, roomId, chunk));
+                completeIfConnected(emitter, connected);
             } catch (Exception e) {
-                handleStreamFailure(emitter, memberId, roomId, e);
+                handleStreamFailure(emitter, connected, memberId, roomId, e);
             }
         });
 
@@ -57,40 +59,64 @@ public class CoachFeedbackController {
     ) {
 
         SseEmitter emitter = new SseEmitter(0L);
+        AtomicBoolean connected = new AtomicBoolean(true);
 
         Thread.startVirtualThread(() -> {
             try {
                 coachFeedbackService.generateSingleWorkoutFeedbackStream(
-                        memberId, roomId, request.toCommand(), request.toSensorCommand(), chunk -> send(emitter, chunk));
-                emitter.complete();
+                        memberId, roomId, request.toCommand(), request.toSensorCommand(), chunk -> send(emitter, connected, memberId, roomId, chunk));
+                completeIfConnected(emitter, connected);
             } catch (Exception e) {
-                handleStreamFailure(emitter, memberId, roomId, e);
+                handleStreamFailure(emitter, connected, memberId, roomId, e);
             }
         });
 
         return emitter;
     }
 
-    private void send(SseEmitter emitter, String chunk) {
+    private void send(SseEmitter emitter, AtomicBoolean connected, Long memberId, UUID roomId, String chunk) {
+        if (!connected.get()) {
+            return;
+        }
         try {
             emitter.send(SseEmitter.event()
                     .name("message")
                     .data(new FeedbackStreamChunk(chunk), MediaType.APPLICATION_JSON));
-        } catch (IOException e) {
-            throw new IllegalStateException("SSE 응답 전송에 실패했습니다.", e);
+        } catch (IOException | RuntimeException e) {
+            connected.set(false);
+            log.warn("피드백 SSE 연결이 종료되었습니다. AI 응답 생성과 저장은 계속합니다. memberId={}, roomId={}", memberId, roomId, e);
         }
     }
 
-    private void handleStreamFailure(SseEmitter emitter, Long memberId, UUID roomId, Exception exception) {
+    private void completeIfConnected(SseEmitter emitter, AtomicBoolean connected) {
+        if (!connected.get()) {
+            return;
+        }
+        try {
+            emitter.complete();
+        } catch (RuntimeException e) {
+            connected.set(false);
+        }
+    }
+
+    private void handleStreamFailure(SseEmitter emitter, AtomicBoolean connected, Long memberId, UUID roomId, Exception exception) {
         log.error("피드백 스트림 생성에 실패했습니다. memberId={}, roomId={}", memberId, roomId, exception);
+        if (!connected.get()) {
+            return;
+        }
         try {
             emitter.send(SseEmitter.event()
                     .name("error")
                     .data(new FeedbackStreamError(FEEDBACK_STREAM_ERROR_MESSAGE), MediaType.APPLICATION_JSON));
             emitter.complete();
-        } catch (IOException sendFailure) {
+        } catch (IOException | RuntimeException sendFailure) {
+            connected.set(false);
             log.warn("피드백 스트림 실패 이벤트 전송에 실패했습니다. memberId={}, roomId={}", memberId, roomId, sendFailure);
-            emitter.completeWithError(exception);
+            try {
+                emitter.completeWithError(exception);
+            } catch (RuntimeException completeFailure) {
+                log.debug("피드백 스트림 실패 완료 처리를 건너뜁니다. memberId={}, roomId={}", memberId, roomId, completeFailure);
+            }
         }
     }
 
