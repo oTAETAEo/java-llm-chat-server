@@ -88,6 +88,6 @@ jobs:
             set -euo pipefail
             cd /opt/chatbot-backend
             test -f .env
-            docker compose -f compose.prod.yml up -d --build
+            docker compose -f compose.prod.yml up -d --build --remove-orphans
             docker image prune -f
           EOF
