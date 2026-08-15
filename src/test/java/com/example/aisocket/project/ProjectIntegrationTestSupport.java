@@ -21,5 +21,7 @@ public abstract class ProjectIntegrationTestSupport {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
+        registry.add("spring.datasource.hikari.maximum-pool-size", () -> "2");
+        registry.add("spring.datasource.hikari.minimum-idle", () -> "0");
     }
 }

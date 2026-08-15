@@ -3,6 +3,7 @@ package com.example.aisocket.project.application.out;
 import com.example.aisocket.project.DataJpaTestSupport;
 import com.example.aisocket.project.adapter.out.persistence.CyclingWorkoutRepositoryAdapter;
 import com.example.aisocket.project.adapter.out.persistence.MemberRepositoryAdapter;
+import com.example.aisocket.project.config.QuerydslConfig;
 import com.example.aisocket.project.domain.AthleteTier;
 import com.example.aisocket.project.domain.CyclingWorkout;
 import com.example.aisocket.project.domain.CyclingWorkoutFixture;
@@ -22,7 +23,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Import({
         MemberRepositoryAdapter.class,
-        CyclingWorkoutRepositoryAdapter.class
+        CyclingWorkoutRepositoryAdapter.class,
+        QuerydslConfig.class
 })
 class CyclingWorkoutRepositoryTest extends DataJpaTestSupport {
 
