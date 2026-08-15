@@ -80,8 +80,35 @@ public class CoachFeedbackServiceImpl implements CoachFeedbackService {
         try {
             chunkConsumer.accept(chunk);
         } catch (RuntimeException exception) {
-            log.warn("피드백 스트림 전송이 중단되었습니다. AI 응답 저장은 계속합니다. memberId={}, roomId={}", memberId, roomId, exception);
+            if (isDisconnectedClient(exception)) {
+                log.info("피드백 SSE 연결이 종료되었습니다. AI 응답 생성과 저장은 계속합니다. memberId={}, roomId={}", memberId, roomId);
+                return;
+            }
+
+            log.warn("피드백 스트림 전송이 중단되었습니다. AI 응답 저장은 계속합니다. memberId={}, roomId={}, exceptionType={}, message={}",
+                    memberId,
+                    roomId,
+                    exception.getClass().getSimpleName(),
+                    exception.getMessage()
+            );
         }
+    }
+
+    private boolean isDisconnectedClient(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            String simpleName = current.getClass().getSimpleName();
+            String message = current.getMessage();
+            if (
+                    "ClientAbortException".equals(simpleName) ||
+                            "AsyncRequestNotUsableException".equals(simpleName) ||
+                            (message != null && message.contains("Broken pipe"))
+            ) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private WorkoutRecordRegistration registerWorkoutAndVector(Long memberId, CoachFeedbackCommand command) {

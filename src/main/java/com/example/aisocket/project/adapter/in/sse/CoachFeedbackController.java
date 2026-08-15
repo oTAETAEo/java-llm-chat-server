@@ -84,8 +84,34 @@ public class CoachFeedbackController {
                     .data(new FeedbackStreamChunk(chunk), MediaType.APPLICATION_JSON));
         } catch (IOException | RuntimeException e) {
             connected.set(false);
-            log.warn("피드백 SSE 연결이 종료되었습니다. AI 응답 생성과 저장은 계속합니다. memberId={}, roomId={}", memberId, roomId, e);
+            logStreamSendFailure(memberId, roomId, e);
         }
+    }
+
+    private void logStreamSendFailure(Long memberId, UUID roomId, Exception exception) {
+        if (isDisconnectedClient(exception)) {
+            log.info("피드백 SSE 클라이언트 연결이 종료되었습니다. AI 응답 생성과 저장은 계속합니다. memberId={}, roomId={}", memberId, roomId);
+            return;
+        }
+
+        log.warn("피드백 SSE 전송에 실패했습니다. AI 응답 생성과 저장은 계속합니다. memberId={}, roomId={}", memberId, roomId, exception);
+    }
+
+    private boolean isDisconnectedClient(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            String simpleName = current.getClass().getSimpleName();
+            String message = current.getMessage();
+            if (
+                    "ClientAbortException".equals(simpleName) ||
+                            "AsyncRequestNotUsableException".equals(simpleName) ||
+                            (message != null && message.contains("Broken pipe"))
+            ) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private void completeIfConnected(SseEmitter emitter, AtomicBoolean connected) {
@@ -100,6 +126,12 @@ public class CoachFeedbackController {
     }
 
     private void handleStreamFailure(SseEmitter emitter, AtomicBoolean connected, Long memberId, UUID roomId, Exception exception) {
+        if (isDisconnectedClient(exception)) {
+            connected.set(false);
+            log.info("피드백 SSE 연결이 종료되었습니다. AI 응답 생성과 저장은 계속합니다. memberId={}, roomId={}", memberId, roomId);
+            return;
+        }
+
         log.error("피드백 스트림 생성에 실패했습니다. memberId={}, roomId={}", memberId, roomId, exception);
         if (!connected.get()) {
             return;
@@ -111,7 +143,16 @@ public class CoachFeedbackController {
             emitter.complete();
         } catch (IOException | RuntimeException sendFailure) {
             connected.set(false);
-            log.warn("피드백 스트림 실패 이벤트 전송에 실패했습니다. memberId={}, roomId={}", memberId, roomId, sendFailure);
+            if (isDisconnectedClient(sendFailure)) {
+                log.info("피드백 스트림 실패 이벤트 전송 전 클라이언트 연결이 종료되었습니다. memberId={}, roomId={}", memberId, roomId);
+            } else {
+                log.warn("피드백 스트림 실패 이벤트 전송에 실패했습니다. memberId={}, roomId={}, exceptionType={}, message={}",
+                        memberId,
+                        roomId,
+                        sendFailure.getClass().getSimpleName(),
+                        sendFailure.getMessage()
+                );
+            }
             try {
                 emitter.completeWithError(exception);
             } catch (RuntimeException completeFailure) {

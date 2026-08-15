@@ -35,10 +35,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ProjectException.class)
     public ResponseEntity<ErrorResponse> handleProjectException(ProjectException exception, HttpServletRequest request) {
-        log.warn("Project exception occurred. code={}, path={}",
+        log.warn("Project exception occurred. code={}, path={}, message={}",
                 exception.errorCode().code(),
                 request.getRequestURI(),
-                exception
+                exception.getMessage()
         );
 
         return ResponseEntity.status(exception.errorCode().status())
@@ -50,13 +50,12 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException exception,
             HttpServletRequest request
     ) {
-        log.warn("Request body validation failed. path={}", request.getRequestURI(), exception);
-
         String message = exception.getBindingResult().getFieldErrors().stream()
                 .map(fieldError -> Objects.requireNonNullElse(fieldError.getDefaultMessage(), CommonErrorCode.BAD_REQUEST.message()))
                 .distinct()
                 .findFirst()
                 .orElse(CommonErrorCode.BAD_REQUEST.message());
+        log.warn("Request body validation failed. path={}, message={}", request.getRequestURI(), message);
 
         return ResponseEntity.badRequest()
                 .body(ErrorResponse.of(
@@ -68,7 +67,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({IllegalArgumentException.class, ConstraintViolationException.class, HandlerMethodValidationException.class})
     public ResponseEntity<ErrorResponse> handleBadRequest(Exception exception, HttpServletRequest request) {
-        log.warn("Bad request exception occurred. path={}", request.getRequestURI(), exception);
+        log.warn("Bad request exception occurred. path={}, exceptionType={}, message={}",
+                request.getRequestURI(),
+                exception.getClass().getSimpleName(),
+                exception.getMessage()
+        );
 
         return ResponseEntity.badRequest()
                 .body(ErrorResponse.of(
@@ -83,10 +86,9 @@ public class GlobalExceptionHandler {
             MissingRequestCookieException exception,
             HttpServletRequest request
     ) {
-        log.warn("Missing request cookie. cookieName={}, path={}",
+        log.info("Missing request cookie. cookieName={}, path={}",
                 exception.getCookieName(),
-                request.getRequestURI(),
-                exception
+                request.getRequestURI()
         );
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -102,10 +104,10 @@ public class GlobalExceptionHandler {
             MethodArgumentTypeMismatchException exception,
             HttpServletRequest request
     ) {
-        log.warn("Method argument type mismatch. parameter={}, path={}",
+        log.warn("Method argument type mismatch. parameter={}, path={}, value={}",
                 exception.getName(),
                 request.getRequestURI(),
-                exception
+                exception.getValue()
         );
 
         return ResponseEntity.badRequest()
