@@ -8,6 +8,9 @@ import com.example.aisocket.project.application.dto.result.LoginResult;
 import com.example.aisocket.project.application.dto.result.LogoutResult;
 import com.example.aisocket.project.application.dto.result.ReissueTokenResult;
 import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
+import com.example.aisocket.project.application.dto.result.TermsDetailResult;
+import com.example.aisocket.project.application.dto.result.TermsResult;
+import com.example.aisocket.project.application.internal.terms.TermsQueryService;
 import com.example.aisocket.project.application.in.MemberAuthService;
 import com.example.aisocket.project.common.error.MemberErrorCode;
 import com.example.aisocket.project.common.error.ProjectException;
@@ -16,6 +19,7 @@ import com.example.aisocket.project.application.internal.token.AccessTokenBlackl
 import com.example.aisocket.project.application.internal.token.JwtTokenValidator;
 import com.example.aisocket.project.application.out.MemberRepository;
 import com.example.aisocket.project.config.SecurityConfig;
+import com.example.aisocket.project.domain.TermType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -61,6 +65,45 @@ class AuthControllerTest {
     @MockitoBean
     private MemberAuthService memberAuthService;
 
+    @MockitoBean
+    private TermsQueryService termsQueryService;
+
+    @Test
+    @DisplayName("회원가입 약관 목록을 조회한다")
+    void findSignUpTerms() throws Exception {
+        given(termsQueryService.findActiveTerms()).willReturn(List.of(
+                new TermsResult(1L, TermType.TERMS_OF_SERVICE, "terms-of-service-kr-v1", "이용약관", "2026.08.15", "/terms", true),
+                new TermsResult(2L, TermType.PRIVACY_POLICY, "privacy-policy-kr-v1", "개인정보 처리방침", "2026.08.15", "/privacy", true)
+        ));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/auth/terms"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].termsId").value(1))
+                .andExpect(jsonPath("$[0].required").value(true))
+                .andExpect(jsonPath("$[1].code").value("privacy-policy-kr-v1"));
+    }
+
+    @Test
+    @DisplayName("약관 코드를 기준으로 약관 본문을 조회한다")
+    void findTerms() throws Exception {
+        given(termsQueryService.findActiveTerm("privacy-policy-kr-v1"))
+                .willReturn(new TermsDetailResult(
+                        2L,
+                        TermType.PRIVACY_POLICY,
+                        "privacy-policy-kr-v1",
+                        "개인정보 처리방침",
+                        "2026.08.15",
+                        "/privacy",
+                        true,
+                        "# 개인정보 처리방침"
+                ));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/auth/terms/privacy-policy-kr-v1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("privacy-policy-kr-v1"))
+                .andExpect(jsonPath("$.content").value("# 개인정보 처리방침"));
+    }
+
     @Test
     @DisplayName("회원가입 요청을 처리한다")
     void signUp() throws Exception {
@@ -80,6 +123,7 @@ class AuthControllerTest {
         assertThat(commandCaptor.getValue().email()).isEqualTo("runner@example.com");
         assertThat(commandCaptor.getValue().rawPassword()).isEqualTo("StrongPass1!");
         assertThat(commandCaptor.getValue().nickname()).isEqualTo("runner");
+        assertThat(commandCaptor.getValue().agreedTermsIds()).containsExactly(1L, 2L);
     }
 
     @Test
@@ -217,7 +261,8 @@ class AuthControllerTest {
                 {
                   "email": "runner@example.com",
                   "password": "StrongPass1!",
-                  "nickname": "runner"
+                  "nickname": "runner",
+                  "agreedTermsIds": [1, 2]
                 }
                 """;
     }

@@ -11,6 +11,7 @@ import com.example.aisocket.project.application.dto.result.ReissueTokenResult;
 import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
 import com.example.aisocket.project.application.internal.member.MemberFinderService;
 import com.example.aisocket.project.application.internal.member.MemberRegisterService;
+import com.example.aisocket.project.application.internal.terms.MemberTermsAgreementRegisterService;
 import com.example.aisocket.project.application.internal.token.AccessTokenBlacklistService;
 import com.example.aisocket.project.application.internal.token.IssuedAccessToken;
 import com.example.aisocket.project.application.internal.token.IssuedToken;
@@ -31,6 +32,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -53,6 +55,9 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
     private MemberRegisterService memberRegisterService;
 
     @MockitoBean
+    private MemberTermsAgreementRegisterService memberTermsAgreementRegisterService;
+
+    @MockitoBean
     private JwtTokenProvider tokenProvider;
 
     @MockitoBean
@@ -64,7 +69,7 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
     @Test
     @DisplayName("회원가입 시 회원 등록 서비스를 호출하고 결과를 반환한다")
     void registerMember() {
-        SignUpMemberCommand command = new SignUpMemberCommand("runner@example.com", "StrongPass1!", "runner");
+        SignUpMemberCommand command = new SignUpMemberCommand("runner@example.com", "StrongPass1!", "runner", List.of(1L, 2L));
         when(memberRegisterService.register(command)).thenReturn(MemberFixture.builder()
                 .id(1L)
                 .email(command.email())
@@ -76,6 +81,7 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
 
         verify(memberFinderService).validateNotExistsByEmail(command.email());
         verify(memberRegisterService).register(command);
+        verify(memberTermsAgreementRegisterService).register(any(Member.class), any());
         assertThat(result.memberId()).isEqualTo(1L);
         assertThat(result.email()).isEqualTo("runner@example.com");
         assertThat(result.nickname()).isEqualTo("runner");
@@ -84,7 +90,7 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
     @Test
     @DisplayName("이미 사용 중인 이메일이면 회원가입에 실패한다")
     void registerMemberWithDuplicatedEmailFails() {
-        SignUpMemberCommand command = new SignUpMemberCommand("runner@example.com", "StrongPass1!", "runner");
+        SignUpMemberCommand command = new SignUpMemberCommand("runner@example.com", "StrongPass1!", "runner", List.of(1L, 2L));
 
         doThrow(new ProjectException(MemberErrorCode.DUPLICATED_EMAIL))
                 .when(memberFinderService).validateNotExistsByEmail("runner@example.com");
@@ -93,6 +99,7 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
                 .isInstanceOf(ProjectException.class);
 
         verify(memberRegisterService, never()).register(any(SignUpMemberCommand.class));
+        verifyNoInteractions(memberTermsAgreementRegisterService);
     }
 
     @Test
@@ -105,7 +112,7 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
     @Test
     @DisplayName("회원가입 요청 필드가 비어 있으면 서비스 검증에 실패한다")
     void registerWithInvalidCommandFails() {
-        SignUpMemberCommand command = new SignUpMemberCommand(" ", "", "");
+        SignUpMemberCommand command = new SignUpMemberCommand(" ", "", "", List.of());
 
         assertThatThrownBy(() -> memberAuthService.signUp(command))
                 .isInstanceOf(ConstraintViolationException.class);
@@ -114,7 +121,7 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
     @Test
     @DisplayName("회원가입 비밀번호가 강한 비밀번호 정책을 만족하지 않으면 서비스 검증에 실패한다")
     void registerWithWeakPasswordFails() {
-        SignUpMemberCommand command = new SignUpMemberCommand("runner@example.com", "password", "runner");
+        SignUpMemberCommand command = new SignUpMemberCommand("runner@example.com", "password", "runner", List.of(1L, 2L));
 
         assertThatThrownBy(() -> memberAuthService.signUp(command))
                 .isInstanceOf(ConstraintViolationException.class)

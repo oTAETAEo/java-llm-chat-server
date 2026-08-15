@@ -11,6 +11,7 @@ import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
 import com.example.aisocket.project.application.in.MemberAuthService;
 import com.example.aisocket.project.application.internal.member.MemberFinderService;
 import com.example.aisocket.project.application.internal.member.MemberRegisterService;
+import com.example.aisocket.project.application.internal.terms.MemberTermsAgreementRegisterService;
 import com.example.aisocket.project.application.internal.token.AccessTokenBlacklistService;
 import com.example.aisocket.project.application.internal.token.IssuedAccessToken;
 import com.example.aisocket.project.application.internal.token.IssuedToken;
@@ -32,6 +33,8 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 
     private final MemberRegisterService memberRegisterService;
 
+    private final MemberTermsAgreementRegisterService memberTermsAgreementRegisterService;
+
     private final RefreshTokenRegisterService refreshTokenRegisterService;
 
     private final AccessTokenBlacklistService accessTokenBlacklistService;
@@ -45,6 +48,8 @@ public class MemberAuthServiceImpl implements MemberAuthService {
         memberFinderService.validateNotExistsByEmail(command.email());
 
         Member savedMember = memberRegisterService.register(command);
+
+        memberTermsAgreementRegisterService.register(savedMember, command.agreedTermsIds());
 
         return new SignUpMemberResult(savedMember.getId(), savedMember.getEmail(), savedMember.getNickname());
     }

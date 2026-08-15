@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
+
 public record SignUpMemberCommand(
         @NotBlank(message = "이메일은 필수 값입니다.")
         @Email(message = "이메일 형식이 올바르지 않습니다.")
@@ -24,6 +26,8 @@ public record SignUpMemberCommand(
         String rawPassword,
 
         @NotBlank(message = "닉네임은 필수 값입니다.")
-        String nickname
+        String nickname,
+
+        List<Long> agreedTermsIds
 ) {
 }

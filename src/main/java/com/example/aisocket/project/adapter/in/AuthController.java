@@ -8,10 +8,13 @@ import com.example.aisocket.project.adapter.in.dto.response.LoginResponse;
 import com.example.aisocket.project.adapter.in.dto.response.LogoutResponse;
 import com.example.aisocket.project.adapter.in.dto.response.ReissueTokenResponse;
 import com.example.aisocket.project.adapter.in.dto.response.SignUpResponse;
+import com.example.aisocket.project.adapter.in.dto.response.TermsResponse;
+import com.example.aisocket.project.adapter.in.dto.response.TermsDetailResponse;
 import com.example.aisocket.project.application.dto.result.LoginResult;
 import com.example.aisocket.project.application.dto.result.LogoutResult;
 import com.example.aisocket.project.application.dto.result.ReissueTokenResult;
 import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
+import com.example.aisocket.project.application.internal.terms.TermsQueryService;
 import com.example.aisocket.project.application.in.MemberAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -37,6 +43,20 @@ public class AuthController {
     private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 
     private final MemberAuthService memberAuthService;
+
+    private final TermsQueryService termsQueryService;
+
+    @GetMapping("/terms")
+    public List<TermsResponse> findSignUpTerms() {
+        return termsQueryService.findActiveTerms().stream()
+                .map(TermsResponse::from)
+                .toList();
+    }
+
+    @GetMapping("/terms/{code}")
+    public TermsDetailResponse findTerms(@PathVariable String code) {
+        return TermsDetailResponse.from(termsQueryService.findActiveTerm(code));
+    }
 
     @PostMapping("/sign-up")
     public ResponseEntity<SignUpResponse> signUp(@Valid @RequestBody SignUpRequest request) {
