@@ -35,7 +35,6 @@ import java.util.Optional;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
-    private static final String AUTH_ENDPOINT_PREFIX = "/api/v1/auth/";
 
     private final JwtTokenValidator jwtTokenValidator;
 
@@ -47,7 +46,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getRequestURI().startsWith(AUTH_ENDPOINT_PREFIX);
+        String method = request.getMethod();
+        String path = request.getRequestURI();
+
+        return ("GET".equals(method) && "/api/v1/auth/terms".equals(path))
+                || ("GET".equals(method) && path.startsWith("/api/v1/auth/terms/") && !path.startsWith("/api/v1/auth/terms/agreements"))
+                || ("POST".equals(method) && "/api/v1/auth/sign-up".equals(path))
+                || ("POST".equals(method) && "/api/v1/auth/login".equals(path))
+                || ("POST".equals(method) && "/api/v1/auth/reissue".equals(path))
+                || ("POST".equals(method) && "/api/v1/auth/logout".equals(path));
     }
 
     @Override

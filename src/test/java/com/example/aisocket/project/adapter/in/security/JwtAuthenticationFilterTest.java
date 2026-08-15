@@ -68,6 +68,7 @@ class JwtAuthenticationFilterTest {
     @DisplayName("인증 엔드포인트는 토큰 검증 필터를 타지 않는다")
     void doFilterWithAuthEndpoint() throws ServletException, IOException {
         MockHttpServletRequest request = request("/api/v1/auth/login");
+        request.setMethod("POST");
         request.setCookies(new Cookie("accessToken", "invalid-token"));
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain filterChain = new MockFilterChain();
@@ -167,6 +168,7 @@ class JwtAuthenticationFilterTest {
 
     private MockHttpServletRequest request(String requestUri) {
         MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setMethod("GET");
         request.setRequestURI(requestUri);
         return request;
     }

@@ -6,6 +6,7 @@ public record LoginResult(
         Long memberId,
         String email,
         String nickname,
+        TermsAgreementStatusResult termsAgreementStatus,
         String accessToken,
         String refreshToken,
         Instant accessTokenExpiresAt,

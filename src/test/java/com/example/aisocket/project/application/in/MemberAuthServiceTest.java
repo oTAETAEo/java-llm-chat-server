@@ -9,9 +9,11 @@ import com.example.aisocket.project.application.dto.result.LoginResult;
 import com.example.aisocket.project.application.dto.result.LogoutResult;
 import com.example.aisocket.project.application.dto.result.ReissueTokenResult;
 import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
+import com.example.aisocket.project.application.dto.result.TermsAgreementStatusResult;
 import com.example.aisocket.project.application.internal.member.MemberFinderService;
 import com.example.aisocket.project.application.internal.member.MemberRegisterService;
 import com.example.aisocket.project.application.internal.terms.MemberTermsAgreementRegisterService;
+import com.example.aisocket.project.application.internal.terms.TermsAgreementStatusService;
 import com.example.aisocket.project.application.internal.token.AccessTokenBlacklistService;
 import com.example.aisocket.project.application.internal.token.IssuedAccessToken;
 import com.example.aisocket.project.application.internal.token.IssuedToken;
@@ -56,6 +58,9 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
 
     @MockitoBean
     private MemberTermsAgreementRegisterService memberTermsAgreementRegisterService;
+
+    @MockitoBean
+    private TermsAgreementStatusService termsAgreementStatusService;
 
     @MockitoBean
     private JwtTokenProvider tokenProvider;
@@ -141,15 +146,19 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
         IssuedToken issuedToken = issuedToken();
         when(memberFinderService.findLoginMember(command)).thenReturn(member);
         when(tokenProvider.issue(member)).thenReturn(issuedToken);
+        when(termsAgreementStatusService.findStatus(member.getId()))
+                .thenReturn(agreedTermsStatus());
 
         LoginResult result = memberAuthService.login(command);
 
         verify(memberFinderService).findLoginMember(command);
         verify(tokenProvider).issue(member);
         verify(refreshTokenRegisterService).register(member, issuedToken);
+        verify(termsAgreementStatusService).findStatus(member.getId());
         assertThat(result.memberId()).isEqualTo(1L);
         assertThat(result.email()).isEqualTo("runner@example.com");
         assertThat(result.nickname()).isEqualTo("runner");
+        assertThat(result.termsAgreementStatus().requiresTermsAgreement()).isFalse();
         assertThat(result.accessToken()).isEqualTo("access-token");
         assertThat(result.refreshToken()).isEqualTo("refresh-token");
         assertThat(result.accessTokenExpiresAt()).isEqualTo(Instant.parse("2026-07-24T00:30:00Z"));
@@ -201,14 +210,18 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
         when(refreshTokenRegisterService.findUsable(command.refreshToken())).thenReturn(refreshToken(member));
         when(memberFinderService.findById(1L)).thenReturn(member);
         when(tokenProvider.issueAccessToken(member)).thenReturn(newIssuedAccessToken);
+        when(termsAgreementStatusService.findStatus(member.getId()))
+                .thenReturn(agreedTermsStatus());
 
         ReissueTokenResult result = memberAuthService.reissueToken(command);
 
         verify(refreshTokenRegisterService).findUsable(command.refreshToken());
         verify(memberFinderService).findById(1L);
         verify(tokenProvider).issueAccessToken(member);
+        verify(termsAgreementStatusService).findStatus(member.getId());
         assertThat(result.memberId()).isEqualTo(1L);
         assertThat(result.accessToken()).isEqualTo("new-access-token");
+        assertThat(result.termsAgreementStatus().requiresTermsAgreement()).isFalse();
     }
 
     @Test
@@ -275,6 +288,10 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
                 Instant.parse("2026-07-24T00:30:00Z"),
                 Instant.parse("2026-08-07T00:00:00Z")
         );
+    }
+
+    private TermsAgreementStatusResult agreedTermsStatus() {
+        return new TermsAgreementStatusResult(false, List.of());
     }
 
     private RefreshToken refreshToken(Member member) {

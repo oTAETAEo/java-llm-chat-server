@@ -6,6 +6,7 @@ public record ReissueTokenResult(
         Long memberId,
         String email,
         String nickname,
+        TermsAgreementStatusResult termsAgreementStatus,
         String accessToken,
         Instant accessTokenExpiresAt
 ) {

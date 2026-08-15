@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -29,10 +30,6 @@ import java.util.List;
 
 @Configuration
 public class SecurityConfig {
-
-    private static final String[] AUTH_ENDPOINTS = {
-            "/api/v1/auth/**"
-    };
 
     private final List<String> allowedOrigins;
 
@@ -87,7 +84,12 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
-                        .requestMatchers(AUTH_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/terms").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/auth/terms/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/sign-up").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/reissue").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").permitAll()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )

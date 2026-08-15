@@ -8,9 +8,12 @@ import com.example.aisocket.project.application.dto.result.LoginResult;
 import com.example.aisocket.project.application.dto.result.LogoutResult;
 import com.example.aisocket.project.application.dto.result.ReissueTokenResult;
 import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
+import com.example.aisocket.project.application.dto.result.TermsAgreementStatusResult;
 import com.example.aisocket.project.application.dto.result.TermsDetailResult;
 import com.example.aisocket.project.application.dto.result.TermsResult;
+import com.example.aisocket.project.application.internal.terms.TermsAgreementStatusService;
 import com.example.aisocket.project.application.internal.terms.TermsQueryService;
+import com.example.aisocket.project.application.internal.token.JwtTokenClaims;
 import com.example.aisocket.project.application.in.MemberAuthService;
 import com.example.aisocket.project.common.error.MemberErrorCode;
 import com.example.aisocket.project.common.error.ProjectException;
@@ -19,6 +22,7 @@ import com.example.aisocket.project.application.internal.token.AccessTokenBlackl
 import com.example.aisocket.project.application.internal.token.JwtTokenValidator;
 import com.example.aisocket.project.application.out.MemberRepository;
 import com.example.aisocket.project.config.SecurityConfig;
+import com.example.aisocket.project.domain.MemberFixture;
 import com.example.aisocket.project.domain.TermType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,6 +47,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -67,6 +72,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private TermsQueryService termsQueryService;
+
+    @MockitoBean
+    private TermsAgreementStatusService termsAgreementStatusService;
 
     @Test
     @DisplayName("회원가입 약관 목록을 조회한다")
@@ -154,6 +162,7 @@ class AuthControllerTest {
                         1L,
                         "runner@example.com",
                         "runner",
+                        agreedTermsStatus(),
                         "access-token",
                         "refresh-token",
                         Instant.parse("2026-07-24T00:30:00Z"),
@@ -164,6 +173,8 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginRequestJson()))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.requiresTermsAgreement").value(false))
+                .andExpect(jsonPath("$.missingRequiredTerms").isArray())
                 .andReturn();
 
         List<String> cookies = mvcResult.getResponse().getHeaders(HttpHeaders.SET_COOKIE);
@@ -187,6 +198,7 @@ class AuthControllerTest {
                         1L,
                         "runner@example.com",
                         "runner",
+                        agreedTermsStatus(),
                         "new-access-token",
                         Instant.parse("2026-07-24T00:30:00Z")
                 ));
@@ -194,6 +206,7 @@ class AuthControllerTest {
         MvcResult mvcResult = mockMvc.perform(post("/api/v1/auth/reissue")
                         .cookie(new Cookie("refreshToken", "old-refresh-token")))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.requiresTermsAgreement").value(false))
                 .andReturn();
 
         List<String> cookies = mvcResult.getResponse().getHeaders(HttpHeaders.SET_COOKIE);
@@ -229,6 +242,54 @@ class AuthControllerTest {
         verify(memberAuthService).logout(commandCaptor.capture());
         assertThat(commandCaptor.getValue().accessToken()).isEqualTo("access-token");
         assertThat(commandCaptor.getValue().refreshToken()).isEqualTo("refresh-token");
+    }
+
+    @Test
+    @DisplayName("인증 회원의 필수 약관 동의 상태를 조회한다")
+    void findTermsAgreementStatus() throws Exception {
+        givenAuthenticatedMember();
+        given(termsAgreementStatusService.findStatus(1L))
+                .willReturn(new TermsAgreementStatusResult(
+                        true,
+                        List.of(new TermsResult(
+                                3L,
+                                TermType.SENSITIVE_INFORMATION,
+                                "sensitive-health-data-kr-v1",
+                                "건강 관련 운동 데이터 처리 동의",
+                                "2026.08.15",
+                                "/privacy#sensitive-information",
+                                true
+                        ))
+                ));
+
+        mockMvc.perform(get("/api/v1/auth/terms/agreements/status")
+                        .cookie(new Cookie("accessToken", "access-token")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.requiresTermsAgreement").value(true))
+                .andExpect(jsonPath("$.missingRequiredTerms[0].termsId").value(3));
+
+        verify(termsAgreementStatusService).findStatus(1L);
+    }
+
+    @Test
+    @DisplayName("인증 회원의 추가 약관 동의를 저장한다")
+    void agreeTerms() throws Exception {
+        givenAuthenticatedMember();
+        given(termsAgreementStatusService.agree(1L, List.of(1L, 2L, 3L)))
+                .willReturn(agreedTermsStatus());
+
+        mockMvc.perform(post("/api/v1/auth/terms/agreements")
+                        .cookie(new Cookie("accessToken", "access-token"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "agreedTermsIds": [1, 2, 3]
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.requiresTermsAgreement").value(false));
+
+        verify(termsAgreementStatusService).agree(1L, List.of(1L, 2L, 3L));
     }
 
     @Test
@@ -274,5 +335,26 @@ class AuthControllerTest {
                   "password": "raw-password"
                 }
                 """;
+    }
+
+    private TermsAgreementStatusResult agreedTermsStatus() {
+        return new TermsAgreementStatusResult(false, List.of());
+    }
+
+    private void givenAuthenticatedMember() {
+        given(jwtTokenValidator.validateAccessToken("access-token"))
+                .willReturn(new JwtTokenClaims(
+                        1L,
+                        "runner@example.com",
+                        "runner",
+                        "access",
+                        Instant.parse("2026-08-24T00:30:00Z")
+                ));
+        given(memberRepository.findById(1L))
+                .willReturn(java.util.Optional.of(MemberFixture.builder()
+                        .id(1L)
+                        .email("runner@example.com")
+                        .nickname("runner")
+                        .build()));
     }
 }

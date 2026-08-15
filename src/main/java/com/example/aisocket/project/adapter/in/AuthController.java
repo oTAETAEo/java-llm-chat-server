@@ -4,16 +4,20 @@ import com.example.aisocket.project.adapter.in.dto.request.LoginRequest;
 import com.example.aisocket.project.adapter.in.dto.request.LogoutRequest;
 import com.example.aisocket.project.adapter.in.dto.request.ReissueTokenRequest;
 import com.example.aisocket.project.adapter.in.dto.request.SignUpRequest;
+import com.example.aisocket.project.adapter.in.dto.request.TermsAgreementRequest;
+import com.example.aisocket.project.adapter.in.dto.response.TermsAgreementStatusResponse;
 import com.example.aisocket.project.adapter.in.dto.response.LoginResponse;
 import com.example.aisocket.project.adapter.in.dto.response.LogoutResponse;
 import com.example.aisocket.project.adapter.in.dto.response.ReissueTokenResponse;
 import com.example.aisocket.project.adapter.in.dto.response.SignUpResponse;
 import com.example.aisocket.project.adapter.in.dto.response.TermsResponse;
 import com.example.aisocket.project.adapter.in.dto.response.TermsDetailResponse;
+import com.example.aisocket.project.adapter.in.security.AuthenticationMember;
 import com.example.aisocket.project.application.dto.result.LoginResult;
 import com.example.aisocket.project.application.dto.result.LogoutResult;
 import com.example.aisocket.project.application.dto.result.ReissueTokenResult;
 import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
+import com.example.aisocket.project.application.internal.terms.TermsAgreementStatusService;
 import com.example.aisocket.project.application.internal.terms.TermsQueryService;
 import com.example.aisocket.project.application.in.MemberAuthService;
 import jakarta.validation.Valid;
@@ -46,6 +50,8 @@ public class AuthController {
 
     private final TermsQueryService termsQueryService;
 
+    private final TermsAgreementStatusService termsAgreementStatusService;
+
     @GetMapping("/terms")
     public List<TermsResponse> findSignUpTerms() {
         return termsQueryService.findActiveTerms().stream()
@@ -56,6 +62,21 @@ public class AuthController {
     @GetMapping("/terms/{code}")
     public TermsDetailResponse findTerms(@PathVariable String code) {
         return TermsDetailResponse.from(termsQueryService.findActiveTerm(code));
+    }
+
+    @GetMapping("/terms/agreements/status")
+    public TermsAgreementStatusResponse findTermsAgreementStatus(@AuthenticationMember Long memberId) {
+        return TermsAgreementStatusResponse.from(termsAgreementStatusService.findStatus(memberId));
+    }
+
+    @PostMapping("/terms/agreements")
+    public TermsAgreementStatusResponse agreeTerms(
+            @AuthenticationMember Long memberId,
+            @Valid @RequestBody TermsAgreementRequest request
+    ) {
+        return TermsAgreementStatusResponse.from(
+                termsAgreementStatusService.agree(memberId, request.agreedTermsIds())
+        );
     }
 
     @PostMapping("/sign-up")

@@ -12,6 +12,7 @@ import com.example.aisocket.project.application.in.MemberAuthService;
 import com.example.aisocket.project.application.internal.member.MemberFinderService;
 import com.example.aisocket.project.application.internal.member.MemberRegisterService;
 import com.example.aisocket.project.application.internal.terms.MemberTermsAgreementRegisterService;
+import com.example.aisocket.project.application.internal.terms.TermsAgreementStatusService;
 import com.example.aisocket.project.application.internal.token.AccessTokenBlacklistService;
 import com.example.aisocket.project.application.internal.token.IssuedAccessToken;
 import com.example.aisocket.project.application.internal.token.IssuedToken;
@@ -34,6 +35,8 @@ public class MemberAuthServiceImpl implements MemberAuthService {
     private final MemberRegisterService memberRegisterService;
 
     private final MemberTermsAgreementRegisterService memberTermsAgreementRegisterService;
+
+    private final TermsAgreementStatusService termsAgreementStatusService;
 
     private final RefreshTokenRegisterService refreshTokenRegisterService;
 
@@ -68,6 +71,7 @@ public class MemberAuthServiceImpl implements MemberAuthService {
                 member.getId(),
                 member.getEmail(),
                 member.getNickname(),
+                termsAgreementStatusService.findStatus(member.getId()),
                 issuedToken.accessToken(),
                 issuedToken.refreshToken(),
                 issuedToken.accessTokenExpiresAt(),
@@ -88,6 +92,7 @@ public class MemberAuthServiceImpl implements MemberAuthService {
                 member.getId(),
                 member.getEmail(),
                 member.getNickname(),
+                termsAgreementStatusService.findStatus(member.getId()),
                 issuedAccessToken.accessToken(),
                 issuedAccessToken.accessTokenExpiresAt()
         );

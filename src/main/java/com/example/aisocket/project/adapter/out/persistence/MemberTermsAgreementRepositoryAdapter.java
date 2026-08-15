@@ -5,6 +5,8 @@ import com.example.aisocket.project.domain.MemberTermsAgreement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Set;
+
 @Component
 @RequiredArgsConstructor
 public class MemberTermsAgreementRepositoryAdapter implements MemberTermsAgreementRepository {
@@ -14,5 +16,10 @@ public class MemberTermsAgreementRepositoryAdapter implements MemberTermsAgreeme
     @Override
     public MemberTermsAgreement save(MemberTermsAgreement agreement) {
         return repository.save(agreement);
+    }
+
+    @Override
+    public Set<Long> findAgreedActiveTermsIdsByMemberId(Long memberId) {
+        return repository.findAgreedActiveTermsIdsByMemberId(memberId);
     }
 }
