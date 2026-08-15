@@ -1,6 +1,7 @@
 package com.example.aisocket.project.adapter.in;
 
 import com.example.aisocket.project.adapter.in.dto.response.CursorPageResponse;
+import com.example.aisocket.project.adapter.in.dto.response.WorkoutDashboardInsightResponse;
 import com.example.aisocket.project.adapter.in.dto.response.WorkoutDashboardSummaryResponse;
 import com.example.aisocket.project.adapter.in.dto.response.WorkoutHistoryItemResponse;
 import com.example.aisocket.project.adapter.in.security.AuthenticationMember;
@@ -32,6 +33,20 @@ public class WorkoutDashboardController {
 
         return WorkoutDashboardSummaryResponse.from(
                 workoutDashboardService.getSummary(
+                        memberId,
+                        new WorkoutDashboardFilterCommand(period, workOutType, startDate, endDate)));
+    }
+
+    @GetMapping("/insights")
+    public WorkoutDashboardInsightResponse getInsights(
+            @AuthenticationMember Long memberId,
+            @RequestParam(defaultValue = "ALL") String period,
+            @RequestParam(defaultValue = "ALL") String workOutType,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        return WorkoutDashboardInsightResponse.from(
+                workoutDashboardService.getInsights(
                         memberId,
                         new WorkoutDashboardFilterCommand(period, workOutType, startDate, endDate)));
     }
