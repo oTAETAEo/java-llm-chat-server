@@ -1,5 +1,10 @@
 package com.example.aisocket.project.adapter.in.exception;
 
+import com.example.aisocket.project.adapter.in.AuthController;
+import com.example.aisocket.project.adapter.in.CoachFeedbackRoomController;
+import com.example.aisocket.project.adapter.in.FitWorkoutUploadController;
+import com.example.aisocket.project.adapter.in.WorkoutDashboardController;
+import com.example.aisocket.project.adapter.in.WorkoutQueryController;
 import com.example.aisocket.project.common.error.CommonErrorCode;
 import com.example.aisocket.project.common.error.ErrorResponse;
 import com.example.aisocket.project.common.error.ProjectException;
@@ -19,7 +24,13 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.util.Objects;
 
 @Slf4j
-@RestControllerAdvice(basePackages = "com.example.aisocket.project.adapter.in")
+@RestControllerAdvice(assignableTypes = {
+        AuthController.class,
+        CoachFeedbackRoomController.class,
+        FitWorkoutUploadController.class,
+        WorkoutDashboardController.class,
+        WorkoutQueryController.class
+})
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ProjectException.class)

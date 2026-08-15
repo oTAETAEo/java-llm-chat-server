@@ -1,4 +1,4 @@
-package com.example.aisocket.project.adapter.in;
+package com.example.aisocket.project.adapter.in.sse;
 
 import com.example.aisocket.project.application.in.CoachFeedbackService;
 import com.example.aisocket.project.application.dto.command.CoachFeedbackCommand;
