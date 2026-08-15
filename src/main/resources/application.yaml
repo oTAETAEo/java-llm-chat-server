@@ -24,16 +24,18 @@ spring:
 
   sql:
     init:
-      mode: always
+      mode: never
 
   jpa:
     open-in-view: false
-    defer-datasource-initialization: true
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
         format_sql: true
+
+  flyway:
+    baseline-on-migrate: true
 
   ai:
     openai:

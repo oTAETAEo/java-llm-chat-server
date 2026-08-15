@@ -40,6 +40,7 @@ jobs:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          WORKOUT_DATA_ENCRYPTION_KEY_BASE64: ${{ secrets.WORKOUT_DATA_ENCRYPTION_KEY_BASE64 }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           APP_CORS_ALLOWED_ORIGINS: ${{ secrets.APP_CORS_ALLOWED_ORIGINS }}
         run: |
@@ -47,6 +48,7 @@ jobs:
 
           : "${POSTGRES_PASSWORD:?Missing POSTGRES_PASSWORD secret}"
           : "${JWT_SECRET:?Missing JWT_SECRET secret}"
+          : "${WORKOUT_DATA_ENCRYPTION_KEY_BASE64:?Missing WORKOUT_DATA_ENCRYPTION_KEY_BASE64 secret}"
           : "${OPENAI_API_KEY:?Missing OPENAI_API_KEY secret}"
 
           umask 077
@@ -55,6 +57,7 @@ jobs:
             printf 'POSTGRES_USER=%s\n' "${POSTGRES_USER:-admin}"
             printf 'POSTGRES_PASSWORD=%s\n' "$POSTGRES_PASSWORD"
             printf 'JWT_SECRET=%s\n' "$JWT_SECRET"
+            printf 'WORKOUT_DATA_ENCRYPTION_KEY_BASE64=%s\n' "$WORKOUT_DATA_ENCRYPTION_KEY_BASE64"
             printf 'OPENAI_API_KEY=%s\n' "$OPENAI_API_KEY"
             printf 'APP_CORS_ALLOWED_ORIGINS=%s\n' "${APP_CORS_ALLOWED_ORIGINS:-https://activity-coaching.com}"
           } > .env.production

@@ -55,6 +55,8 @@ class RunningWorkoutRepositoryTest extends DataJpaTestSupport {
                         """,
                 workoutId
         );
+        RunningWorkout savedWorkout = runningWorkoutRepository.findByIdAndMemberId(workoutId, member.getId())
+                .orElseThrow();
 
         assertThat(workoutId).isNotNull();
         assertThat(row.get("member_id")).isEqualTo(member.getId());
@@ -65,8 +67,14 @@ class RunningWorkoutRepositoryTest extends DataJpaTestSupport {
         assertThat(row.get("started_at").toString()).contains("2026-07-18 07:00");
         assertThat(row.get("ended_at").toString()).contains("2026-07-18 07:45");
         assertThat(((Number) row.get("distance")).doubleValue()).isEqualTo(8.2);
-        assertThat(((Number) row.get("avg_pace")).doubleValue()).isEqualTo(5.48);
-        assertThat(((Number) row.get("steps")).intValue()).isEqualTo(7600);
+        assertThat(row.get("avg_pace")).isInstanceOf(String.class);
+        assertThat(row.get("avg_pace").toString()).contains("\"alg\":\"AES-256-GCM\"");
+        assertThat(row.get("avg_pace").toString()).doesNotContain("5.48");
+        assertThat(row.get("steps")).isInstanceOf(String.class);
+        assertThat(row.get("steps").toString()).contains("\"alg\":\"AES-256-GCM\"");
+        assertThat(row.get("steps").toString()).doesNotContain("7600");
+        assertThat(savedWorkout.getAvgPace()).isEqualTo(5.48);
+        assertThat(savedWorkout.getSteps()).isEqualTo(7600);
     }
 
     @Test

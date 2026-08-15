@@ -4,6 +4,7 @@ import com.example.aisocket.project.application.out.WorkoutVectorRepository;
 import com.example.aisocket.project.domain.WorkoutVector;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,23 @@ public class WorkoutVectorRepositoryAdapter implements WorkoutVectorRepository {
     private final JdbcTemplate jdbcTemplate;
 
     private final ObjectMapper objectMapper;
+
+    @PostConstruct
+    void initializeSchema() {
+        jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS vector");
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS workout_vector_store (
+                    id uuid PRIMARY KEY,
+                    member_id bigint,
+                    workout_id bigint NOT NULL,
+                    workout_type varchar(30) NOT NULL,
+                    content text NOT NULL,
+                    metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+                    embedding vector(1536) NOT NULL,
+                    created_at timestamp NOT NULL
+                )
+                """);
+    }
 
     @Override
     public UUID save(WorkoutVector workoutVector) {

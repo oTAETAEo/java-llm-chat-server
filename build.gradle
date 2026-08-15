@@ -26,6 +26,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.flywaydb:flyway-core'
     implementation 'org.springframework.ai:spring-ai-starter-model-openai'
     implementation 'com.garmin:fit:21.205.0'
     // OpenFeign QueryDSL
@@ -40,6 +41,7 @@ dependencies {
     annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
 
     runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'org.flywaydb:flyway-database-postgresql'
     runtimeOnly 'org.springframework.boot:spring-boot-docker-compose'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'

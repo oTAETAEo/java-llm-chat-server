@@ -1,6 +1,7 @@
 package com.example.aisocket.project.domain;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -14,6 +15,8 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import com.example.aisocket.project.domain.encryption.EncryptedDoubleAttributeConverter;
 
 import java.time.LocalDateTime;
 
@@ -51,16 +54,44 @@ public class CyclingWorkout extends BaseEntity implements Workout {
     private Double elevGain;
     private Double elevationMax;
     private Integer movingTime;
+    @Convert(converter = EncryptedDoubleAttributeConverter.class)
+    @Column(columnDefinition = "text")
     private Double calories;
+
+    @Convert(converter = EncryptedDoubleAttributeConverter.class)
+    @Column(columnDefinition = "text")
     private Double avgCadence;
+
+    @Convert(converter = EncryptedDoubleAttributeConverter.class)
+    @Column(columnDefinition = "text")
     private Double maxCadence;
+
+    @Convert(converter = EncryptedDoubleAttributeConverter.class)
+    @Column(columnDefinition = "text")
     private Double maxHeartRate;
+
+    @Convert(converter = EncryptedDoubleAttributeConverter.class)
+    @Column(columnDefinition = "text")
     private Double avgHeartRate;
 
+    @Convert(converter = EncryptedDoubleAttributeConverter.class)
+    @Column(columnDefinition = "text")
     private Double avgSpeed;
+
+    @Convert(converter = EncryptedDoubleAttributeConverter.class)
+    @Column(columnDefinition = "text")
     private Double maxSpeed;
+
+    @Convert(converter = EncryptedDoubleAttributeConverter.class)
+    @Column(columnDefinition = "text")
     private Double avgPower;
+
+    @Convert(converter = EncryptedDoubleAttributeConverter.class)
+    @Column(columnDefinition = "text")
     private Double maxPower;
+
+    @Convert(converter = EncryptedDoubleAttributeConverter.class)
+    @Column(columnDefinition = "text")
     private Double ftp;
 
     public static CyclingWorkout create(
