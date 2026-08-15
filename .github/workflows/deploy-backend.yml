@@ -70,6 +70,7 @@ jobs:
             --exclude '.env' \
             --exclude 'letsencrypt' \
             --exclude 'certbot-www' \
+            --exclude 'cloudflare-origin' \
             -e "ssh -i ~/.ssh/lightsail_key" \
             ./ "${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }}:/opt/chatbot-backend/"
 

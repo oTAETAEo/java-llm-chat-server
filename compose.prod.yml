@@ -65,6 +65,7 @@ services:
       - ./deploy/nginx/conf.d:/etc/nginx/conf.d:ro
       - ./certbot-www:/var/www/certbot:ro
       - ./letsencrypt:/etc/letsencrypt:ro
+      - ./cloudflare-origin:/etc/cloudflare-origin:ro
     networks:
       - chatbot
 

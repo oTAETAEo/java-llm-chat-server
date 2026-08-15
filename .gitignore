@@ -44,3 +44,8 @@ out/
 # Production-only certificate material
 /letsencrypt/
 /certbot-www/
+/cloudflare-origin/
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
