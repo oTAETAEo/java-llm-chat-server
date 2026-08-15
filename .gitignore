@@ -40,3 +40,7 @@ out/
 /src/main/java/com/example/aisocket/week2/adapter/in/socket/chat_async_history.log
 
 /document
+
+# Production-only certificate material
+/letsencrypt/
+/certbot-www/

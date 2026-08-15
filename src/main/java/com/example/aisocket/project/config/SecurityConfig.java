@@ -6,7 +6,7 @@ import com.example.aisocket.project.common.error.TokenErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.Filter;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -28,12 +28,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Configuration
-@RequiredArgsConstructor
 public class SecurityConfig {
 
     private static final String[] AUTH_ENDPOINTS = {
             "/api/v1/auth/**"
     };
+
+    private final List<String> allowedOrigins;
+
+    public SecurityConfig(@Value("${app.cors.allowed-origins}") List<String> allowedOrigins) {
+        this.allowedOrigins = allowedOrigins;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -93,10 +98,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "http://127.0.0.1:3000"
-        ));
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

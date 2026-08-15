@@ -1,0 +1,89 @@
+name: Deploy backend to Lightsail
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-backend-production
+  cancel-in-progress: true
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Run tests
+        run: ./gradlew cleanTest test --no-daemon
+
+      - name: Prepare SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.LIGHTSAIL_SSH_PRIVATE_KEY }}" > ~/.ssh/lightsail_key
+          chmod 600 ~/.ssh/lightsail_key
+          ssh-keyscan -H "${{ secrets.LIGHTSAIL_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Create production env file
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          APP_CORS_ALLOWED_ORIGINS: ${{ secrets.APP_CORS_ALLOWED_ORIGINS }}
+        run: |
+          set -euo pipefail
+
+          : "${POSTGRES_PASSWORD:?Missing POSTGRES_PASSWORD secret}"
+          : "${JWT_SECRET:?Missing JWT_SECRET secret}"
+          : "${OPENAI_API_KEY:?Missing OPENAI_API_KEY secret}"
+
+          umask 077
+          {
+            printf 'POSTGRES_DB=%s\n' "${POSTGRES_DB:-ai_rag_db}"
+            printf 'POSTGRES_USER=%s\n' "${POSTGRES_USER:-admin}"
+            printf 'POSTGRES_PASSWORD=%s\n' "$POSTGRES_PASSWORD"
+            printf 'JWT_SECRET=%s\n' "$JWT_SECRET"
+            printf 'OPENAI_API_KEY=%s\n' "$OPENAI_API_KEY"
+            printf 'APP_CORS_ALLOWED_ORIGINS=%s\n' "${APP_CORS_ALLOWED_ORIGINS:-https://activity-coaching.com}"
+          } > .env.production
+
+      - name: Upload backend source
+        run: |
+          rsync -az --delete \
+            --exclude '.git' \
+            --exclude '.gradle' \
+            --exclude 'build' \
+            --exclude '.idea' \
+            --exclude '.env.production' \
+            --exclude '.env' \
+            --exclude 'letsencrypt' \
+            --exclude 'certbot-www' \
+            -e "ssh -i ~/.ssh/lightsail_key" \
+            ./ "${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }}:/opt/chatbot-backend/"
+
+      - name: Upload production env file
+        run: |
+          scp -i ~/.ssh/lightsail_key .env.production "${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }}:/opt/chatbot-backend/.env"
+          ssh -i ~/.ssh/lightsail_key "${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }}" "chmod 600 /opt/chatbot-backend/.env"
+
+      - name: Deploy with Docker Compose
+        run: |
+          ssh -i ~/.ssh/lightsail_key "${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }}" <<'EOF'
+            set -euo pipefail
+            cd /opt/chatbot-backend
+            test -f .env
+            docker compose -f compose.prod.yml up -d --build
+            docker image prune -f
+          EOF

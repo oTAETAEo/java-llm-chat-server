@@ -1,0 +1,9 @@
+.git
+.gradle
+.idea
+.omx
+build
+document
+*.log
+.DS_Store
+src/**/.DS_Store
