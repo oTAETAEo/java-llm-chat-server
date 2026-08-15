@@ -2,6 +2,7 @@ package com.example.aisocket.project.domain;
 
 import com.example.aisocket.project.domain.security.PasswordHasher;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -24,36 +25,32 @@ public class Member extends BaseEntity {
     @Column(unique = true)
     private String email;
 
-    @Column
-    private String password;
+    @Embedded
+    private Password password;
 
     @Column(nullable = false)
     private String nickname;
 
     public static Member create(String email, String rawPassword, String nickname, PasswordHasher passwordHasher) {
-        validatePasswordHasher(passwordHasher);
-        String hashedPassword = passwordHasher.hash(rawPassword);
-        return new Member(email, hashedPassword, nickname);
+        return new Member(email, Password.fromRaw(rawPassword, passwordHasher), nickname);
     }
 
     public static Member of(Long id, String email, String password, String nickname) {
-        Member member = new Member(email, password, nickname);
+        Member member = new Member(email, Password.encoded(password), nickname);
         member.id = id;
         return member;
     }
 
-    private static void validatePasswordHasher(PasswordHasher passwordHasher) {
-        if (passwordHasher == null) {
-            throw new IllegalArgumentException("비밀번호 해시 정책(passwordHasher)은 필수 값입니다.");
-        }
-    }
-
-    private Member(String email, String password, String nickname) {
+    private Member(String email, Password password, String nickname) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
 
         validate();
+    }
+
+    public String getPassword() {
+        return password.value();
     }
 
     private void validate() {
@@ -73,7 +70,7 @@ public class Member extends BaseEntity {
         if (!email.contains("@")) {
             throw new IllegalArgumentException("이메일(email) 형식이 올바르지 않습니다.");
         }
-        if (password == null || password.isBlank()) {
+        if (password == null) {
             throw new IllegalArgumentException("비밀번호(password)는 필수 값입니다.");
         }
     }

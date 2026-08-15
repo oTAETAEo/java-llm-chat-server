@@ -13,6 +13,7 @@ import com.example.aisocket.project.application.dto.result.LogoutResult;
 import com.example.aisocket.project.application.dto.result.ReissueTokenResult;
 import com.example.aisocket.project.application.dto.result.SignUpMemberResult;
 import com.example.aisocket.project.application.in.MemberAuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -38,7 +39,7 @@ public class AuthController {
     private final MemberAuthService memberAuthService;
 
     @PostMapping("/sign-up")
-    public ResponseEntity<SignUpResponse> signUp(@RequestBody SignUpRequest request) {
+    public ResponseEntity<SignUpResponse> signUp(@Valid @RequestBody SignUpRequest request) {
 
         SignUpMemberResult result = memberAuthService.signUp(request.toCommand());
 

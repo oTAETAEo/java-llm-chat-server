@@ -10,10 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingRequestCookieException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import java.util.Objects;
 
 @Slf4j
 @RestControllerAdvice(basePackages = "com.example.aisocket.project.adapter.in")
@@ -29,6 +32,27 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(exception.errorCode().status())
                 .body(ErrorResponse.of(exception.errorCode(), request.getRequestURI()));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException exception,
+            HttpServletRequest request
+    ) {
+        log.warn("Request body validation failed. path={}", request.getRequestURI(), exception);
+
+        String message = exception.getBindingResult().getFieldErrors().stream()
+                .map(fieldError -> Objects.requireNonNullElse(fieldError.getDefaultMessage(), CommonErrorCode.BAD_REQUEST.message()))
+                .distinct()
+                .findFirst()
+                .orElse(CommonErrorCode.BAD_REQUEST.message());
+
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.of(
+                        CommonErrorCode.BAD_REQUEST,
+                        message,
+                        request.getRequestURI()
+                ));
     }
 
     @ExceptionHandler({IllegalArgumentException.class, ConstraintViolationException.class, HandlerMethodValidationException.class})

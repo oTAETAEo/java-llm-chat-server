@@ -6,7 +6,7 @@ public final class MemberFixture {
 
     private static final Long DEFAULT_ID = 1L;
     private static final String DEFAULT_EMAIL = "runner@example.com";
-    private static final String DEFAULT_RAW_PASSWORD = "raw-password";
+    private static final String DEFAULT_RAW_PASSWORD = "StrongPass1!";
     private static final String DEFAULT_ENCODED_PASSWORD = "encoded-password";
     private static final String DEFAULT_NICKNAME = "test-member";
     private static final TestPasswordHasher PASSWORD_HASHER = new TestPasswordHasher();

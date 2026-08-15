@@ -64,11 +64,11 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
     @Test
     @DisplayName("회원가입 시 회원 등록 서비스를 호출하고 결과를 반환한다")
     void registerMember() {
-        SignUpMemberCommand command = new SignUpMemberCommand("runner@example.com", "raw-password", "runner");
+        SignUpMemberCommand command = new SignUpMemberCommand("runner@example.com", "StrongPass1!", "runner");
         when(memberRegisterService.register(command)).thenReturn(MemberFixture.builder()
                 .id(1L)
                 .email(command.email())
-                .encodedPassword("hashed-password:raw-password")
+                .encodedPassword("hashed-password:StrongPass1!")
                 .nickname(command.nickname())
                 .build());
 
@@ -84,7 +84,7 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
     @Test
     @DisplayName("이미 사용 중인 이메일이면 회원가입에 실패한다")
     void registerMemberWithDuplicatedEmailFails() {
-        SignUpMemberCommand command = new SignUpMemberCommand("runner@example.com", "raw-password", "runner");
+        SignUpMemberCommand command = new SignUpMemberCommand("runner@example.com", "StrongPass1!", "runner");
 
         doThrow(new ProjectException(MemberErrorCode.DUPLICATED_EMAIL))
                 .when(memberFinderService).validateNotExistsByEmail("runner@example.com");
@@ -109,6 +109,16 @@ class MemberAuthServiceTest extends SpringBootIntegrationTestSupport {
 
         assertThatThrownBy(() -> memberAuthService.signUp(command))
                 .isInstanceOf(ConstraintViolationException.class);
+    }
+
+    @Test
+    @DisplayName("회원가입 비밀번호가 강한 비밀번호 정책을 만족하지 않으면 서비스 검증에 실패한다")
+    void registerWithWeakPasswordFails() {
+        SignUpMemberCommand command = new SignUpMemberCommand("runner@example.com", "password", "runner");
+
+        assertThatThrownBy(() -> memberAuthService.signUp(command))
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining("영문자, 숫자, 특수문자");
     }
 
     @Test

@@ -13,13 +13,13 @@ class MemberTest {
     void createMember() {
         Member member = MemberFixture.builder()
                 .email("runner@example.com")
-                .rawPassword("raw-password")
+                .rawPassword("StrongPass1!")
                 .nickname("runner")
                 .buildNew();
 
         assertThat(member.getId()).isNull();
         assertThat(member.getEmail()).isEqualTo("runner@example.com");
-        assertThat(member.getPassword()).isEqualTo("hashed-password:raw-password");
+        assertThat(member.getPassword()).isEqualTo("hashed-password:StrongPass1!");
         assertThat(member.getNickname()).isEqualTo("runner");
     }
 
@@ -72,6 +72,14 @@ class MemberTest {
     void createMemberWithAuthFieldsWithoutPasswordFails() {
         assertThatThrownBy(() -> MemberFixture.builder().rawPassword(null).buildNew())
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("신규 회원 생성 시 강한 비밀번호가 아니면 실패한다")
+    void createMemberWithWeakPasswordFails() {
+        assertThatThrownBy(() -> MemberFixture.builder().rawPassword("password").buildNew())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("영문자, 숫자, 특수문자");
     }
 
     @Test

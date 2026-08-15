@@ -54,7 +54,7 @@ class MemberRepositoryTest extends DataJpaTestSupport {
         Member savedMember = memberRepository.save(
                 MemberFixture.builder()
                         .email("runner@example.com")
-                        .rawPassword("raw-password")
+                        .rawPassword("StrongPass1!")
                         .nickname("runner")
                         .buildNew()
         );
@@ -72,7 +72,7 @@ class MemberRepositoryTest extends DataJpaTestSupport {
         memberRepository.save(
                 MemberFixture.builder()
                         .email("runner@example.com")
-                        .rawPassword("raw-password")
+                        .rawPassword("StrongPass1!")
                         .nickname("runner")
                         .buildNew()
         );

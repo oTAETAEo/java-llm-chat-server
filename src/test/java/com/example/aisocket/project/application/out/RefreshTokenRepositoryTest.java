@@ -77,7 +77,7 @@ class RefreshTokenRepositoryTest extends DataJpaTestSupport {
                 MemberFixture.builder()
                         .id(null)
                         .email("runner@example.com")
-                        .rawPassword("raw-password")
+                        .rawPassword("StrongPass1!")
                         .nickname("runner")
                         .buildNew()
         );

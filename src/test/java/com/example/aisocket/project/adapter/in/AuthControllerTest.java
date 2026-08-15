@@ -36,6 +36,7 @@ import jakarta.servlet.http.Cookie;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -77,8 +78,27 @@ class AuthControllerTest {
 
         verify(memberAuthService).signUp(commandCaptor.capture());
         assertThat(commandCaptor.getValue().email()).isEqualTo("runner@example.com");
-        assertThat(commandCaptor.getValue().rawPassword()).isEqualTo("raw-password");
+        assertThat(commandCaptor.getValue().rawPassword()).isEqualTo("StrongPass1!");
         assertThat(commandCaptor.getValue().nickname()).isEqualTo("runner");
+    }
+
+    @Test
+    @DisplayName("회원가입 비밀번호가 강한 비밀번호 정책을 만족하지 않으면 요청에 실패한다")
+    void signUpWithWeakPasswordFails() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/sign-up")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "runner@example.com",
+                                  "password": "password",
+                                  "nickname": "runner"
+                }
+                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("비밀번호는 8~64자이며 영문자, 숫자, 특수문자를 각각 1개 이상 포함하고 공백이 없어야 합니다."));
+
+        verify(memberAuthService, never()).signUp(any(SignUpMemberCommand.class));
     }
 
     @Test
@@ -196,7 +216,7 @@ class AuthControllerTest {
         return """
                 {
                   "email": "runner@example.com",
-                  "password": "raw-password",
+                  "password": "StrongPass1!",
                   "nickname": "runner"
                 }
                 """;
